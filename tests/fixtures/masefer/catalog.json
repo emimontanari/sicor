@@ -1,0 +1,803 @@
+{
+ "codes": [
+  "SNEAKPRO",
+  "PAC25",
+  "ELASTIZA",
+  "REM01"
+ ],
+ "docs": [
+  {
+   "msg": "added",
+   "collection": "web_metacategorias",
+   "id": "Calzado",
+   "fields": {
+    "nombre": "Calzado"
+   }
+  },
+  {
+   "msg": "added",
+   "collection": "web_metacategorias",
+   "id": "Indumentaria",
+   "fields": {
+    "nombre": "Indumentaria"
+   }
+  },
+  {
+   "msg": "added",
+   "collection": "web_metacategorias",
+   "id": "Seguridad Industrial",
+   "fields": {
+    "nombre": "Seguridad Industrial"
+   }
+  },
+  {
+   "msg": "added",
+   "collection": "web_metacategorias",
+   "id": "Seguridad Vial",
+   "fields": {
+    "nombre": "Seguridad Vial"
+   }
+  },
+  {
+   "msg": "added",
+   "collection": "web_categorias",
+   "id": "Calzado_BORCEGUIES",
+   "fields": {
+    "metaCategoria": "Calzado",
+    "subfamilia": "BORCEGUIES"
+   }
+  },
+  {
+   "msg": "added",
+   "collection": "web_categorias",
+   "id": "Calzado_BOTAS PVC",
+   "fields": {
+    "metaCategoria": "Calzado",
+    "subfamilia": "BOTAS PVC"
+   }
+  },
+  {
+   "msg": "added",
+   "collection": "web_categorias",
+   "id": "Calzado_BOTIN CON PUNTERA",
+   "fields": {
+    "metaCategoria": "Calzado",
+    "subfamilia": "BOTIN CON PUNTERA"
+   }
+  },
+  {
+   "msg": "added",
+   "collection": "web_categorias",
+   "id": "Calzado_BOTIN SIN PUNTERA",
+   "fields": {
+    "metaCategoria": "Calzado",
+    "subfamilia": "BOTIN SIN PUNTERA"
+   }
+  },
+  {
+   "msg": "added",
+   "collection": "web_categorias",
+   "id": "Calzado_DIELECTRICOS",
+   "fields": {
+    "metaCategoria": "Calzado",
+    "subfamilia": "DIELECTRICOS"
+   }
+  },
+  {
+   "msg": "added",
+   "collection": "web_categorias",
+   "id": "Calzado_ULTRALIVIANOS",
+   "fields": {
+    "metaCategoria": "Calzado",
+    "subfamilia": "ULTRALIVIANOS"
+   }
+  },
+  {
+   "msg": "added",
+   "collection": "web_marcas",
+   "id": "~59",
+   "fields": {
+    "DESCRIPCION": "BELL"
+   }
+  },
+  {
+   "msg": "added",
+   "collection": "web_marcas",
+   "id": "~2",
+   "fields": {
+    "DESCRIPCION": "BILVEX"
+   }
+  },
+  {
+   "msg": "added",
+   "collection": "web_marcas",
+   "id": "~3",
+   "fields": {
+    "DESCRIPCION": "BM"
+   }
+  },
+  {
+   "msg": "added",
+   "collection": "web_marcas",
+   "id": "~4",
+   "fields": {
+    "DESCRIPCION": "BOHM"
+   }
+  },
+  {
+   "msg": "added",
+   "collection": "web_marcas",
+   "id": "~5",
+   "fields": {
+    "DESCRIPCION": "CASTOR"
+   }
+  },
+  {
+   "msg": "added",
+   "collection": "dropbox",
+   "id": "/web/img200/pac25.jpg",
+   "fields": {
+    "ownerId": "PAC25",
+    "createdAt": {
+     "$date": 1756915725000
+    },
+    "name": "pac25.jpg",
+    "shortName": "pac25",
+    "ext": "jpg",
+    "link": "https://www.dropbox.com/scl/fi/coux2d208rl9jxboqvxpi/PAC25.jpg?rlkey=g75v4b6c941g7s45cih8grrbz&dl=0&&raw=1",
+    "source": "web",
+    "color": null,
+    "path": "/web/img200/pac25.jpg",
+    "level": 4
+   }
+  },
+  {
+   "msg": "added",
+   "collection": "dropbox",
+   "id": "/web/img500/pac25.jpg",
+   "fields": {
+    "ownerId": "PAC25",
+    "createdAt": {
+     "$date": 1756915938000
+    },
+    "name": "pac25.jpg",
+    "shortName": "pac25",
+    "ext": "jpg",
+    "link": "https://www.dropbox.com/scl/fi/9rv7soc1e0qoy3k7zejr5/PAC25.jpg?rlkey=32y4m8e4hlnsw42s62stzvw37&dl=0&&raw=1",
+    "source": "web",
+    "color": null,
+    "path": "/web/img500/pac25.jpg",
+    "level": 4
+   }
+  },
+  {
+   "msg": "added",
+   "collection": "dropbox",
+   "id": "/web/catalogos/pac25 ficha tecnica.pdf",
+   "fields": {
+    "ownerId": "PAC25",
+    "createdAt": {
+     "$date": 1756915513000
+    },
+    "name": "pac25 ficha tecnica.pdf",
+    "shortName": "ficha tecnica",
+    "ext": "pdf",
+    "link": "https://www.dropbox.com/scl/fi/tqditqzszdpwgym6mz6w8/PAC25-FICHA-TECNICA.pdf?rlkey=mvhmunk410x20v57l1jgw8svh&dl=0&&raw=1",
+    "source": "web",
+    "color": null,
+    "path": "/web/catalogos/pac25 ficha tecnica.pdf",
+    "level": 4
+   }
+  },
+  {
+   "msg": "added",
+   "collection": "web_articulos",
+   "id": "PAC25-5",
+   "fields": {
+    "AGUJEROS": "S",
+    "ALMACEN_UNIMED_ID": null,
+    "CANTIDAD_ALMACEN": 10,
+    "DENOMINACION": "PANTALON CARGO RIPSTOP MASEFER",
+    "DESCUENTO_ALMACEN": null,
+    "ES_GRUPO_REVENDEDOR": null,
+    "FAMILIA": "CONFECCION STOCK",
+    "FAMILIA_ID": 14,
+    "FORMPAG_ID": 1,
+    "FRACCIONA": "N",
+    "GENERICO": "PAC25",
+    "MARCA": "MSF",
+    "MARCAS_ID": 26,
+    "METACATEGORIA": "Indumentaria",
+    "PRECIO": 45950,
+    "PRECIOS_ID": 5,
+    "PUBLICA_WEB": 1,
+    "SUBFAMILIA": "PANTALONES CARGO",
+    "SUBFAMILIA_ID": 8,
+    "TIPDTOS": 1,
+    "TIPOARTICULO": "PADRE",
+    "UMEDIDA": "UN.",
+    "UNIMED_ID": 7,
+    "UNMEDIDAALMACEN": null,
+    "hasDelay": true,
+    "ORDEN": 1,
+    "ALICUOTA_IVA": 0.21,
+    "COTIZACION_MONEDA": 1,
+    "NOMBRE_MONEDA": "PESOS",
+    "SIGNO_MONEDA": "$",
+    "PUBLICADO_WEB2": "SI"
+   }
+  },
+  {
+   "msg": "added",
+   "collection": "dropbox",
+   "id": "/web/img200/elastiza_2 (1).jpg",
+   "fields": {
+    "ownerId": "ELASTIZA",
+    "createdAt": {
+     "$date": 1639064578000
+    },
+    "name": "elastiza_2 (1).jpg",
+    "shortName": "1",
+    "ext": "jpg",
+    "link": "https://www.dropbox.com/scl/fi/yj5uan1i1ubph7wu7hkhc/ELASTIZA_2-1.jpg?rlkey=pu3ce4h6pzjvpl3r38okvdqty&dl=0&&raw=1",
+    "source": "web",
+    "color": "2"
+   }
+  },
+  {
+   "msg": "added",
+   "collection": "dropbox",
+   "id": "/web/img200/elastiza (2).jpg",
+   "fields": {
+    "ownerId": "ELASTIZA",
+    "createdAt": {
+     "$date": 1701800085000
+    },
+    "name": "elastiza (2).jpg",
+    "shortName": "2",
+    "ext": "jpg",
+    "link": "https://www.dropbox.com/scl/fi/jo5fwat7evnatsgvom2ww/ELASTIZA-2.jpg?rlkey=hj7s15dtmfgu7dzta9j4a09tw&dl=0&&raw=1",
+    "source": "web",
+    "color": null
+   }
+  },
+  {
+   "msg": "added",
+   "collection": "dropbox",
+   "id": "/web/img200/elastiza (3).jpg",
+   "fields": {
+    "ownerId": "ELASTIZA",
+    "createdAt": {
+     "$date": 1701800085000
+    },
+    "name": "elastiza (3).jpg",
+    "shortName": "3",
+    "ext": "jpg",
+    "link": "https://www.dropbox.com/scl/fi/64t8dk967i9o1aa56uosa/ELASTIZA-3.jpg?rlkey=e1c3ketjst6tzlry2lugiikoi&dl=0&&raw=1",
+    "source": "web",
+    "color": null
+   }
+  },
+  {
+   "msg": "added",
+   "collection": "dropbox",
+   "id": "/web/img200/elastiza (4).jpg",
+   "fields": {
+    "ownerId": "ELASTIZA",
+    "createdAt": {
+     "$date": 1701800085000
+    },
+    "name": "elastiza (4).jpg",
+    "shortName": "4",
+    "ext": "jpg",
+    "link": "https://www.dropbox.com/scl/fi/ecmm8ngbjzhgjqx19jq3w/ELASTIZA-4.jpg?rlkey=bchslonsg1fr5mejqy23p8ka6&dl=0&&raw=1",
+    "source": "web",
+    "color": null
+   }
+  },
+  {
+   "msg": "added",
+   "collection": "dropbox",
+   "id": "/web/img200/elastiza_2 (5).jpg",
+   "fields": {
+    "ownerId": "ELASTIZA",
+    "createdAt": {
+     "$date": 1701800085000
+    },
+    "name": "elastiza_2 (5).jpg",
+    "shortName": "5",
+    "ext": "jpg",
+    "link": "https://www.dropbox.com/scl/fi/dqmkssnx6yjupuamvtr9d/ELASTIZA_2-5.jpg?rlkey=r1aceont89h29uo55rb427kq0&dl=0&&raw=1",
+    "source": "web",
+    "color": "2"
+   }
+  },
+  {
+   "msg": "added",
+   "collection": "dropbox",
+   "id": "/web/img200/elastiza_3 (7).jpg",
+   "fields": {
+    "ownerId": "ELASTIZA",
+    "createdAt": {
+     "$date": 1701800085000
+    },
+    "name": "elastiza_3 (7).jpg",
+    "shortName": "7",
+    "ext": "jpg",
+    "link": "https://www.dropbox.com/scl/fi/s5yc2b004brqq3e0mmmm9/ELASTIZA_3-7.jpg?rlkey=zziirgor9e32y05qp7wlhlnyk&dl=0&&raw=1",
+    "source": "web",
+    "color": "3"
+   }
+  },
+  {
+   "msg": "added",
+   "collection": "dropbox",
+   "id": "/web/img200/elastiza_4 (1).jpg",
+   "fields": {
+    "ownerId": "ELASTIZA",
+    "createdAt": {
+     "$date": 1701800085000
+    },
+    "name": "elastiza_4 (1).jpg",
+    "shortName": "1",
+    "ext": "jpg",
+    "link": "https://www.dropbox.com/scl/fi/7vjh3v35enjmnsq5vl0i6/ELASTIZA_4-1.jpg?rlkey=r0qrg55ddh6j459s5en3izmns&dl=0&&raw=1",
+    "source": "web",
+    "color": "4"
+   }
+  },
+  {
+   "msg": "added",
+   "collection": "dropbox",
+   "id": "/web/img200/elastiza_7 (6).jpg",
+   "fields": {
+    "ownerId": "ELASTIZA",
+    "createdAt": {
+     "$date": 1701800085000
+    },
+    "name": "elastiza_7 (6).jpg",
+    "shortName": "6",
+    "ext": "jpg",
+    "link": "https://www.dropbox.com/scl/fi/mjuxsljwi3hb1mffqogw5/ELASTIZA_7-6.jpg?rlkey=pf5nit25lv8sd875gm32wx5ge&dl=0&&raw=1",
+    "source": "web",
+    "color": "7"
+   }
+  },
+  {
+   "msg": "added",
+   "collection": "dropbox",
+   "id": "/web/img500/elastiza (2).jpg",
+   "fields": {
+    "ownerId": "ELASTIZA",
+    "createdAt": {
+     "$date": 1701800505000
+    },
+    "name": "elastiza (2).jpg",
+    "shortName": "2",
+    "ext": "jpg",
+    "link": "https://www.dropbox.com/scl/fi/ys6b9zgqijtanfry2e2ua/ELASTIZA-2.jpg?rlkey=oaazm1m66tbfftxrwwz6424xj&dl=0&&raw=1",
+    "source": "web",
+    "color": null
+   }
+  },
+  {
+   "msg": "added",
+   "collection": "dropbox",
+   "id": "/web/img500/elastiza (3).jpg",
+   "fields": {
+    "ownerId": "ELASTIZA",
+    "createdAt": {
+     "$date": 1701800505000
+    },
+    "name": "elastiza (3).jpg",
+    "shortName": "3",
+    "ext": "jpg",
+    "link": "https://www.dropbox.com/scl/fi/zahlzl4xb0a8ib6gkmjw6/ELASTIZA-3.jpg?rlkey=dm5p9xiin9sx1aoim8s12das4&dl=0&&raw=1",
+    "source": "web",
+    "color": null
+   }
+  },
+  {
+   "msg": "added",
+   "collection": "dropbox",
+   "id": "/web/img500/elastiza (4).jpg",
+   "fields": {
+    "ownerId": "ELASTIZA",
+    "createdAt": {
+     "$date": 1701800505000
+    },
+    "name": "elastiza (4).jpg",
+    "shortName": "4",
+    "ext": "jpg",
+    "link": "https://www.dropbox.com/scl/fi/rhbykr0qg6km3ke77wi6m/ELASTIZA-4.jpg?rlkey=ehsnf1n6hn8syfcnpsrhz8i9s&dl=0&&raw=1",
+    "source": "web",
+    "color": null
+   }
+  },
+  {
+   "msg": "added",
+   "collection": "dropbox",
+   "id": "/web/img500/elastiza_2 (5).jpg",
+   "fields": {
+    "ownerId": "ELASTIZA",
+    "createdAt": {
+     "$date": 1701800505000
+    },
+    "name": "elastiza_2 (5).jpg",
+    "shortName": "5",
+    "ext": "jpg",
+    "link": "https://www.dropbox.com/scl/fi/pqgad284ibydauoz8nidl/ELASTIZA_2-5.jpg?rlkey=1riizpnma7xsise6hmukwoff1&dl=0&&raw=1",
+    "source": "web",
+    "color": "2"
+   }
+  },
+  {
+   "msg": "added",
+   "collection": "dropbox",
+   "id": "/web/img500/elastiza_3 (7).jpg",
+   "fields": {
+    "ownerId": "ELASTIZA",
+    "createdAt": {
+     "$date": 1701800505000
+    },
+    "name": "elastiza_3 (7).jpg",
+    "shortName": "7",
+    "ext": "jpg",
+    "link": "https://www.dropbox.com/scl/fi/4afw59ruxqszhgxxbpsyf/ELASTIZA_3-7.jpg?rlkey=m8w9desykzewluyt2j4v6okt1&dl=0&&raw=1",
+    "source": "web",
+    "color": "3"
+   }
+  },
+  {
+   "msg": "added",
+   "collection": "dropbox",
+   "id": "/web/img500/elastiza_4 (1).jpg",
+   "fields": {
+    "ownerId": "ELASTIZA",
+    "createdAt": {
+     "$date": 1701800505000
+    },
+    "name": "elastiza_4 (1).jpg",
+    "shortName": "1",
+    "ext": "jpg",
+    "link": "https://www.dropbox.com/scl/fi/uam5ikuas63vtg1iyy938/ELASTIZA_4-1.jpg?rlkey=onpwx3mj8r98sc5oosizismlj&dl=0&&raw=1",
+    "source": "web",
+    "color": "4"
+   }
+  },
+  {
+   "msg": "added",
+   "collection": "dropbox",
+   "id": "/web/img500/elastiza_7 (6).jpg",
+   "fields": {
+    "ownerId": "ELASTIZA",
+    "createdAt": {
+     "$date": 1701800505000
+    },
+    "name": "elastiza_7 (6).jpg",
+    "shortName": "6",
+    "ext": "jpg",
+    "link": "https://www.dropbox.com/scl/fi/dtn0d44ntdp3ybm1jzo18/ELASTIZA_7-6.jpg?rlkey=vbewt20tww0z835o3lhoyo03w&dl=0&&raw=1",
+    "source": "web",
+    "color": "7"
+   }
+  },
+  {
+   "msg": "added",
+   "collection": "web_articulos",
+   "id": "ELASTIZA-5",
+   "fields": {
+    "ALMACEN_UNIMED_ID": null,
+    "CANTIDAD_ALMACEN": 10,
+    "DENOMINACION": "PANTALON CARGO ELASTIZADO PAMPERO 38/54",
+    "DESCUENTO_ALMACEN": null,
+    "ES_GRUPO_REVENDEDOR": null,
+    "FAMILIA": "INDUMENTARIA TIEMPO LIBRE",
+    "FAMILIA_ID": 3,
+    "FORMPAG_ID": 1,
+    "FRACCIONA": "N",
+    "GENERICO": "ELASTIZA",
+    "MARCA": "PAMPERO",
+    "MARCAS_ID": 29,
+    "METACATEGORIA": "Indumentaria",
+    "PRECIO": 53500,
+    "PRECIOS_ID": 5,
+    "SUBFAMILIA": "PANTALONES CARGO",
+    "SUBFAMILIA_ID": 2,
+    "TIPDTOS": 1,
+    "TIPOARTICULO": "PADRE",
+    "UMEDIDA": "UN.",
+    "UNIMED_ID": 7,
+    "UNMEDIDAALMACEN": null,
+    "hasDelay": true,
+    "ORDEN": 2,
+    "AGUJEROS": "S",
+    "PUBLICA_WEB": 1,
+    "ALICUOTA_IVA": 0.21,
+    "COTIZACION_MONEDA": 1,
+    "NOMBRE_MONEDA": "PESOS",
+    "SIGNO_MONEDA": "$",
+    "PUBLICADO_WEB2": "SI"
+   }
+  },
+  {
+   "msg": "added",
+   "collection": "dropbox",
+   "id": "/web/img200/rem01_4 (1).jpg",
+   "fields": {
+    "ownerId": "REM01",
+    "createdAt": {
+     "$date": 1756993875000
+    },
+    "name": "rem01_4 (1).jpg",
+    "shortName": "1",
+    "ext": "jpg",
+    "link": "https://www.dropbox.com/scl/fi/e4ipwrno5vgf7xpes2cay/REM01_4-1.jpg?rlkey=973iasc6jet642cmqbrc22mwx&dl=0&&raw=1",
+    "source": "web",
+    "color": "4",
+    "path": "/web/img200/rem01_4 (1).jpg",
+    "level": 4
+   }
+  },
+  {
+   "msg": "added",
+   "collection": "dropbox",
+   "id": "/web/img200/rem01_9 (3).jpg",
+   "fields": {
+    "ownerId": "REM01",
+    "createdAt": {
+     "$date": 1757096791000
+    },
+    "name": "rem01_9 (3).jpg",
+    "shortName": "3",
+    "ext": "jpg",
+    "link": "https://www.dropbox.com/scl/fi/cq4f5z1qwwzbpwprgdwop/REM01_9-3.jpg?rlkey=mftw1ay1z3v42p33mhusy6eh0&dl=0&&raw=1",
+    "source": "web",
+    "color": "9",
+    "path": "/web/img200/rem01_9 (3).jpg",
+    "level": 4
+   }
+  },
+  {
+   "msg": "added",
+   "collection": "dropbox",
+   "id": "/web/img200/rem01_5 (1).jpg",
+   "fields": {
+    "ownerId": "REM01",
+    "createdAt": {
+     "$date": 1756993686000
+    },
+    "name": "rem01_5 (1).jpg",
+    "shortName": "1",
+    "ext": "jpg",
+    "link": "https://www.dropbox.com/scl/fi/wrctvabu7r7i1s0ms3x03/REM01_5-1.jpg?rlkey=7rt4c7dr3qhp325o7bfbjsone&dl=0&&raw=1",
+    "source": "web",
+    "color": "5",
+    "path": "/web/img200/rem01_5 (1).jpg",
+    "level": 4
+   }
+  },
+  {
+   "msg": "added",
+   "collection": "dropbox",
+   "id": "/web/img200/rem01_7 (2).jpg",
+   "fields": {
+    "ownerId": "REM01",
+    "createdAt": {
+     "$date": 1636206634000
+    },
+    "name": "rem01_7 (2).jpg",
+    "shortName": "2",
+    "ext": "jpg",
+    "link": "https://www.dropbox.com/scl/fi/l2f2jwogvrt7ky07eog8n/REM01_7-2.jpg?rlkey=j8jzdxs4wno3ltl8rke2yy0xo&dl=0&&raw=1",
+    "source": "web",
+    "color": "7"
+   }
+  },
+  {
+   "msg": "added",
+   "collection": "dropbox",
+   "id": "/web/img500/rem01 (2).jpg",
+   "fields": {
+    "ownerId": "REM01",
+    "createdAt": {
+     "$date": 1756995660000
+    },
+    "name": "rem01 (2).jpg",
+    "shortName": "2",
+    "ext": "jpg",
+    "link": "https://www.dropbox.com/scl/fi/ecg89h2uz5vl7qmz66axq/REM01-2.jpg?rlkey=wkbj3hzhc4f7donheqeymwcng&dl=0&&raw=1",
+    "source": "web",
+    "color": null,
+    "path": "/web/img500/rem01 (2).jpg",
+    "level": 4
+   }
+  },
+  {
+   "msg": "added",
+   "collection": "dropbox",
+   "id": "/web/img500/rem01 (3).jpg",
+   "fields": {
+    "ownerId": "REM01",
+    "createdAt": {
+     "$date": 1757096771000
+    },
+    "name": "rem01 (3).jpg",
+    "shortName": "3",
+    "ext": "jpg",
+    "link": "https://www.dropbox.com/scl/fi/r0tvq55ah6o54gipo67oq/REM01-3.jpg?rlkey=0kqwtp8d5ga15cf1a0zwzvpvx&dl=0&&raw=1",
+    "source": "web",
+    "color": null,
+    "path": "/web/img500/rem01 (3).jpg",
+    "level": 4
+   }
+  },
+  {
+   "msg": "added",
+   "collection": "dropbox",
+   "id": "/web/img500/rem01 (1).jpg",
+   "fields": {
+    "ownerId": "REM01",
+    "createdAt": {
+     "$date": 1756994768000
+    },
+    "name": "rem01 (1).jpg",
+    "shortName": "1",
+    "ext": "jpg",
+    "link": "https://www.dropbox.com/scl/fi/p3ezu5rfaa7nw0p0stonm/REM01-1.jpg?rlkey=kmy5doinc2kkutax0i1jnrfaz&dl=0&&raw=1",
+    "source": "web",
+    "color": null,
+    "path": "/web/img500/rem01 (1).jpg",
+    "level": 4
+   }
+  },
+  {
+   "msg": "added",
+   "collection": "dropbox",
+   "id": "/web/img500/rem01 (4).jpg",
+   "fields": {
+    "ownerId": "REM01",
+    "createdAt": {
+     "$date": 1756993962000
+    },
+    "name": "rem01 (4).jpg",
+    "shortName": "4",
+    "ext": "jpg",
+    "link": "https://www.dropbox.com/scl/fi/owxev0cftvhgr1wgyh4e5/REM01-4.jpg?rlkey=z22ym4w328mdwxtolfx5fcvyc&dl=0&&raw=1",
+    "source": "web",
+    "color": null,
+    "path": "/web/img500/rem01 (4).jpg",
+    "level": 4
+   }
+  },
+  {
+   "msg": "added",
+   "collection": "dropbox",
+   "id": "/web/catalogos/rem01 ficha tecnica.pdf",
+   "fields": {
+    "ownerId": "REM01",
+    "createdAt": {
+     "$date": 1757013665000
+    },
+    "name": "rem01 ficha tecnica.pdf",
+    "shortName": "ficha tecnica",
+    "ext": "pdf",
+    "link": "https://www.dropbox.com/scl/fi/o1fwyz4u5v0hx2f7lbysu/REM01-FICHA-TECNICA.pdf?rlkey=d4e5to21nzesory6mfoi66irs&dl=0&&raw=1",
+    "source": "web",
+    "color": null,
+    "path": "/web/catalogos/rem01 ficha tecnica.pdf",
+    "level": 4
+   }
+  },
+  {
+   "msg": "added",
+   "collection": "web_articulos",
+   "id": "REM01-5",
+   "fields": {
+    "GENERICO": "REM01",
+    "TIPOARTICULO": "PADRE",
+    "DENOMINACION": "REMERA ALGODON PEINADO 24/1 M/CORTA MSF",
+    "UNIMED_ID": 7,
+    "UMEDIDA": "UN.",
+    "ALMACEN_UNIMED_ID": 62,
+    "UNMEDIDAALMACEN": "PACK",
+    "CANTIDAD_ALMACEN": 20,
+    "DESCUENTO_ALMACEN": null,
+    "FAMILIA_ID": 14,
+    "TIPDTOS": 1,
+    "METACATEGORIA": "Indumentaria",
+    "FAMILIA": "CONFECCION STOCK",
+    "SUBFAMILIA_ID": 1,
+    "SUBFAMILIA": "REMERAS",
+    "MARCAS_ID": 26,
+    "MARCA": "MSF",
+    "FRACCIONA": "N",
+    "ES_GRUPO_REVENDEDOR": "S",
+    "PRECIO": 12550,
+    "PRECIOS_ID": 5,
+    "FORMPAG_ID": 1,
+    "ORDEN": 3,
+    "hasDelay": false,
+    "AGUJEROS": "S",
+    "PUBLICA_WEB": 1,
+    "ALICUOTA_IVA": 0.21,
+    "COTIZACION_MONEDA": 1,
+    "NOMBRE_MONEDA": "PESOS",
+    "SIGNO_MONEDA": "$",
+    "PUBLICADO_WEB2": "SI"
+   }
+  },
+  {
+   "msg": "added",
+   "collection": "dropbox",
+   "id": "/web/img200/sneakpro (1).jpg",
+   "fields": {
+    "ownerId": "SNEAKPRO",
+    "createdAt": {
+     "$date": 1753753745000
+    },
+    "name": "sneakpro (1).jpg",
+    "shortName": "1",
+    "ext": "jpg",
+    "link": "https://www.dropbox.com/scl/fi/px7tglfcirpfnyifgwu3e/SNEAKPRO-1.jpg?rlkey=ehqqbgk6o38gxrqbvau7tkg4i&dl=0&&raw=1",
+    "source": "web",
+    "color": null
+   }
+  },
+  {
+   "msg": "added",
+   "collection": "dropbox",
+   "id": "/web/img500/sneakpro (1).jpg",
+   "fields": {
+    "ownerId": "SNEAKPRO",
+    "createdAt": {
+     "$date": 1753753710000
+    },
+    "name": "sneakpro (1).jpg",
+    "shortName": "1",
+    "ext": "jpg",
+    "link": "https://www.dropbox.com/scl/fi/9u017f2rf6x4vqaqk0ar6/SNEAKPRO-1.jpg?rlkey=w30exvocm4ezimnqvz5clnpws&dl=0&&raw=1",
+    "source": "web",
+    "color": null
+   }
+  },
+  {
+   "msg": "added",
+   "collection": "web_articulos",
+   "id": "SNEAKPRO-5",
+   "fields": {
+    "AGUJEROS": "S",
+    "ALMACEN_UNIMED_ID": 62,
+    "CANTIDAD_ALMACEN": 5,
+    "DENOMINACION": "ZAPATILLA SNEAKER PRO COMPOSITE",
+    "DESCUENTO_ALMACEN": null,
+    "ES_GRUPO_REVENDEDOR": null,
+    "FAMILIA": "CALZADO DE SEGURIDAD",
+    "FAMILIA_ID": 2,
+    "FORMPAG_ID": 1,
+    "FRACCIONA": "N",
+    "GENERICO": "SNEAKPRO",
+    "MARCA": "OMBU",
+    "MARCAS_ID": 48,
+    "METACATEGORIA": "Calzado",
+    "PRECIO": 93300,
+    "PRECIOS_ID": 5,
+    "PUBLICA_WEB": 1,
+    "SUBFAMILIA": "BOTIN CON PUNTERA",
+    "SUBFAMILIA_ID": 3,
+    "TIPDTOS": 2,
+    "TIPOARTICULO": "PADRE",
+    "UMEDIDA": "PAR",
+    "UNIMED_ID": 8,
+    "UNMEDIDAALMACEN": "PACK",
+    "hasDelay": true,
+    "ORDEN": 5,
+    "ALICUOTA_IVA": 0.21,
+    "COTIZACION_MONEDA": 1,
+    "NOMBRE_MONEDA": "PESOS",
+    "SIGNO_MONEDA": "$",
+    "PUBLICADO_WEB2": "SI"
+   }
+  }
+ ]
+}

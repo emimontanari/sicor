@@ -1,0 +1,268 @@
+[
+ {
+  "msg": "added",
+  "collection": "subarticulos",
+  "id": "ELASTIZA-04-38",
+  "fields": {
+   "ARTICULO": "ELASTIZA-04-38",
+   "COLOR": "AZUL MARINO",
+   "GENERICO": "ELASTIZA",
+   "PUBLICA_WEB": "S",
+   "TALLE": "38",
+   "TEXTO": "PANTALON CARGO ELASTIZADO PAMPERO 38/54 ",
+   "stock": {
+    "1": 7,
+    "2": 19
+   },
+   "IDCOLOR": 4
+  }
+ },
+ {
+  "msg": "added",
+  "collection": "subarticulos",
+  "id": "ELASTIZA-04-40",
+  "fields": {
+   "ARTICULO": "ELASTIZA-04-40",
+   "COLOR": "AZUL MARINO",
+   "GENERICO": "ELASTIZA",
+   "PUBLICA_WEB": "S",
+   "TALLE": "40",
+   "TEXTO": "PANTALON CARGO ELASTIZADO PAMPERO 38/54 ",
+   "stock": {
+    "1": 12,
+    "2": 45
+   },
+   "IDCOLOR": 4
+  }
+ },
+ {
+  "msg": "added",
+  "collection": "subarticulos",
+  "id": "ELASTIZA-04-42",
+  "fields": {
+   "ARTICULO": "ELASTIZA-04-42",
+   "COLOR": "AZUL MARINO",
+   "GENERICO": "ELASTIZA",
+   "PUBLICA_WEB": "S",
+   "TALLE": "42",
+   "TEXTO": "PANTALON CARGO ELASTIZADO PAMPERO 38/54 ",
+   "stock": {
+    "1": 28,
+    "2": 34
+   },
+   "IDCOLOR": 4
+  }
+ },
+ {
+  "msg": "added",
+  "collection": "subarticulos",
+  "id": "PAC25-20-36",
+  "fields": {
+   "ARTICULO": "PAC25-20-36",
+   "COLOR": "ARENA",
+   "GENERICO": "PAC25",
+   "IDCOLOR": 20,
+   "PUBLICA_WEB": "S",
+   "TALLE": "36",
+   "TEXTO": "PANTALON CARGO RIPSTOP ARENA 36",
+   "stock": {
+    "1": 0,
+    "2": 0
+   }
+  }
+ },
+ {
+  "msg": "added",
+  "collection": "subarticulos",
+  "id": "PAC25-20-38",
+  "fields": {
+   "ARTICULO": "PAC25-20-38",
+   "COLOR": "ARENA",
+   "GENERICO": "PAC25",
+   "IDCOLOR": 20,
+   "PUBLICA_WEB": "S",
+   "TALLE": "38",
+   "TEXTO": "PANTALON CARGO RIPSTOP ARENA 38",
+   "stock": {
+    "1": 0,
+    "2": 0
+   }
+  }
+ },
+ {
+  "msg": "added",
+  "collection": "subarticulos",
+  "id": "PAC25-20-40",
+  "fields": {
+   "ARTICULO": "PAC25-20-40",
+   "COLOR": "ARENA",
+   "GENERICO": "PAC25",
+   "IDCOLOR": 20,
+   "PUBLICA_WEB": "S",
+   "TALLE": "40",
+   "TEXTO": "PANTALON CARGO RIPSTOP ARENA 40",
+   "stock": {
+    "1": 0,
+    "2": 0
+   }
+  }
+ },
+ {
+  "msg": "added",
+  "collection": "subarticulos",
+  "id": "REM01-04-2XL",
+  "fields": {
+   "GENERICO": "REM01",
+   "ARTICULO": "REM01-04-2XL",
+   "TEXTO": "REMERA ALGODON PEINADO 24/1 M/CORTA MSF ",
+   "PUBLICA_WEB": "S",
+   "TALLE": "2XL",
+   "COLOR": "AZUL MARINO",
+   "stock": {
+    "1": 109,
+    "2": 1640,
+    "9": 0
+   },
+   "IDCOLOR": 4
+  }
+ },
+ {
+  "msg": "added",
+  "collection": "subarticulos",
+  "id": "REM01-04-3XL",
+  "fields": {
+   "GENERICO": "REM01",
+   "ARTICULO": "REM01-04-3XL",
+   "TEXTO": "REMERA ALGODON PEINADO 24/1 M/CORTA MSF ",
+   "PUBLICA_WEB": "S",
+   "TALLE": "3XL",
+   "COLOR": "AZUL MARINO",
+   "stock": {
+    "1": 20,
+    "2": 785,
+    "9": 0
+   },
+   "IDCOLOR": 4
+  }
+ },
+ {
+  "msg": "added",
+  "collection": "subarticulos",
+  "id": "REM01-04-L",
+  "fields": {
+   "GENERICO": "REM01",
+   "ARTICULO": "REM01-04-L",
+   "TEXTO": "REMERA ALGODON PEINADO 24/1 M/CORTA MSF ",
+   "PUBLICA_WEB": "S",
+   "TALLE": "L",
+   "COLOR": "AZUL MARINO",
+   "stock": {
+    "1": 124,
+    "2": 2500,
+    "9": 0
+   },
+   "IDCOLOR": 4
+  }
+ },
+ {
+  "msg": "added",
+  "collection": "subarticulos",
+  "id": "SNEAKPRO-02-35",
+  "fields": {
+   "ARTICULO": "SNEAKPRO-02-35",
+   "COLOR": "BEIGE",
+   "GENERICO": "SNEAKPRO",
+   "IDCOLOR": 2,
+   "PUBLICA_WEB": "S",
+   "TALLE": "35",
+   "TEXTO": "ZAPATILLA SNEAKER PRO COMPOSITE BEIGE 35",
+   "stock": {
+    "1": 0,
+    "2": 0
+   }
+  }
+ },
+ {
+  "msg": "added",
+  "collection": "subarticulos",
+  "id": "SNEAKPRO-02-36",
+  "fields": {
+   "ARTICULO": "SNEAKPRO-02-36",
+   "COLOR": "BEIGE",
+   "GENERICO": "SNEAKPRO",
+   "IDCOLOR": 2,
+   "PUBLICA_WEB": "S",
+   "TALLE": "36",
+   "TEXTO": "ZAPATILLA SNEAKER PRO COMPOSITE BEIGE 36",
+   "stock": {
+    "1": 3,
+    "2": 6,
+    "26": 0,
+    "201": 0,
+    "210": 0
+   }
+  }
+ },
+ {
+  "msg": "added",
+  "collection": "subarticulos",
+  "id": "SNEAKPRO-02-37",
+  "fields": {
+   "ARTICULO": "SNEAKPRO-02-37",
+   "COLOR": "BEIGE",
+   "GENERICO": "SNEAKPRO",
+   "IDCOLOR": 2,
+   "PUBLICA_WEB": "S",
+   "TALLE": "37",
+   "TEXTO": "ZAPATILLA SNEAKER PRO COMPOSITE BEIGE 37",
+   "stock": {
+    "1": 3,
+    "2": 9,
+    "26": 0,
+    "201": 0
+   }
+  }
+ },
+ {
+  "msg": "added",
+  "collection": "subarticulos",
+  "id": "SNEAKPRO-02-38",
+  "fields": {
+   "ARTICULO": "SNEAKPRO-02-38",
+   "COLOR": "BEIGE",
+   "GENERICO": "SNEAKPRO",
+   "IDCOLOR": 2,
+   "PUBLICA_WEB": "S",
+   "TALLE": "38",
+   "TEXTO": "ZAPATILLA SNEAKER PRO COMPOSITE BEIGE 38",
+   "stock": {
+    "1": 7,
+    "2": 17,
+    "26": 0,
+    "201": 0,
+    "210": 0
+   }
+  }
+ },
+ {
+  "msg": "added",
+  "collection": "subarticulos",
+  "id": "SNEAKPRO-02-39",
+  "fields": {
+   "ARTICULO": "SNEAKPRO-02-39",
+   "COLOR": "BEIGE",
+   "GENERICO": "SNEAKPRO",
+   "IDCOLOR": 2,
+   "PUBLICA_WEB": "S",
+   "TALLE": "39",
+   "TEXTO": "ZAPATILLA SNEAKER PRO COMPOSITE BEIGE 39",
+   "stock": {
+    "1": 6,
+    "2": 43,
+    "26": 0,
+    "201": 0,
+    "302": 0
+   }
+  }
+ }
+]
