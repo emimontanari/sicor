@@ -1,0 +1,13 @@
+node_modules/
+.next/
+out/
+.env*
+!.env.example
+data/
+coverage/
+*.tsbuildinfo
+spike/**/node_modules
+spike/rae/har/
+# duplicate RAE output, kept untracked
+scripts/
+.DS_Store
