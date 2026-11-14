@@ -9,5 +9,5 @@ coverage/
 spike/**/node_modules
 spike/rae/har/
 # duplicate RAE output, kept untracked
-scripts/
+/scripts/
 .DS_Store
