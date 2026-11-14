@@ -18,9 +18,9 @@ Phase 1 of `docs/idea.md`: scaffold the single app deployed on Dokploy, turn the
 
 | ID | Specs | Task | Route | Status | Commit |
 |----|-------|------|-------|--------|--------|
-| T1 | S8 | Scaffold Next.js + TypeScript + Drizzle (Postgres prod, PGlite tests) + Vitest, Dockerfile + docker-compose for Dokploy, `.env.example`, `.gitignore`; update `docs/idea.md` §7 stack to Dokploy | gentle-ai-worker | pending | |
-| T2 | S1, S9 | Masefer module `src/server/masefer/`: DDP client adapted from spike, normalized types, fixture-based unit tests, live smoke script | gentle-ai-worker | pending | |
-| T3 | S2, S5, S9 | DB schema + migrations: categories (SICOR 7 seeded), source products/variants, overrides, category mappings, settings, sync runs + pending changes | gentle-ai-worker | pending | |
+| T1 | S8 | Scaffold Next.js + TypeScript + Drizzle (Postgres prod, PGlite tests) + Vitest, Dockerfile + docker-compose for Dokploy, `.env.example`, `.gitignore`; update `docs/idea.md` §7 stack to Dokploy | gentle-ai-worker | done (gaps: `.env.example` blocked by write policy; `.gitignore` `scripts/` hid `spike/rae/scripts/`, fixed in 92b47fc) | e37f584 |
+| T2 | S1, S9 | Masefer module `src/server/masefer/`: DDP client adapted from spike, normalized types, fixture-based unit tests, live smoke script | gentle-ai-worker | done | 7222da9 |
+| T3 | S2, S5, S9 | DB schema + migrations: categories (SICOR 7 seeded), source products/variants, overrides, category mappings, settings, sync runs + pending changes | gentle-ai-worker | done | 5f528cc |
 | T4 | S2, S4, S5, S6, S7 | Sync engine: `check()` → pending run; `apply(runId)` atomic; `discard(runId)`; image copy; tests on PGlite with fake client | gentle-ai-worker | pending | |
 | T5 | S3, S7, S8 | Entrypoints: `pnpm sync:check` for the Dokploy 15-day scheduled job, README + `docs/deploy-dokploy.md` | gentle-ai-worker | pending | |
 
@@ -34,4 +34,6 @@ Phase 1 of `docs/idea.md`: scaffold the single app deployed on Dokploy, turn the
 - **L6**: "pero apra sincro no podemos usar la herramienta que te brinde? hacerlo direcramiente https://www.masefer.com.ar/" → "dale"
 - **L7**: Phase 0 evidence: generated client ran twice live: 4 metacategories, 48 categories, 30 brands, 551 articles, no login; `articles.web.one` returns nothing publicly; no description field; images are Dropbox links.
 - **L8**: "dale" (start Phase 1) → "dale perfecto, el deploy lo vamos a hacer en dockploy ahi va estar toda la app cpmplemta"
+- **L10** (evidence): T1 checks — `pnpm test` 1/1 pass (parent re-ran); typecheck/build/lint pass per worker; Dockerfile/compose not built (Docker daemon down).
 - **L9** (decision, parent): stack = Next.js (App Router, TypeScript, pnpm) + Postgres on Dokploy via Drizzle ORM (PGlite for tests, no Docker needed locally) + images on a mounted volume served by the app + Vitest. Local Docker daemon (colima) is not running.
+- **L11** (evidence): T2 — 16 masefer tests, live smoke 551 products / 3915 variants in ~5 s via batched `subarticlesOfMany`. T3 — schema + migration 0000, idempotent `seedCategories`, `effectiveVisibility` (reviewed + visible null = shown, worker choice). Parent re-ran `pnpm test` 26/26 and typecheck OK.
