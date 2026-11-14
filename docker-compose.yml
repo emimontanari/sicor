@@ -6,9 +6,9 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgres://sicor:${POSTGRES_PASSWORD}@postgres:5432/sicor
+      DATABASE_URL: postgres://sicor:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/sicor
       IMAGES_DIR: /app/data/images
-      SYNC_SECRET: ${SYNC_SECRET}
+      SYNC_SECRET: ${SYNC_SECRET:?SYNC_SECRET is required}
     expose:
       - "3000"
     healthcheck:
@@ -25,7 +25,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: sicor
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
       POSTGRES_DB: sicor
     volumes:
       - postgres_data:/var/lib/postgresql/data

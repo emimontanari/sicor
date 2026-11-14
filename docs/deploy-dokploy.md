@@ -49,9 +49,11 @@ curl -fsS -X POST -H "Authorization: Bearer $SYNC_SECRET" http://app:3000/api/in
 # o con la URL pública: https://<tu-dominio>/api/internal/sync/check
 ```
 
-**Por qué `*/15` en día del mes:** el cron corre los días 1, 16 y 31 de cada mes (el 31 solo en meses que lo tienen). Los intervalos entre ejecuciones son de 15 días dentro del mes (1→16) y de 13 a 15 días al cambiar de mes (16→1 en meses de 28–30 días; en meses de 31 días, 16→31 y 31→1 = 1 día), por lo que nunca pasan más de 15 días entre chequeos, cumpliendo "no más que esto".
+**Por qué `*/15` en día del mes:** el cron corre los días 1, 16 y 31 de cada mes (el 31 solo en meses que lo tienen). Los intervalos son: dentro de un mes de 31 días, 1→16 = 15 días, 16→31 = 15 días y 31→1 = 1 día; en meses de 28–30 días, 1→16 = 15 días y 16→1 = 13 a 15 días. Nunca pasan más de 15 días entre chequeos, cumpliendo "no más que esto".
 
 Respuestas del endpoint: `200 {runId,status,summary}` (chequeo ok), `500` con `error` (chequeo fallido; queda registrado como corrida fallida), `401` (secreto faltante/incorrecto), `503` (`SYNC_SECRET` sin configurar), `405` (método distinto de POST).
+
+Si la base de datos está caída, el chequeo no puede registrarse (la respuesta trae `runId: null` y no queda fila en `sync_runs`); la señal es el HTTP 500 del schedule en Dokploy, así que conviene revisar los logs de las corridas del schedule.
 
 ## 6. Verificar
 
