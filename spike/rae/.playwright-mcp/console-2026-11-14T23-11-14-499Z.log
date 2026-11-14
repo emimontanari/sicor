@@ -1,0 +1,14 @@
+[    3287ms] [LOG] canceling - cb4c2f78-ec65-4335-a25f-0f283040edff @ https://www.masefer.com.ar/1c0f96544419da2b1a0b1b1a2044ecc705b280b6.js?meteor_js_resource=true:978
+[    3287ms] [LOG] canceling - 1a14826b-4e1c-41d8-b6b3-92b3ef410e0b @ https://www.masefer.com.ar/1c0f96544419da2b1a0b1b1a2044ecc705b280b6.js?meteor_js_resource=true:978
+[    3287ms] [LOG] canceling - f82f2638-7dae-44f2-82b3-80565f5036b3 @ https://www.masefer.com.ar/1c0f96544419da2b1a0b1b1a2044ecc705b280b6.js?meteor_js_resource=true:978
+[    3918ms] [WARNING] Failed to decode downloaded font: https://www.masefer.com.ar/fonts/Myriad-Pro_31655.ttf @ https://www.masefer.com.ar/:0
+[    3918ms] [WARNING] OTS parsing error: invalid sfntVersion: 1008813135 @ https://www.masefer.com.ar/:0
+[    3918ms] [WARNING] Failed to decode downloaded font: https://www.masefer.com.ar/fonts/Myriad-Pro_31655.ttf @ https://www.masefer.com.ar/:0
+[    3918ms] [WARNING] OTS parsing error: invalid sfntVersion: 1008813135 @ https://www.masefer.com.ar/:0
+[    3918ms] [WARNING] Failed to decode downloaded font: https://www.masefer.com.ar/fonts/Myriad-Pro_31655.ttf @ https://www.masefer.com.ar/:0
+[    3918ms] [WARNING] OTS parsing error: invalid sfntVersion: 1008813135 @ https://www.masefer.com.ar/:0
+[    7559ms] [LOG] canceling - f88b3339-c2c6-430c-ace7-58510abc6aec @ https://www.masefer.com.ar/1c0f96544419da2b1a0b1b1a2044ecc705b280b6.js?meteor_js_resource=true:978
+[    7560ms] [LOG] canceling - 29950fe1-fd8d-40a8-aaa9-68733b848cbc @ https://www.masefer.com.ar/1c0f96544419da2b1a0b1b1a2044ecc705b280b6.js?meteor_js_resource=true:978
+[    7560ms] [LOG] canceling - 21890445-c3c5-4c89-9e0b-e035866a5419 @ https://www.masefer.com.ar/1c0f96544419da2b1a0b1b1a2044ecc705b280b6.js?meteor_js_resource=true:978
+[    7838ms] [WARNING] Failed to decode downloaded font: https://www.masefer.com.ar/fonts/Myriad-Pro_31655.ttf @ https://www.masefer.com.ar/:0
+[    7838ms] [WARNING] OTS parsing error: invalid sfntVersion: 1008813135 @ https://www.masefer.com.ar/:0
