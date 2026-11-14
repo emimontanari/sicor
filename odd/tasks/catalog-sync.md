@@ -21,8 +21,8 @@ Phase 1 of `docs/idea.md`: scaffold the single app deployed on Dokploy, turn the
 | T1 | S8 | Scaffold Next.js + TypeScript + Drizzle (Postgres prod, PGlite tests) + Vitest, Dockerfile + docker-compose for Dokploy, `.env.example`, `.gitignore`; update `docs/idea.md` §7 stack to Dokploy | gentle-ai-worker | done (gaps: `.env.example` blocked by write policy; `.gitignore` `scripts/` hid `spike/rae/scripts/`, fixed in 92b47fc) | e37f584 |
 | T2 | S1, S9 | Masefer module `src/server/masefer/`: DDP client adapted from spike, normalized types, fixture-based unit tests, live smoke script | gentle-ai-worker | done | 7222da9 |
 | T3 | S2, S5, S9 | DB schema + migrations: categories (SICOR 7 seeded), source products/variants, overrides, category mappings, settings, sync runs + pending changes | gentle-ai-worker | done | 5f528cc |
-| T4 | S2, S4, S5, S6, S7 | Sync engine: `check()` → pending run; `apply(runId)` atomic; `discard(runId)`; image copy; tests on PGlite with fake client | gentle-ai-worker | done, independent verify pending (Risk: items 1, 4) | b6c2bab |
-| T5 | S3, S7, S8 | Entrypoints: `pnpm sync:check` for the Dokploy 15-day scheduled job, README + `docs/deploy-dokploy.md` | gentle-ai-worker | pending | |
+| T4 | S2, S4, S5, S6, S7 | Sync engine: `check()` → pending run; `apply(runId)` atomic; `discard(runId)`; image copy; tests on PGlite with fake client | gentle-ai-worker | done; verified (S2,S4 pass; S5/S6/S7 findings fixed) | b6c2bab, fix commit below |
+| T5 | S3, S7, S8 | Entrypoints: `pnpm sync:check` for the Dokploy 15-day scheduled job, README + `docs/deploy-dokploy.md` | gentle-ai-worker | done (Docker untested) | edd0149 |
 
 ## Log
 
@@ -38,3 +38,4 @@ Phase 1 of `docs/idea.md`: scaffold the single app deployed on Dokploy, turn the
 - **L9** (decision, parent): stack = Next.js (App Router, TypeScript, pnpm) + Postgres on Dokploy via Drizzle ORM (PGlite for tests, no Docker needed locally) + images on a mounted volume served by the app + Vitest. Local Docker daemon (colima) is not running.
 - **L11** (evidence): T2 — 16 masefer tests, live smoke 551 products / 3915 variants in ~5 s via batched `subarticlesOfMany`. T3 — schema + migration 0000, idempotent `seedCategories`, `effectiveVisibility` (reviewed + visible null = shown, worker choice). Parent re-ran `pnpm test` 26/26 and typecheck OK.
 - **L12** (evidence): T4 — engine with `payload` snapshot column (migration 0001), claim-first apply guard; parent re-ran `pnpm vitest run tests/sync` 16/16; sync code has 0 references to `productOverrides`. Zero-change checks end as `discarded` with zero summary.
+- **L13** (evidence): independent verify of T4 — S2, S4 pass; findings fixed: fail() overwrote applied run under concurrency (high), image path traversal via supplier code (medium), unbounded downloads (medium), global SKU uniqueness could block apply forever (low; migration 0002). S5 visibility enforced by `effectiveVisibility` (to be used by Phase 2 catalog). T5 — internal POST /api/internal/sync/check (Bearer SYNC_SECRET, constant-time), `pnpm sync:check`, migrations on container boot, docs/deploy-dokploy.md, README. Parent re-ran full suite after fixes.
