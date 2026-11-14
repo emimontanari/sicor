@@ -120,6 +120,16 @@ export type SyncChange = {
   fields?: string[];
 };
 
+/** Normalized data needed to apply a pending run deterministically (no re-fetch). */
+export type SyncPayload = {
+  /** Full normalized supplier products for every new/changed item. */
+  products: unknown[];
+  /** Codes removed by the supplier. */
+  removed: string[];
+  /** Codes present and unchanged (only their last_seen_at is bumped). */
+  unchanged: string[];
+};
+
 export const syncRuns = pgTable("sync_runs", {
   id: serial("id").primaryKey(),
   trigger: syncTrigger("trigger").notNull(),
@@ -128,6 +138,7 @@ export const syncRuns = pgTable("sync_runs", {
   finishedAt: tz("finished_at"),
   summary: jsonb("summary").$type<SyncSummary>(),
   changes: jsonb("changes").$type<SyncChange[]>(),
+  payload: jsonb("payload").$type<SyncPayload>(),
   error: text("error"),
   appliedAt: tz("applied_at"),
 });
