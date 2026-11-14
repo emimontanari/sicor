@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { access, mkdir, rename, writeFile } from "node:fs/promises";
+import { access, mkdir, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 export interface ImageStore {
@@ -7,11 +7,27 @@ export interface ImageStore {
   save(input: { code: string; index: number; url: string }): Promise<string>;
 }
 
-const safe = (s: string) => s.replace(/[^A-Za-z0-9._-]/g, "_");
+export interface FsImageStoreOptions {
+  /** Per-image timeout (download + body), default 20s. */
+  timeoutMs?: number;
+  /** Max image size in bytes, default 8 MB. */
+  maxBytes?: number;
+}
+
+const DEFAULT_TIMEOUT_MS = 20_000;
+const DEFAULT_MAX_BYTES = 8 * 1024 * 1024;
+
+const sha = (s: string, n: number) => createHash("sha256").update(s).digest("hex").slice(0, n);
+
+/** Directory-safe name: only [A-Za-z0-9_-], so never `.`/`..` and never a separator. */
+function safeDir(code: string): string {
+  const cleaned = code.replace(/[^A-Za-z0-9_-]/g, "_") || "_";
+  // Disambiguate codes that were altered so e.g. "A.1" and "A_1" do not collide.
+  return cleaned === code ? cleaned : `${cleaned}-${sha(code, 8)}`;
+}
 
 /** Deterministic relative file name: `<code>/<index>-<urlhash>.<ext>`. */
 export function imageFileName(code: string, index: number, url: string): string {
-  const hash = createHash("sha256").update(url).digest("hex").slice(0, 10);
   let ext = ".jpg";
   try {
     const e = path.extname(new URL(url).pathname).toLowerCase();
@@ -19,35 +35,78 @@ export function imageFileName(code: string, index: number, url: string): string 
   } catch {
     /* keep default */
   }
-  return `${safe(code)}/${index}-${hash}${ext}`;
+  return `${safeDir(code)}/${index}-${sha(url, 10)}${ext}`;
 }
 
 /** Filesystem store writing under IMAGES_DIR; skips files already present. */
 export class FsImageStore implements ImageStore {
+  private readonly timeoutMs: number;
+  private readonly maxBytes: number;
+
   constructor(
     private readonly dir: string | undefined = process.env.IMAGES_DIR,
     private readonly fetchFn: typeof fetch = fetch,
+    options: FsImageStoreOptions = {},
   ) {
     if (!dir) throw new Error("IMAGES_DIR is not set");
+    this.timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+    this.maxBytes = options.maxBytes ?? DEFAULT_MAX_BYTES;
   }
 
   async save({ code, index, url }: { code: string; index: number; url: string }): Promise<string> {
+    let parsed: URL;
+    try {
+      parsed = new URL(url);
+    } catch {
+      throw new Error(`Image URL must be a valid https URL: ${url}`);
+    }
+    if (parsed.protocol !== "https:") throw new Error(`Image URL must use https: ${url}`);
+
+    const root = path.resolve(this.dir!);
     const rel = imageFileName(code, index, url);
-    const abs = path.join(this.dir!, rel);
+    const abs = path.resolve(root, rel);
+    if (!abs.startsWith(root + path.sep)) throw new Error(`Image path escapes the images dir: ${rel}`);
+
     try {
       await access(abs);
       return rel;
     } catch {
       /* not present yet */
     }
-    const res = await this.fetchFn(url, { redirect: "follow" });
-    if (!res.ok) throw new Error(`Image download failed (${res.status}) for ${url}`);
-    const buf = Buffer.from(await res.arrayBuffer());
-    if (buf.length === 0) throw new Error(`Image download empty for ${url}`);
-    await mkdir(path.dirname(abs), { recursive: true });
+
     const tmp = `${abs}.tmp`;
-    await writeFile(tmp, buf);
-    await rename(tmp, abs);
-    return rel;
+    try {
+      const signal = AbortSignal.timeout(this.timeoutMs);
+      const res = await this.fetchFn(url, { redirect: "follow", signal });
+      if (!res.ok) throw new Error(`Image download failed (${res.status}) for ${url}`);
+      const type = res.headers.get("content-type") ?? "";
+      if (!/^image\//i.test(type)) throw new Error(`Unexpected content-type "${type}" for ${url}`);
+      const declared = Number(res.headers.get("content-length"));
+      if (Number.isFinite(declared) && declared > this.maxBytes) {
+        throw new Error(`Image too large (${declared} bytes) for ${url}`);
+      }
+      if (!res.body) throw new Error(`Image download empty for ${url}`);
+      const chunks: Uint8Array[] = [];
+      let total = 0;
+      const reader = res.body.getReader();
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        total += value.length;
+        if (total > this.maxBytes) {
+          await reader.cancel().catch(() => undefined);
+          throw new Error(`Image too large (>${this.maxBytes} bytes) for ${url}`);
+        }
+        chunks.push(value);
+      }
+      if (total === 0) throw new Error(`Image download empty for ${url}`);
+      await mkdir(path.dirname(abs), { recursive: true });
+      await writeFile(tmp, Buffer.concat(chunks));
+      await rename(tmp, abs);
+      return rel;
+    } catch (e) {
+      await rm(tmp, { force: true });
+      throw e;
+    }
   }
 }

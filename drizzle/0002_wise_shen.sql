@@ -1,0 +1,2 @@
+ALTER TABLE "source_variants" DROP CONSTRAINT "source_variants_sku_unique";--> statement-breakpoint
+CREATE UNIQUE INDEX "source_variants_product_sku_uq" ON "source_variants" USING btree ("product_code","sku");

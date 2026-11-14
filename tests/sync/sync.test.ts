@@ -232,17 +232,19 @@ describe("sync engine", () => {
   it("8b: DB error mid-apply rolls back everything", async () => {
     await seedBase();
     const before = await products();
-    // D's variant sku collides with existing sku of A -> unique violation after D's product insert
+    const beforeVariants = await variants();
+    // A is updated first; D then fails at the DB (price overflows numeric(14,2)).
     source.next = catalog(
-      product("A"),
+      product("A", { name: "Renamed A" }),
       product("B"),
       product("C"),
-      product("D", { variants: [{ sku: "A-R", color: "", size: "", text: "", stockTotal: 1, published: true }] }),
+      product("D", { supplierPrice: 1e20 }),
     );
     const run = await engine.check("manual");
     const res = await engine.apply(run.id);
     expect(res.status).toBe("failed");
     expect(await products()).toEqual(before);
+    expect(await variants()).toEqual(beforeVariants);
   });
 
   it("9: a new check supersedes an older pending run", async () => {
@@ -291,5 +293,56 @@ describe("sync engine", () => {
     const [r] = await runs();
     expect(r.status).toBe("applied");
     expect(r.error).toBeNull();
+  });
+
+  it("13: a loser failing in the image phase after the winner committed cannot overwrite the applied run", async () => {
+    source.next = catalog(product("A"));
+    const run = await engine.check("manual");
+    let release!: () => void;
+    const gate = new Promise<void>((r) => (release = r));
+    let first = true;
+    let blockedResolve!: () => void;
+    const blocked = new Promise<void>((r) => (blockedResolve = r));
+    images.save = async (input) => {
+      if (first) {
+        first = false;
+        blockedResolve();
+        await gate;
+        throw new Error("late image failure");
+      }
+      return `${input.code}/${input.index}.jpg`;
+    };
+    const loser = engine.apply(run.id);
+    const loserResult = loser.then(
+      () => "ok",
+      (e: Error) => e.message,
+    );
+    await blocked;
+    const winner = await engine.apply(run.id);
+    expect(winner.status).toBe("applied");
+    release();
+    expect(await loserResult).toMatch(/pending/);
+    const [r] = await runs();
+    expect(r.status).toBe("applied");
+    expect(r.error).toBeNull();
+    expect(await products()).toHaveLength(1);
+  });
+
+  it("14: the same SKU under two products (or duplicated in one) applies successfully", async () => {
+    const dup = { sku: "SHARED", color: "x", size: "", text: "", stockTotal: 1, published: true };
+    source.next = catalog(
+      product("A", { variants: [dup, { ...dup, color: "dup" }] }),
+      product("B", { variants: [dup] }),
+    );
+    const run = await engine.check("manual");
+    const res = await engine.apply(run.id);
+    expect(res.status).toBe("applied");
+    const v = await variants();
+    expect(v.map((x) => [x.productCode, x.sku]).sort()).toEqual([
+      ["A", "SHARED"],
+      ["B", "SHARED"],
+    ]);
+    // stable: re-check reports no changes
+    expect((await engine.check("manual")).summary).toEqual({ new: 0, changed: 0, removed: 0 });
   });
 });

@@ -31,6 +31,12 @@ type CanonVariant = {
   published: boolean;
 };
 
+/** Supplier may repeat a SKU inside one product: keep the first occurrence. */
+export const dedupeVariants = <T extends { sku: string }>(v: T[]): T[] => {
+  const seen = new Set<string>();
+  return v.filter((x) => (seen.has(x.sku) ? false : (seen.add(x.sku), true)));
+};
+
 export const sortVariants = (v: CanonVariant[]) =>
   [...v]
     .map((x) => ({
@@ -54,7 +60,7 @@ export function canonicalFromSupplier(p: SupplierProduct): Canonical {
     supplierPrice: p.supplierPrice === null ? null : Number(p.supplierPrice),
     currency: p.currency,
     images: imageUrls(p),
-    variants: sortVariants(p.variants),
+    variants: sortVariants(dedupeVariants(p.variants)),
   };
 }
 

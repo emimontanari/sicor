@@ -9,7 +9,14 @@ import {
   type SyncSummary,
 } from "../db/schema";
 import type { MaseferSource, SupplierProduct } from "../masefer";
-import { canonicalFromRow, canonicalFromSupplier, changedFields, contentHash, imageUrls } from "./canonical";
+import {
+  canonicalFromRow,
+  canonicalFromSupplier,
+  changedFields,
+  contentHash,
+  dedupeVariants,
+  imageUrls,
+} from "./canonical";
 import type { ImageStore } from "./images";
 
 export type SyncRun = typeof syncRuns.$inferSelect;
@@ -38,12 +45,23 @@ export function createSyncEngine(deps: SyncDeps) {
   const { source, imageStore } = deps;
   const now = deps.clock ?? (() => new Date());
 
-  async function fail(runId: number, e: unknown): Promise<SyncRun> {
+  /**
+   * Records a failure, but only on a run still pending/checking: a run that
+   * another caller already applied/discarded is never overwritten. Returns
+   * null when the run was already finalized.
+   */
+  async function fail(runId: number, e: unknown): Promise<SyncRun | null> {
     const [r] = await db
       .update(syncRuns)
       .set({ status: "failed", error: msg(e), finishedAt: now() })
-      .where(eq(syncRuns.id, runId))
+      .where(and(eq(syncRuns.id, runId), inArray(syncRuns.status, ["pending", "checking"])))
       .returning();
+    return r ?? null;
+  }
+
+  async function failOrReject(runId: number, e: unknown): Promise<SyncRun> {
+    const r = await fail(runId, e);
+    if (!r) throw new SyncRunNotPendingError(runId);
     return r;
   }
 
@@ -133,7 +151,7 @@ export function createSyncEngine(deps: SyncDeps) {
         .returning();
       return r;
     } catch (e) {
-      return fail(run.id, e);
+      return failOrReject(run.id, e);
     }
   }
 
@@ -150,7 +168,7 @@ export function createSyncEngine(deps: SyncDeps) {
   async function apply(runId: number): Promise<SyncRun> {
     const run = await loadPending(runId);
     const payload = run.payload;
-    if (!payload) return fail(runId, new Error("Pending run has no payload"));
+    if (!payload) return failOrReject(runId, new Error("Pending run has no payload"));
     const products = payload.products as SupplierProduct[];
     try {
       // S6: copy images BEFORE touching the DB, so an image failure leaves it untouched.
@@ -205,9 +223,10 @@ export function createSyncEngine(deps: SyncDeps) {
           } else {
             await tx.insert(sourceProducts).values({ code: p.code, ...fields, firstSeenAt: at });
           }
-          if (p.variants.length > 0) {
+          const variantsToInsert = dedupeVariants(p.variants);
+          if (variantsToInsert.length > 0) {
             await tx.insert(sourceVariants).values(
-              p.variants.map((v) => ({
+              variantsToInsert.map((v) => ({
                 productCode: p.code,
                 sku: v.sku,
                 color: v.color,
@@ -236,7 +255,7 @@ export function createSyncEngine(deps: SyncDeps) {
       return done;
     } catch (e) {
       if (e instanceof SyncRunNotPendingError) throw e;
-      return fail(runId, e);
+      return failOrReject(runId, e);
     }
   }
 

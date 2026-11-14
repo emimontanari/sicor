@@ -61,14 +61,18 @@ export const sourceVariants = pgTable(
     productCode: text("product_code")
       .notNull()
       .references(() => sourceProducts.code, { onDelete: "cascade" }),
-    sku: text("sku").notNull().unique(),
+    sku: text("sku").notNull(),
     color: text("color"),
     size: text("size"),
     text: text("text"),
     stockTotal: integer("stock_total"),
     published: boolean("published").notNull().default(true),
   },
-  (t) => [index("source_variants_product_code_idx").on(t.productCode)],
+  (t) => [
+    index("source_variants_product_code_idx").on(t.productCode),
+    // A SKU may appear under several products; unique only within one product.
+    uniqueIndex("source_variants_product_sku_uq").on(t.productCode, t.sku),
+  ],
 );
 
 /** Client edits. NEVER written by sync (S2). */
