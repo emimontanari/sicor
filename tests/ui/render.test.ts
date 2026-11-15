@@ -87,6 +87,42 @@ describe("UI smoke renders", () => {
     expect(flagOnly).not.toContain("_blank");
   });
 
+  it("card actions: ficha técnica + Ver detalle + Agregar; no ficha link without a ficha", () => {
+    const withFicha = renderToStaticMarkup(
+      createElement(ProductCard, {
+        product: product({ hasFicha: true, fichaUrl: "/docs/x.pdf" }),
+        onAdd: () => {},
+      }),
+    );
+    expect(withFicha).toContain("Ficha técnica");
+    expect(withFicha).toContain("Ver detalle");
+    expect(withFicha).toContain("Agregar");
+    expect(withFicha).not.toContain("Descargar");
+    const without = renderToStaticMarkup(createElement(ProductCard, { product: product(), onAdd: () => {} }));
+    expect(without).not.toContain("Ficha técnica");
+    expect(without).toContain("Ver detalle");
+    expect(without).toContain('href="/producto/CAM%201"');
+  });
+
+  it("in-cart product shows a − N + stepper instead of Agregar", () => {
+    const html = renderToStaticMarkup(createElement(ProductCard, { product: product(), quantity: 3, onAdd: () => {} }));
+    expect(html).toContain('aria-label="Quitar uno"');
+    expect(html).toContain('aria-label="Agregar uno"');
+    expect(html).toMatch(/<output[^>]*aria-live="polite"[^>]*>3</);
+    expect(html).not.toContain("<span>Agregar</span>");
+    expect(html).not.toContain("en tu cotización");
+    expect(html).not.toContain("Agregado");
+  });
+
+  it("variant product keeps Elegir opciones and never gets a stepper", () => {
+    const html = renderToStaticMarkup(
+      createElement(ProductCard, { product: product({ variants: true }), quantity: 2, onAdd: () => {} }),
+    );
+    expect(html).toContain("Elegir opciones");
+    expect(html).not.toContain("Quitar uno");
+    expect(html).not.toContain("<output");
+  });
+
   it("card with variants and ficha keeps both the options link and the ficha link", () => {
     const html = renderToStaticMarkup(
       createElement(ProductCard, { product: product({ variants: true, hasFicha: true, fichaUrl: "/docs/x.pdf" }) }),
@@ -126,7 +162,7 @@ describe("UI smoke renders", () => {
     expect(plain).toContain("data-quote-add");
     expect(plain).toContain("Agregar");
     const added = renderToStaticMarkup(createElement(ProductCard, { product: product(), onAdd, quantity: 3 }));
-    expect(added).toContain("Agregado (3)");
+    expect(added).toContain("Quitar uno");
     const variant = renderToStaticMarkup(createElement(ProductCard, { product: product({ variants: true }), onAdd }));
     expect(variant).not.toContain("data-quote-add");
     expect(variant).not.toContain("<button");

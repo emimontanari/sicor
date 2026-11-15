@@ -16,6 +16,7 @@ export type CartState = { items: CartItem[]; customerNote: string };
 export type CartAction =
   | { type: "add"; item: CartItem }
   | { type: "setQuantity"; key: string; quantity: number }
+  | { type: "decrement"; key: string }
   | { type: "setNote"; key: string; note: string }
   | { type: "setCustomerNote"; note: string }
   | { type: "remove"; key: string }
@@ -52,6 +53,17 @@ export function cartReducer(state: CartState, action: CartAction): CartState {
         items: state.items.map((i) =>
           itemKey(i) === target ? { ...i, quantity: clampQty(action.quantity) } : i,
         ),
+      };
+    }
+    case "decrement": {
+      // One less; the line disappears when it would reach zero.
+      const target = action.key;
+      return {
+        ...state,
+        items: state.items.flatMap((i) => {
+          if (itemKey(i) !== target) return [i];
+          return i.quantity <= 1 ? [] : [{ ...i, quantity: clampQty(i.quantity - 1) }];
+        }),
       };
     }
     case "setNote": {

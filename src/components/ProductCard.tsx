@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { itemKey } from "../lib/cart/cart";
+import { dispatchCart } from "../lib/cart/store";
 import { categoryIcon } from "../lib/catalog/categories";
 import type { CatalogItem } from "../lib/catalog/filters";
 import { Icon } from "./Icon";
@@ -17,7 +19,8 @@ export function ProductCard({ product, priority = false, quantity = 0, onAdd }: 
   const href = `/producto/${encodeURIComponent(product.code)}`;
   const add = addControl(product, href, quantity, onAdd);
   const ficha = product.hasFicha && product.fichaUrl ? product.fichaUrl : null;
-  const actions = add || ficha;
+  const links = ficha || !product.variants;
+  const actions = add || links;
   return (
     <li className="card">
       <Link href={href} scroll={false} className="card__media" tabIndex={-1} aria-hidden>
@@ -42,19 +45,28 @@ export function ProductCard({ product, priority = false, quantity = 0, onAdd }: 
       </div>
       {actions ? (
         <div className="card__actions">
-          {add}
-          {ficha ? (
-            <a
-              className="ficha"
-              href={ficha}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Ver ficha técnica (PDF)"
-            >
-              <Icon name="pdf" className="ficha__ico" />
-              <span>Ficha técnica</span>
-            </a>
+          {links ? (
+            <div className="card__links">
+              {ficha ? (
+                <a
+                  className="ficha"
+                  href={ficha}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Ver ficha técnica (PDF)"
+                >
+                  <Icon name="pdf" className="ficha__ico" />
+                  <span>Ficha técnica</span>
+                </a>
+              ) : null}
+              {product.variants ? null : (
+                <Link href={href} scroll={false} className="ficha ficha--text">
+                  <span>Ver detalle</span>
+                </Link>
+              )}
+            </div>
           ) : null}
+          {add}
         </div>
       ) : null}
     </li>
@@ -76,17 +88,35 @@ function addControl(
     );
   }
   if (!onAdd) return null;
+  if (quantity > 0) {
+    const key = itemKey({ code: product.code });
+    return (
+      <div className="card-step" role="group" aria-label={`Cantidad de ${product.name}`}>
+        <button type="button" aria-label="Quitar uno" onClick={() => dispatchCart({ type: "decrement", key })}>
+          −
+        </button>
+        <output aria-live="polite">{quantity}</output>
+        <button
+          type="button"
+          aria-label="Agregar uno"
+          onClick={() => dispatchCart({ type: "add", item: { code: product.code, name: product.name, quantity: 1 } })}
+        >
+          +
+        </button>
+      </div>
+    );
+  }
   return (
     <button
       type="button"
-      className={quantity > 0 ? "add is-added" : "add"}
+      className="add"
       data-quote-add
       data-code={product.code}
       aria-label={`Agregar ${product.name} a la cotización`}
       onClick={() => onAdd(product)}
     >
-      <Icon name={quantity > 0 ? "check" : "plus"} />
-      <span>{quantity > 0 ? `Agregado (${quantity})` : "Agregar"}</span>
+      <Icon name="plus" />
+      <span>Agregar</span>
     </button>
   );
 }

@@ -12,6 +12,18 @@ import {
 const empty: CartState = { items: [], customerNote: "" };
 const base = { code: "A1", name: "CAMISA", talle: "M", color: "Azul" };
 
+describe("cartReducer decrement", () => {
+  it("lowers the quantity by one and removes the line at one", () => {
+    let s = cartReducer(empty, { type: "add", item: { code: "B1", name: "BOTA", quantity: 2 } });
+    s = cartReducer(s, { type: "add", item: { code: "C1", name: "CASCO", quantity: 1 } });
+    s = cartReducer(s, { type: "decrement", key: "B1||" });
+    expect(s.items.find((i) => i.code === "B1")!.quantity).toBe(1);
+    s = cartReducer(s, { type: "decrement", key: "B1||" });
+    expect(s.items.map((i) => i.code)).toEqual(["C1"]);
+    expect(cartReducer(s, { type: "decrement", key: "ZZ||" })).toEqual(s);
+  });
+});
+
 describe("cartReducer", () => {
   it("merges same code+talle+color by adding quantities", () => {
     let s = cartReducer(empty, { type: "add", item: { ...base, quantity: 1 } });
