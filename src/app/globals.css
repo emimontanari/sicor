@@ -327,20 +327,27 @@ h3 {
   color: var(--red-dark);
 }
 .card__actions {
-  display: flex;
-  flex-direction: column; /* row 1: ficha + detalle; row 2: add / stepper / options */
-  align-items: flex-start; /* natural widths, left edges aligned */
-  gap: 0.6rem;
+  /* Row 1: [ficha][detalle]; row 2: add / stepper / options in column 1, so it is
+     exactly as wide as the first button above it. Natural widths, never full card. */
+  display: grid;
+  grid-template-columns: auto auto;
+  justify-content: start;
+  justify-items: stretch;
+  align-items: start;
+  gap: 0.6rem 0.35rem;
   margin: 0.7rem 0.65rem 0.7rem;
 }
-.card__actions > * {
+.card__links {
+  display: contents; /* its buttons are the grid's row-1 cells */
+}
+.card__actions > *,
+.card__links > * {
   position: relative;
   z-index: 1; /* above the whole-card product link */
 }
-.card__links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem 0.35rem;
+.card__actions > :not(.card__links) {
+  grid-column: 1;
+  grid-row: 2;
 }
 /* One control family: same height, border, radius, type, padding and icon size. */
 .ficha,
@@ -406,8 +413,12 @@ h3 {
   padding: 0;
   gap: 0;
 }
+.card-step {
+  justify-content: space-between;
+}
 .card-step button {
   position: relative;
+  flex: none;
   width: 32px;
   height: 100%;
   padding: 0;
@@ -423,6 +434,7 @@ h3 {
   inset: -5px -2px;
 }
 .card-step output {
+  flex: 1;
   min-width: 2ch;
   text-align: center;
 }
