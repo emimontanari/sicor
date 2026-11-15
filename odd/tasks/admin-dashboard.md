@@ -18,8 +18,8 @@ Phase 3 of `docs/idea.md`, on top of Phase 1 (`odd/tasks/catalog-sync.md`: sync 
 |----|-------|------|-------|--------|--------|
 | T1 | S1 | Auth: scrypt password hash CLI, signed session cookie, login/logout, rate limit, proxy guard for /admin, `requireAdmin()` for server actions, admin layout shell + nav | gentle-ai-worker | done | feat(auth) commit |
 | T2 | S2, S3, S4, S6, S7 | Admin data layer `src/server/admin/`: product queries/filters/pagination, override updates + bulk, image upload store, settings, mappings, sync wrappers; validation; PGlite tests | gentle-ai-worker | done (no RED observed — tests written after code) | feat(admin) commit |
-| T3 | S2, S3, S4 | Admin UI products: list with filters/search/bulk, edit page, review queue | gentle-ai-worker | pending | |
-| T4 | S5, S6, S7 | Admin UI updates + settings + mappings: pending notice confirm/cancel, manual check, failures, runs history, settings form, mappings page | gentle-ai-worker | pending | |
+| T3 | S2, S3, S4 | Admin UI products: list with filters/search/bulk, edit page, review queue | gentle-ai-worker | done | feat(admin-ui) commit |
+| T4 | S5, S6, S7 | Admin UI updates + settings + mappings: pending notice confirm/cancel, manual check, failures, runs history, settings form, mappings page | gentle-ai-worker | done | feat(admin-ui) commit |
 
 ## Log
 
@@ -30,3 +30,4 @@ Phase 3 of `docs/idea.md`, on top of Phase 1 (`odd/tasks/catalog-sync.md`: sync 
 - **L6** (Phase 3 start): "si" (answering "¿Arranco con la Fase 3, el dashboard del admin?").
 - **L7** (decision, parent): auth without third-party auth service — env credentials, scrypt (node:crypto), signed cookie (jose or HMAC), Next 16 `proxy.ts` guard plus server-side `requireAdmin()` in every action/page. Next 16 has breaking changes: read `node_modules/next/dist/docs/` before using routing/middleware/server-action APIs. Dev DB: `postgres://sicor:devpass@localhost:5433/sicor`, IMAGES_DIR `./data/images` (real data: 551 products, 28 visible).
 - **L8** (evidence): T1 — scrypt hash `scrypt:N:r:p:salt:hash`, HMAC session cookie `sicor_admin` 7d, proxy.ts guard (307 → /admin/login verified on standalone build), in-memory rate limit 5/15min keyed on x-forwarded-for. T2 — hand-rolled validation, magic-byte images ≤5 MB under custom/, sync wrappers return {ok,run,error}. Suite 201/201 (one transient timeout in tests/jobs/sync.test.ts under parallel load).
+- **L9** (evidence): independent verify — S1 met live (guards, cookie flags, tamper/expiry, rate limit), S2 upload validation met live, S5 pending→apply met live on dev DB (run 3: 2 changed, overrides byte-identical). S3/S4/S6/S7 static only (UI screenshots by workers). Advisories fixed: account-wide login limiter (10/15 min), same-origin check + safe decode on upload route; documented that logout does not revoke tokens. Suite 228/228.
