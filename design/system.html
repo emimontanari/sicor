@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SICOR — Design system</title>
+<style>
+:root{--red:#e1202f;--red-dark:#b8101e;--charcoal:#2b2a33;--light:#f3f3f5;--line:#d9d9de;--muted:#5d5c66;--white:#fff;--font:"Helvetica Neue",Arial,"Segoe UI",system-ui,sans-serif;--pad:1rem;--max:72rem}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--font);color:var(--charcoal);background:var(--white);line-height:1.45;border-top:8px solid var(--red);width:1440px}
+h1,h2,h3{margin:0;text-transform:uppercase;font-weight:800;letter-spacing:.01em;line-height:1.15}
+:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+header{background:#f8f8f8;border-bottom:1px solid var(--line);padding:.75rem 3rem;display:flex;align-items:center;justify-content:space-between}
+header h1{font-size:2rem;font-weight:900}
+main{padding:2rem 3rem 3rem;display:grid;gap:2.5rem}
+h2{font-size:1.15rem;margin-bottom:1rem;padding-left:.6rem;border-left:5px solid var(--red)}
+.sw{display:grid;grid-template-columns:repeat(7,1fr);gap:1rem}
+.sw div{border:1px solid var(--line);border-radius:6px;overflow:hidden;font-size:.85rem}
+.sw i{display:block;height:84px}
+.sw b,.sw span{display:block;padding:.2rem .6rem}.sw span{color:var(--muted);padding-bottom:.6rem}
+.row{display:flex;gap:2rem;flex-wrap:wrap;align-items:flex-start}
+.btn{min-height:48px;padding:0 1.25rem;font:inherit;font-weight:800;text-transform:uppercase;letter-spacing:.02em;border:0;border-radius:6px;background:var(--charcoal);color:var(--white);display:inline-flex;align-items:center}
+.btn--primary{background:var(--red)}.btn--wa{background:#1a7f37}.btn--ghost{background:transparent;color:var(--charcoal);border:2px solid var(--charcoal)}
+.chip{min-width:44px;min-height:44px;padding:0 .9rem;border:2px solid var(--line);border-radius:6px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+.chip.on{background:var(--charcoal);border-color:var(--charcoal);color:var(--white)}
+.search{display:flex;gap:.5rem;width:420px}.search input{flex:1;min-height:48px;padding:0 .9rem;font:inherit;border:2px solid var(--line);border-radius:6px}
+.card{width:200px;border:1px solid var(--line);border-radius:6px;overflow:hidden;padding-bottom:.75rem;box-shadow:0 4px 14px rgb(43 42 51/.15)}
+.card .img{aspect-ratio:1;background:var(--light);display:grid;place-items:center;font-weight:900;color:var(--line);font-size:1.4rem;letter-spacing:.1em}
+.card p{margin:.6rem .65rem 0;font-size:.85rem;font-weight:700}.card em{display:block;font-style:normal;margin:.45rem .65rem 0;font-size:.72rem;font-weight:800;text-transform:uppercase;color:var(--red)}
+.badge{width:44px;height:48px;display:grid;place-items:center;border-radius:4px;color:#fff;font-weight:800}
+.fab{position:relative;min-height:56px;padding:0 1.1rem;display:inline-flex;align-items:center;background:var(--red);color:#fff;border-radius:999px;font-weight:800;text-transform:uppercase;font-size:.85rem;box-shadow:0 4px 14px rgb(43 42 51/.35)}
+.fab b{position:absolute;top:-6px;right:-4px;min-width:24px;height:24px;border-radius:12px;background:var(--charcoal);border:2px solid #fff;display:grid;place-items:center;font-size:.8rem}
+.note{padding:.7rem .9rem;background:var(--light);border-left:5px solid var(--red);width:420px}
+footer{background:var(--charcoal);color:#fff;padding:1.5rem 3rem;font-weight:700;font-size:.85rem;letter-spacing:.02em}
+.ty p{margin:.3rem 0}.muted{color:var(--muted)}
+.rad{display:flex;gap:1rem}.rad i{width:72px;height:72px;background:var(--light);border:2px solid var(--line);display:block}
+.logo{height:56px;width:auto}
+</style></head><body>
+<header>
+<svg class="logo" viewBox="0 0 330 120" role="img" aria-label="SICOR Suministros Industriales"><circle cx="46" cy="52" r="40" fill="none" stroke="#e1202f" stroke-width="11" stroke-dasharray="9 8"/><circle cx="46" cy="52" r="32" fill="none" stroke="#e1202f" stroke-width="6"/><path d="M46 24a28 28 0 0 0 0 56z" fill="#5d5c66"/><text x="100" y="82" font-family="Arial Narrow,Helvetica Neue,Arial,sans-serif" font-weight="900" font-size="92" textLength="224" lengthAdjust="spacingAndGlyphs"><tspan fill="#2b2a33">SI</tspan><tspan fill="#b8101e">COR</tspan></text><text x="100" y="108" font-family="Arial Narrow,Arial,sans-serif" font-weight="700" font-size="18" fill="#2b2a33" textLength="224" lengthAdjust="spacingAndGlyphs">SUMINISTROS INDUSTRIALES</text></svg>
+<h1>Design system</h1><span class="muted">Fuente: src/app/globals.css</span></header>
+<main>
+<section><h2>Colores</h2><div class="sw">
+<div><i style="background:#e1202f"></i><b>--red</b><span>#e1202f</span></div>
+<div><i style="background:#b8101e"></i><b>--red-dark</b><span>#b8101e</span></div>
+<div><i style="background:#2b2a33"></i><b>--charcoal</b><span>#2b2a33</span></div>
+<div><i style="background:#f3f3f5"></i><b>--light</b><span>#f3f3f5</span></div>
+<div><i style="background:#d9d9de"></i><b>--line</b><span>#d9d9de</span></div>
+<div><i style="background:#5d5c66"></i><b>--muted</b><span>#5d5c66</span></div>
+<div><i style="background:#1a7f37"></i><b>WhatsApp / ok</b><span>#1a7f37</span></div></div></section>
+<section class="ty"><h2>Tipografía — --font</h2>
+<h1 style="font-size:2.8rem;font-weight:900">Hero título 2.8rem / 900</h1>
+<h2 style="border:0;padding:0;margin:.5rem 0">Section title 1.15rem / 800</h2>
+<p style="font-size:1rem">Cuerpo 1rem, line-height 1.45. Guantes de protección para la industria.</p>
+<p class="muted" style="font-size:.85rem">Texto secundario 0.85rem · --muted</p></section>
+<section><h2>Radio, espaciado y sombras</h2><div class="row">
+<div class="rad"><i style="border-radius:4px"></i><i style="border-radius:6px"></i><i style="border-radius:8px"></i><i style="border-radius:12px"></i><i style="border-radius:999px"></i></div>
+<div>4 · 6 · 8 · 12 · 999 px<br><span class="muted">--pad 1rem · --max 72rem · gaps .5 / .75 / 1rem</span></div></div></section>
+<section><h2>Componentes</h2><div class="row">
+<div style="display:grid;gap:1rem"><div class="row" style="gap:.75rem"><span class="btn">Botón</span><span class="btn btn--primary">Agregar</span><span class="btn btn--ghost">Ghost</span><span class="btn btn--wa">WhatsApp</span></div>
+<div class="row" style="gap:.5rem"><span class="chip on">Seleccionado</span><span class="chip">Chip</span><span class="chip">Chip</span></div>
+<div class="search"><input placeholder="Buscar productos" aria-label="Buscar"><span class="btn">Buscar</span></div>
+<div class="note">Este producto tiene demora en algunas variantes de talle/color.</div>
+<div class="row" style="gap:.75rem;align-items:center"><span class="badge" style="background:#e1202f">01</span><span class="badge" style="background:#2b2a33">02</span><strong style="text-transform:uppercase">Indumentaria laboral</strong></div>
+<span class="fab">Cotización<b>3</b></span></div>
+<div class="card"><div class="img">SICOR</div><p>CHOMBA DE PIQUE M/C</p><em>Consultar cotización</em></div>
+</div></section>
+</main>
+<footer>SICOR | SUMINISTROS INDUSTRIALES CÓRDOBA</footer>
+</body></html>

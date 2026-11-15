@@ -1,0 +1,10 @@
+{
+  "title": "Catálogo público en una sola página",
+  "brief": "Home pública del catálogo SICOR como UNA página con todos los productos (551 en producción), filtro responsive por categoría, marca y búsqueda, contador de resultados, chips de filtros activos y limpiar filtros; tarjetas con foto o placeholder, 'Consultar cotización', 'Agregar' y cotización flotante con contador. Móvil 390 y escritorio 1280.",
+  "feature": "odd/tasks/catalog-redesign.md",
+  "artboards": [
+    { "file": "01-chips-y-hoja-de-filtros.html", "title": "Chips fijos + hoja de filtros", "tradeoff": "Rubros siempre a un toque y mínimo espacio perdido en móvil; la marca queda un paso más lejos (hoja inferior) y en móvil los chips obligan a scrollear horizontalmente", "width": 1440, "height": 900 },
+    { "file": "02-barra-lateral-y-cajon.html", "title": "Barra lateral + cajón", "tradeoff": "Filtros agrupados, con cantidades y siempre visibles en escritorio (mejor para explorar 500+ productos); en móvil todo queda tras un botón y la grilla pierde ancho en escritorio", "width": 1440, "height": 900 },
+    { "file": "03-mosaicos-de-categoria.html", "title": "Mosaicos de categoría + grilla/lista", "tradeoff": "Portada visual y de marca, ideal para quien no sabe qué busca y lista densa para comparar; empuja los productos más abajo y la marca es de selección única", "width": 1440, "height": 900 }
+  ]
+}
