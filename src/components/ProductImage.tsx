@@ -1,16 +1,32 @@
+import { Icon, type IconName } from "./Icon";
+
 type Props = {
-  src: string | undefined;
+  src: string | null | undefined;
   alt: string;
+  /** Shown on the no-photo placeholder ("Sin foto" + code). */
+  code?: string;
+  icon?: IconName;
   priority?: boolean;
-  sizes?: string;
 };
 
-/** Plain <img> (the /images route serves originals; no optimizer round trip). Fixed box prevents layout shift. */
-export function ProductImage({ src, alt, priority = false }: Props) {
+/**
+ * Plain <img> (the /images route serves originals; no optimizer round trip).
+ * Fixed width/height attributes plus a CSS aspect-ratio box prevent layout shift; below-the-fold
+ * images lazy-load.
+ */
+export function ProductImage({ src, alt, code, icon = "box", priority = false }: Props) {
   if (!src) {
     return (
-      <div className="img-box img-box--empty" role="img" aria-label={`${alt} (sin imagen)`}>
-        <span aria-hidden>SICOR</span>
+      <div className="img-box img-box--empty" role="img" aria-label={`${alt} (sin foto)`}>
+        <Icon name={icon} className="img-box__pic" />
+        <span className="img-box__lbl" aria-hidden>
+          Sin foto
+        </span>
+        {code ? (
+          <span className="img-box__code" aria-hidden>
+            {code}
+          </span>
+        ) : null}
       </div>
     );
   }

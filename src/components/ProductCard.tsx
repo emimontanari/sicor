@@ -1,28 +1,60 @@
 import Link from "next/link";
-import type { CatalogProduct } from "../server/catalog";
+import { categoryIcon } from "../lib/catalog/categories";
+import type { CatalogItem } from "../lib/catalog/filters";
+import { Icon } from "./Icon";
 import { ProductImage } from "./ProductImage";
 
-export function ProductCard({ product, priority = false }: { product: CatalogProduct; priority?: boolean }) {
+type Props = {
+  product: CatalogItem;
+  priority?: boolean;
+  /** Units of this product already in the quote (any variant). */
+  quantity?: number;
+  /** Quick add for products without variants. Without it the card has no add button. */
+  onAdd?: (product: CatalogItem) => void;
+};
+
+export function ProductCard({ product, priority = false, quantity = 0, onAdd }: Props) {
+  const href = `/producto/${encodeURIComponent(product.code)}`;
   return (
     <li className="card">
-      <Link href={`/producto/${encodeURIComponent(product.code)}`} className="card__link">
-        <ProductImage src={product.images[0]} alt={product.name} priority={priority} />
-        <h3 className="card__name">{product.name}</h3>
-        {product.price ? (
-          <p className="card__price">{product.price}</p>
-        ) : null}
-        <p className="card__cta">Consultar cotización</p>
+      <Link href={href} className="card__media" tabIndex={-1} aria-hidden>
+        <ProductImage
+          src={product.image}
+          alt={product.name}
+          code={product.code}
+          icon={categoryIcon(product.category)}
+          priority={priority}
+        />
       </Link>
+      <div className="card__body">
+        <p className="card__meta">
+          {product.brand ? <span className="card__brand">{product.brand}</span> : null}
+          <span className="card__code">Cód. {product.code}</span>
+        </p>
+        <h3 className="card__name">
+          <Link href={href}>{product.name}</Link>
+        </h3>
+        {product.price ? <p className="card__price">{product.price}</p> : null}
+        <p className="card__cta">Consultar cotización</p>
+      </div>
+      {product.variants ? (
+        <Link href={href} className="add" aria-label={`Elegir talle o color de ${product.name}`}>
+          <span>Elegir opciones</span>
+          <Icon name="options" />
+        </Link>
+      ) : onAdd ? (
+        <button
+          type="button"
+          className={quantity > 0 ? "add is-added" : "add"}
+          data-quote-add
+          data-code={product.code}
+          aria-label={`Agregar ${product.name} a la cotización`}
+          onClick={() => onAdd(product)}
+        >
+          <Icon name={quantity > 0 ? "check" : "plus"} />
+          <span>{quantity > 0 ? `Agregado (${quantity})` : "Agregar"}</span>
+        </button>
+      ) : null}
     </li>
-  );
-}
-
-export function ProductGrid({ products, priorityCount = 2 }: { products: CatalogProduct[]; priorityCount?: number }) {
-  return (
-    <ul className="grid">
-      {products.map((p, i) => (
-        <ProductCard key={p.code} product={p} priority={i < priorityCount} />
-      ))}
-    </ul>
   );
 }

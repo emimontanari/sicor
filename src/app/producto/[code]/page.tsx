@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { AddToQuoteButton } from "../../../components/AddToQuoteButton";
 import { ProductImage } from "../../../components/ProductImage";
 import { VariantChips } from "../../../components/VariantChips";
+import { categoryIcon } from "../../../lib/catalog/categories";
 import { buildPageMetadata } from "../../../lib/seo/metadata";
 import { getProduct } from "../../../server/catalog";
 
@@ -37,7 +38,7 @@ export default async function ProductPage({ params }: Params) {
         <Link href="/">Inicio</Link> <span aria-hidden>/</span>{" "}
         {product.category ? (
           <>
-            <Link href={`/categoria/${product.category.slug}`}>{product.category.name}</Link>{" "}
+            <Link href={`/?categoria=${encodeURIComponent(product.category.slug)}`}>{product.category.name}</Link>{" "}
             <span aria-hidden>/</span>{" "}
           </>
         ) : null}
@@ -45,7 +46,13 @@ export default async function ProductPage({ params }: Params) {
       </nav>
 
       <div className="product__gallery">
-        <ProductImage src={main} alt={product.name} priority />
+        <ProductImage
+          src={main}
+          alt={product.name}
+          code={product.code}
+          icon={categoryIcon(product.category?.slug ?? "otros")}
+          priority
+        />
         {rest.length > 0 ? (
           <ul className="thumbs">
             {rest.map((src) => (

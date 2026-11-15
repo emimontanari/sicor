@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { CartButton } from "../components/CartButton";
+import { IconSprite } from "../components/Icon";
 import { SiteFooter } from "../components/SiteFooter";
 import { SiteHeader } from "../components/SiteHeader";
 import { baseUrl, SITE_DESCRIPTION } from "../lib/seo/metadata";
@@ -25,6 +26,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="es">
       <body>
+        <IconSprite />
         <SiteHeader />
         <main id="contenido">{children}</main>
         <SiteFooter />

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
-import { CategoryList } from "../components/CategoryList";
-import { ProductGrid } from "../components/ProductCard";
-import { SearchBox } from "../components/SearchBox";
+import { Catalog } from "../components/Catalog";
+import { toCatalogItem } from "../lib/catalog/items";
 import { buildPageMetadata, SITE_DESCRIPTION } from "../lib/seo/metadata";
 import { listCategories, listProducts } from "../server/catalog";
 
@@ -18,45 +17,21 @@ export function generateMetadata(): Metadata {
   };
 }
 
-const FEATURED_SLUG = "productos-destacados";
-const FEATURED_LIMIT = 8;
-
+/**
+ * Single-page catalog. All visible products ship once as a slim list (~100 B each, ~550 items =
+ * tens of KB gzipped) and are filtered on the client: chips/sheet/search react instantly, no
+ * server round trip per tap, and the URL (?categoria=&marca=&q=) stays the source of truth so
+ * links are shareable and back/forward works. The filter is read from the URL during SSR too,
+ * so a shared link renders already filtered.
+ */
 export default async function Home() {
-  const [categories, featured, all] = await Promise.all([
-    listCategories(),
-    listProducts({ categorySlug: FEATURED_SLUG }),
-    listProducts(),
-  ]);
-  const showcase = (featured.length > 0 ? featured : all).slice(0, FEATURED_LIMIT);
-  const visibleCategories = categories.filter((c) => c.count > 0 || c.id !== null);
-
+  const [categories, products] = await Promise.all([listCategories(), listProducts()]);
   return (
-    <>
-      <section className="hero">
-        <h1>
-          CATÁLOGO COMERCIAL
-          <span className="hero__brand">| SICOR</span>
-        </h1>
-        <div className="hero__rule" aria-hidden />
-        <p className="hero__lead">Soluciones para la industria, el trabajo y la seguridad.</p>
-        <SearchBox />
-      </section>
-
-      <section className="section" aria-labelledby="h-categorias">
-        <h2 id="h-categorias" className="section__title">
-          Categorías
-        </h2>
-        <CategoryList categories={visibleCategories} />
-      </section>
-
-      {showcase.length > 0 ? (
-        <section className="section" aria-labelledby="h-destacados">
-          <h2 id="h-destacados" className="section__title">
-            {featured.length > 0 ? "Productos destacados" : "Productos"}
-          </h2>
-          <ProductGrid products={showcase} />
-        </section>
-      ) : null}
-    </>
+    <Catalog
+      items={products.map(toCatalogItem)}
+      categories={categories
+        .filter((c) => c.count > 0)
+        .map((c) => ({ slug: c.slug, name: c.name, count: c.count }))}
+    />
   );
 }
