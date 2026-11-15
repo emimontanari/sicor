@@ -17,10 +17,10 @@ Phase 2 of `docs/idea.md`, built on Phase 1 (`odd/tasks/catalog-sync.md`: Masefe
 
 | ID | Specs | Task | Route | Status | Commit |
 |----|-------|------|-------|--------|--------|
-| T1 | S2, S4, S5, S7 | Catalog read model `src/server/catalog/` (categories with counts, list/search/get product with effective fields, settings + env fallback) + image serving route with path confinement; PGlite tests | gentle-ai-worker | done | see git log feat(catalog) |
-| T2 | S5, S8 | Bootstrap: default category mappings from live Masefer taxonomy + PDF product list matched to Masefer codes + `pnpm catalog:bootstrap`; tests | gentle-ai-worker | done (real-Postgres run in progress) | see git log feat(bootstrap) |
-| T3 | S1, S2, S5, S6 | Public UI: layout/brand, home (categories, destacados, search), category page, product page (variant picker), search, OG tags | gentle-ai-worker | pending | |
-| T4 | S3 | Quote cart (localStorage) + WhatsApp message builder + send button; tests | gentle-ai-worker | pending | |
+| T1 | S2, S4, S5, S7 | Catalog read model `src/server/catalog/` (categories with counts, list/search/get product with effective fields, settings + env fallback) + image serving route with path confinement; PGlite tests | gentle-ai-worker | done, verified (symlink escape fixed) | see git log feat(catalog) |
+| T2 | S5, S8 | Bootstrap: default category mappings from live Masefer taxonomy + PDF product list matched to Masefer codes + `pnpm catalog:bootstrap`; tests | gentle-ai-worker | done, verified; real run: 551 products, 28 published, 754 images | see git log feat(bootstrap) |
+| T3 | S1, S2, S5, S6 | Public UI: layout/brand, home (categories, destacados, search), category page, product page (variant picker), search, OG tags | gentle-ai-worker | done | feat(ui) commit |
+| T4 | S3 | Quote cart (localStorage) + WhatsApp message builder + send button; tests | gentle-ai-worker | done, verified | feat(cart) commit |
 
 ## Log
 
@@ -32,3 +32,4 @@ Phase 2 of `docs/idea.md`, built on Phase 1 (`odd/tasks/catalog-sync.md`: Masefe
 - **L6** (evidence): Phase 1 Docker proof — `docker compose up --build` OK, migrations + 7 categories seeded on boot, images volume writable by non-root, doc trigger via in-container wget returned 200 {runId:1,status:pending,summary:{new:551}}.
 - **L7** (evidence): T2 PDF finding — only INDUMENTARIA LABORAL (pp. 2–6) has real products; other PDF sections are Canva placeholders. 20 PDF names → 28 Masefer codes (series heuristics: CAMISA/PANTALON OMBU, CAMISA PAMPERO; BUZ01 chosen over BUZCOL01). 50 taxonomy mappings; BOTIQUINES, SOGAS, CONFECCION COLEGIAL left as Otros. Suite 121/121.
 - **L8** (evidence/decision): first real bootstrap (19 min, sequential image copy) failed: `Unexpected content-type "video/mp4"` for a Masefer PAC12 .mp4 asset → 0 products. Parent decision: per-image failures are skipped with `summary.imageWarnings` (+ list ≤50), DB errors stay fatal/atomic; mapping keeps only .jpg/.jpeg/.png/.webp/.gif; images download 6 at a time with skip-if-exists. Fixed in "fix(sync): skip broken supplier images..." commit; rerun in progress.
+- **L9** (evidence): real bootstrap rerun 11 s: run 2 applied, 551 products, 28 overrides visible, 0 image warnings, 754 local image files. Independent verify: S2, S3, S4, S8 met; S7 symlink escape found and fixed (`resolveImageFile` with realpath). Suite 156/156. 390px screenshots of product (variants + stepper) and cart reviewed by parent.
