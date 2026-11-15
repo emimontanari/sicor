@@ -147,14 +147,19 @@ export class DdpConnection {
         this.ws.send(JSON.stringify({ msg: "sub", id, name, params }));
       });
       // docs can keep streaming after `ready`: wait until quiet
-      while (this.settleMs > 0) {
-        const before = this.store.size;
-        await new Promise((r) => setTimeout(r, Math.min(this.settleMs, Math.max(0, this.deadline - Date.now()))));
-        if (this.store.size === before || Date.now() >= this.deadline) break;
-      }
+      await this.settle(this.settleMs);
     } finally {
       clearTimeout(timer);
       this.pending.delete(id);
+    }
+  }
+
+  /** Waits until no document was added/removed for `quietMs` (bounded by the overall deadline). 0 disables. */
+  async settle(quietMs: number): Promise<void> {
+    while (quietMs > 0) {
+      const before = this.store.size;
+      await new Promise((r) => setTimeout(r, Math.min(quietMs, Math.max(0, this.deadline - Date.now()))));
+      if (this.store.size === before || Date.now() >= this.deadline) break;
     }
   }
 

@@ -10,6 +10,7 @@ import {
 } from "../db/schema";
 import type { MaseferSource, SupplierProduct } from "../masefer";
 import {
+  canonDocuments,
   canonicalFromRow,
   canonicalFromSupplier,
   changedFields,
@@ -17,7 +18,8 @@ import {
   dedupeVariants,
   imageUrls,
 } from "./canonical";
-import type { ImageStore } from "./images";
+import { FsDocumentStore, type DocumentStore } from "./documents";
+import { FsImageStore, type ImageStore } from "./images";
 
 export type SyncRun = typeof syncRuns.$inferSelect;
 export type SyncTrigger = "scheduled" | "manual";
@@ -26,6 +28,12 @@ export interface SyncDeps {
   db: PgDb | TestDb;
   source: MaseferSource;
   imageStore: ImageStore;
+  /**
+   * PDF copy store. Defaults to an {@link FsDocumentStore} on the same root/fetch as an
+   * {@link FsImageStore}; with any other image store and no explicit store, documents are not copied
+   * (each one becomes a warning).
+   */
+  documentStore?: DocumentStore;
   clock?: () => Date;
   /** Max simultaneous image downloads during apply (default 6). */
   imageConcurrency?: number;
@@ -33,6 +41,7 @@ export interface SyncDeps {
 
 /** Extra fields stored in sync_runs.summary by apply (jsonb; no schema change). */
 export type ImageWarning = { code: string; url: string; reason: string };
+export type DocumentWarning = ImageWarning;
 const MAX_WARNING_LIST = 50;
 
 /** Thrown when a run is not (or no longer) pending; never recorded as a run failure. */
@@ -49,6 +58,8 @@ export function createSyncEngine(deps: SyncDeps) {
   // PgDb and TestDb share the same query API; one cast keeps call sites simple.
   const db = deps.db as TestDb;
   const { source, imageStore } = deps;
+  const documentStore: DocumentStore | undefined =
+    deps.documentStore ?? (imageStore instanceof FsImageStore ? new FsDocumentStore(imageStore.dir, imageStore.fetchFn) : undefined);
   const now = deps.clock ?? (() => new Date());
   const concurrency = Math.max(1, deps.imageConcurrency ?? 6);
 
@@ -207,10 +218,42 @@ export function createSyncEngine(deps: SyncDeps) {
           [...(saved.get(p.code) ?? new Map<number, string>()).entries()].sort((x, y) => x[0] - y[0]).map(([, v]) => v),
         ]),
       );
+
+      // S4: copy supplier PDFs too; same rules (per-document failure = warning, never fatal).
+      const docTasks = products.flatMap((p) =>
+        (p.documents ?? []).map((d, index) => ({ code: p.code, index, url: d.url })),
+      );
+      const savedDocs = new Map<string, Map<number, string>>();
+      const docWarnings: DocumentWarning[] = [];
+      let nextDoc = 0;
+      const docWorker = async () => {
+        while (nextDoc < docTasks.length) {
+          const t = docTasks[nextDoc++];
+          try {
+            if (!documentStore) throw new Error("No document store configured");
+            const rel = await documentStore.save(t);
+            const m = savedDocs.get(t.code) ?? new Map<number, string>();
+            m.set(t.index, rel);
+            savedDocs.set(t.code, m);
+          } catch (e) {
+            docWarnings.push({ code: t.code, url: t.url, reason: msg(e) });
+          }
+        }
+      };
+      await Promise.all(Array.from({ length: Math.min(concurrency, docTasks.length) }, docWorker));
+      docWarnings.sort((x, y) => (x.code === y.code ? 0 : x.code < y.code ? -1 : 1));
+      const localDocs = (p: SupplierProduct) =>
+        (p.documents ?? []).flatMap((d, index) => {
+          const path = savedDocs.get(p.code)?.get(index);
+          return path ? [{ kind: d.kind, label: d.label, path }] : [];
+        });
+
       const summary = {
         ...(run.summary as SyncSummary),
         imageWarnings: warnings.length,
         imageWarningList: warnings.slice(0, MAX_WARNING_LIST),
+        documentWarnings: docWarnings.length,
+        documentWarningList: docWarnings.slice(0, MAX_WARNING_LIST),
       } as SyncSummary;
 
       const at = now();
@@ -245,6 +288,8 @@ export function createSyncEngine(deps: SyncDeps) {
             currency: p.currency,
             supplierImages: imageUrls(p),
             localImages: local.get(p.code) ?? [],
+            supplierDocuments: canonDocuments(p.documents),
+            localDocuments: localDocs(p),
             status: "active" as const,
             lastSeenAt: at,
             contentHash: contentHash(c),

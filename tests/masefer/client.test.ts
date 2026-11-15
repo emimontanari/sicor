@@ -80,3 +80,22 @@ describe("MaseferClient.fetchCatalog", () => {
     await expect(empty.fetchCatalog()).rejects.toBeInstanceOf(MaseferSyncError);
   });
 });
+
+describe("MaseferClient documents delivery", () => {
+  it("waits for dropbox docs that stream in after ready", async () => {
+    const late = { collection: "dropbox", id: "/web/catalogos/late.pdf", fields: { ownerId: "SNEAKPRO", name: "late.pdf", shortName: "ficha tecnica", ext: "pdf", source: "web", link: "https://www.dropbox.com/x/late.pdf?raw=1" } };
+    const make = (): DdpSocket => {
+      const s = serverSocket()();
+      const send = s.send.bind(s);
+      s.send = (data: string) => {
+        send(data);
+        const m = JSON.parse(data);
+        if (m.name === "articulos.genericos") setTimeout(() => s.onmessage?.({ data: JSON.stringify({ msg: "added", ...late }) }), 60);
+      };
+      return s;
+    };
+    const withWait = await new MaseferClient({ createSocket: make, settleMs: 0, documentsSettleMs: 150, timeoutMs: 3000 }).fetchCatalog();
+    expect(withWait.products.find((p) => p.code === "SNEAKPRO")!.documents!.map((d) => d.label)).toEqual(["Ficha técnica"]);
+    expect(withWait.products.find((p) => p.code === "PAC25")!.documents).toHaveLength(2);
+  });
+});

@@ -137,6 +137,8 @@ describe("toCatalogItem", () => {
     colors: [],
     sizes: [],
     price: null,
+    documents: [],
+    hasFicha: false,
   };
   it("slims the product to what the list needs", () => {
     expect(toCatalogItem(base)).toEqual({
@@ -147,7 +149,21 @@ describe("toCatalogItem", () => {
       image: "/images/C1/a.jpg",
       variants: false,
       price: null,
+      hasFicha: false,
     });
+  });
+  it("adds hasFicha and the ficha url only when the product has a ficha", () => {
+    const doc = (kind: "ficha" | "certificacion", url: string) => ({ kind, label: kind, url });
+    const withFicha = toCatalogItem({
+      ...base,
+      hasFicha: true,
+      documents: [doc("certificacion", "/docs/C1/1-b.pdf"), doc("ficha", "/docs/C1/0-a.pdf")],
+    });
+    expect(withFicha.hasFicha).toBe(true);
+    expect(withFicha.fichaUrl).toBe("/docs/C1/0-a.pdf");
+    expect(withFicha).not.toHaveProperty("documents");
+    expect(toCatalogItem({ ...base, documents: [doc("certificacion", "/docs/C1/1-b.pdf")] })).toMatchObject({ hasFicha: false });
+    expect(toCatalogItem(base)).not.toHaveProperty("fichaUrl");
   });
   it("uses 'otros' when uncategorised, null image when none, and flags required variants", () => {
     const i = toCatalogItem({ ...base, category: null, images: [], sizes: ["M"], colors: [] });

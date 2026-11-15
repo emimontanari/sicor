@@ -17,10 +17,10 @@ export interface FsImageStoreOptions {
 const DEFAULT_TIMEOUT_MS = 20_000;
 const DEFAULT_MAX_BYTES = 8 * 1024 * 1024;
 
-const sha = (s: string, n: number) => createHash("sha256").update(s).digest("hex").slice(0, n);
+export const sha = (s: string, n: number) => createHash("sha256").update(s).digest("hex").slice(0, n);
 
 /** Directory-safe name: only [A-Za-z0-9_-], so never `.`/`..` and never a separator. */
-function safeDir(code: string): string {
+export function safeDir(code: string): string {
   const cleaned = code.replace(/[^A-Za-z0-9_-]/g, "_") || "_";
   // Disambiguate codes that were altered so e.g. "A.1" and "A_1" do not collide.
   return cleaned === code ? cleaned : `${cleaned}-${sha(code, 8)}`;
@@ -44,8 +44,8 @@ export class FsImageStore implements ImageStore {
   private readonly maxBytes: number;
 
   constructor(
-    private readonly dir: string | undefined = process.env.IMAGES_DIR,
-    private readonly fetchFn: typeof fetch = fetch,
+    readonly dir: string | undefined = process.env.IMAGES_DIR,
+    readonly fetchFn: typeof fetch = fetch,
     options: FsImageStoreOptions = {},
   ) {
     if (!dir) throw new Error("IMAGES_DIR is not set");

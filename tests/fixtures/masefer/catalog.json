@@ -798,6 +798,22 @@
     "SIGNO_MONEDA": "$",
     "PUBLICADO_WEB2": "SI"
    }
+  },
+  {
+   "msg": "added",
+   "collection": "dropbox",
+   "id": "/web/catalogos/pac25 licencia iram.pdf",
+   "fields": {
+    "ownerId": "PAC25",
+    "name": "pac25 licencia iram.pdf",
+    "shortName": "licencia iram",
+    "ext": "pdf",
+    "link": "https://www.dropbox.com/scl/fi/abc/PAC25-LICENCIA-IRAM.PDF?rlkey=k&dl=0&&raw=1",
+    "source": "web",
+    "color": null,
+    "path": "/web/catalogos/pac25 licencia iram.pdf",
+    "level": 4
+   }
   }
  ]
 }

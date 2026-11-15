@@ -34,6 +34,9 @@ export const categories = pgTable("categories", {
 });
 
 /** Supplier data. Overwritten only by sync apply (S2). */
+export type StoredSupplierDocument = { kind: "ficha" | "certificacion"; label: string; url: string };
+export type StoredLocalDocument = { kind: "ficha" | "certificacion"; label: string; path: string };
+
 export const sourceProducts = pgTable("source_products", {
   code: text("code").primaryKey(),
   name: text("name").notNull(),
@@ -48,6 +51,10 @@ export const sourceProducts = pgTable("source_products", {
   supplierImages: jsonb("supplier_images").$type<string[]>().notNull().default(sql`'[]'::jsonb`),
   /** Paths of images copied into app storage (S6). */
   localImages: jsonb("local_images").$type<string[]>().notNull().default(sql`'[]'::jsonb`),
+  /** Supplier PDFs (`/web/catalogos`): ficha técnica + certifications. Supplier URLs, never public. */
+  supplierDocuments: jsonb("supplier_documents").$type<StoredSupplierDocument[]>().default(sql`'[]'::jsonb`),
+  /** PDFs copied into app storage (under `docs/`); failed copies are omitted. Only these are exposed. */
+  localDocuments: jsonb("local_documents").$type<StoredLocalDocument[]>().default(sql`'[]'::jsonb`),
   status: productStatus("status").notNull().default("active"),
   firstSeenAt: tz("first_seen_at").notNull().defaultNow(),
   lastSeenAt: tz("last_seen_at").notNull().defaultNow(),

@@ -91,4 +91,74 @@ describe("mapCatalog", () => {
     ]);
     expect(pac.images.small).toEqual(["https://www.dropbox.com/scl/fi/x/PAC25-6.png?raw=1"]);
   });
+
+  describe("documents (/web/catalogos PDFs)", () => {
+    const doc = (owner: string, file: string, shortName: string, over: Record<string, unknown> = {}): DdpDoc =>
+      ({
+        collection: "dropbox",
+        id: `/web/catalogos/${file}`,
+        fields: { ownerId: owner, name: file, shortName, ext: "pdf", source: "web", link: `https://www.dropbox.com/scl/fi/x/${encodeURIComponent(file)}?rlkey=k&dl=0&&raw=1`, ...over },
+      }) as unknown as DdpDoc;
+    const base = catalogDocs.filter((d) => d.collection !== "dropbox");
+    const docsOf = (code: string, extra: DdpDoc[]) => mapCatalog([...base, ...extra]).products.find((p) => p.code === code)!.documents ?? [];
+
+    it("fixture: PAC25 has ficha first then IRAM licence; SNEAKPRO has none", () => {
+      const c = mapCatalog([...catalogDocs, ...variantDocs]);
+      expect(c.products.find((p) => p.code === "PAC25")!.documents!.map((d) => [d.kind, d.label])).toEqual([
+        ["ficha", "Ficha técnica"],
+        ["certificacion", "Licencia IRAM"],
+      ]);
+      expect(c.products.find((p) => p.code === "SNEAKPRO")!.documents).toEqual([]);
+    });
+
+    it("detects the ficha for 'ficha tecnica' and 'fichatecnica', ordered ficha first then by label", () => {
+      const docs = docsOf("PAC25", [
+        doc("PAC25", "b.pdf", "niosh"),
+        doc("PAC25", "a.pdf", "fichatecnica"),
+        doc("PAC25", "c.pdf", "ansi"),
+      ]);
+      expect(docs.map((d) => [d.kind, d.label, d.name])).toEqual([
+        ["ficha", "Ficha técnica", "a.pdf"],
+        ["certificacion", "ANSI", "c.pdf"],
+        ["certificacion", "NIOSH", "b.pdf"],
+      ]);
+      expect(docs[0].url).toBe("https://www.dropbox.com/scl/fi/x/a.pdf?rlkey=k&dl=0&&raw=1");
+      expect(Object.keys(docs[0]).sort()).toEqual(["kind", "label", "name", "url"]);
+      expect(docsOf("PAC25", [doc("PAC25", "z.pdf", "Ficha  Técnica")])[0].kind).toBe("ficha");
+    });
+
+    it.each([
+      ["licencia iram", "Licencia IRAM"],
+      ["isp", "ISP"],
+      ["niosh", "NIOSH"],
+      ["ansi", "ANSI"],
+      ["iram", "IRAM"],
+      ["test results and report for libus ppe argon", "Informe de ensayo"],
+      ["colocacion", "Instructivo de colocación"],
+      ["certificado achs", "Certificado ACHS"],
+      ["manual de uso", "Manual De Uso"],
+    ])("labels %j as %j", (shortName, label) => {
+      const [d] = docsOf("PAC25", [doc("PAC25", "x.pdf", shortName)]);
+      expect(d).toMatchObject({ kind: "certificacion", label });
+    });
+
+    it("dedupes by url, ignores non-pdf, other sources, other folders and unknown owners", () => {
+      const docs = docsOf("PAC25", [
+        doc("PAC25", "a.pdf", "isp"),
+        doc("PAC25", "a.pdf", "isp", {}),
+        { ...doc("PAC25", "dup.pdf", "ansi", { link: "https://www.dropbox.com/scl/fi/x/a.pdf?rlkey=k&dl=0&&raw=1" }), id: "/web/catalogos/dup.pdf" },
+        doc("PAC25", "v.mp4", "video", { ext: "mp4", link: "https://www.dropbox.com/scl/fi/x/v.mp4?raw=1" }),
+        doc("PAC25", "s.pdf", "niosh", { source: "other" }),
+        { ...doc("PAC25", "i.pdf", "ansi"), id: "/web/img500/i.pdf" } as DdpDoc,
+        doc("NOPE", "n.pdf", "ansi"),
+        doc("PAC25", "nolink.pdf", "ansi", { link: null }),
+      ]);
+      expect(docs.map((d) => d.name)).toEqual(["a.pdf"]);
+    });
+
+    it("accepts a link whose path ends in .pdf even if ext is missing", () => {
+      const docs = docsOf("PAC25", [doc("PAC25", "q.pdf", "isp", { ext: undefined })]);
+      expect(docs).toHaveLength(1);
+    });
+  });
 });

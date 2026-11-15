@@ -10,6 +10,10 @@ export type CatalogItem = {
   /** True when the product has talle/color options: quick-add must go through the product page. */
   variants: boolean;
   price: string | null;
+  /** True when the product has a ficha técnica PDF (optional so older fixtures stay valid). */
+  hasFicha?: boolean;
+  /** App URL of the ficha técnica PDF; present only when `hasFicha`. */
+  fichaUrl?: string;
 };
 
 export type CatalogFilter = { categories: string[]; brands: string[]; q: string };

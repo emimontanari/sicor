@@ -14,6 +14,12 @@ export interface MaseferClientOptions {
   /** Concurrent variant subscriptions on the single connection. Default 4. */
   variantConcurrency?: number;
   settleMs?: number;
+  /**
+   * Final quiet window (ms) after every subscription is ready, before mapping. Masefer streams the
+   * `dropbox` documents (images + `/web/catalogos` PDFs) after `ready`, so the catalog is only
+   * mapped once the document store stopped growing for this long. Default 1500; 0 when `settleMs` is 0.
+   */
+  documentsSettleMs?: number;
   createSocket?: (url: string) => DdpSocket;
 }
 
@@ -49,6 +55,9 @@ export class MaseferClient implements MaseferSource {
         while (next < batches.length) await c.subscribe("subarticlesOfMany", [batches[next++]]);
       };
       await Promise.all(Array.from({ length: Math.min(opts.variantConcurrency ?? 4, batches.length) }, worker));
+
+      // Guarantee: dropbox docs (incl. PDFs) arrive after `ready`; wait for a quiet window so mapping sees them all.
+      await c.settle(opts.documentsSettleMs ?? (opts.settleMs === 0 ? 0 : 1500));
 
       return mapCatalog(c.docs());
     } catch (e) {

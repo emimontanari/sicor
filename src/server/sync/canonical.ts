@@ -13,6 +13,7 @@ export const FIELDS = [
   "currency",
   "images",
   "variants",
+  "documents",
 ] as const;
 export type Field = (typeof FIELDS)[number];
 
@@ -49,6 +50,12 @@ export const sortVariants = (v: CanonVariant[]) =>
     }))
     .sort((a, b) => (a.sku < b.sku ? -1 : a.sku > b.sku ? 1 : 0));
 
+type CanonDoc = { kind: "ficha" | "certificacion"; label: string; url: string };
+
+/** `name` is cosmetic and excluded; order is the mapping's stable order. */
+export const canonDocuments = (docs: readonly CanonDoc[] | null | undefined): CanonDoc[] =>
+  (docs ?? []).map((d) => ({ kind: d.kind, label: d.label, url: d.url }));
+
 export function canonicalFromSupplier(p: SupplierProduct): Canonical {
   return {
     name: p.name,
@@ -61,6 +68,7 @@ export function canonicalFromSupplier(p: SupplierProduct): Canonical {
     currency: p.currency,
     images: imageUrls(p),
     variants: sortVariants(dedupeVariants(p.variants)),
+    documents: canonDocuments(p.documents),
   };
 }
 
@@ -75,6 +83,7 @@ export function canonicalFromRow(
     supplierPrice: string | null;
     currency: string | null;
     supplierImages: string[];
+    supplierDocuments?: CanonDoc[] | null;
   },
   variants: CanonVariant[],
 ): Canonical {
@@ -89,13 +98,16 @@ export function canonicalFromRow(
     currency: row.currency,
     images: row.supplierImages,
     variants: sortVariants(variants),
+    documents: canonDocuments(row.supplierDocuments),
   };
 }
 
 /** Stable content hash over the canonical supplier fields (fixed key order). */
 export function contentHash(c: Canonical): string {
   return createHash("sha256")
-    .update(JSON.stringify(FIELDS.map((f) => c[f])))
+    // `documents` only joins the hash when present, so products without PDFs keep their pre-documents hash
+    // (no spurious "changed" for them); gaining/losing/changing PDFs always changes it.
+    .update(JSON.stringify(FIELDS.filter((f) => f !== "documents" || (c.documents as unknown[]).length > 0).map((f) => c[f])))
     .digest("hex");
 }
 

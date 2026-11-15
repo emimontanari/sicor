@@ -5,6 +5,7 @@ export const UNCATEGORISED = "otros";
 
 /** Slim, serializable projection of a product for the single-page list (keeps the RSC payload small). */
 export function toCatalogItem(p: CatalogProduct): CatalogItem {
+  const ficha = p.documents.find((d) => d.kind === "ficha");
   return {
     code: p.code,
     name: p.name,
@@ -13,5 +14,7 @@ export function toCatalogItem(p: CatalogProduct): CatalogItem {
     image: p.images[0] ?? null,
     variants: p.sizes.length > 0 || p.colors.length > 0,
     price: p.price,
+    hasFicha: p.hasFicha,
+    ...(ficha ? { fichaUrl: ficha.url } : {}),
   };
 }

@@ -9,7 +9,7 @@ import {
   sourceProducts,
   sourceVariants,
 } from "../db/schema";
-import { imageUrl } from "./paths";
+import { documentUrl, imageUrl } from "./paths";
 
 type Db = PgDb | TestDb;
 
@@ -26,6 +26,7 @@ export type CatalogVariant = {
   size: string | null;
   text: string | null;
 };
+export type CatalogDocument = { kind: "ficha" | "certificacion"; label: string; url: string };
 export type CatalogProduct = {
   code: string;
   name: string;
@@ -35,6 +36,10 @@ export type CatalogProduct = {
   brand: string | null;
   unit: string | null;
   variants: CatalogVariant[];
+  /** PDFs copied to our storage (ficha técnica first); app URLs only, never supplier links. */
+  documents: CatalogDocument[];
+  /** True when `documents` contains a ficha técnica. */
+  hasFicha: boolean;
   colors: string[];
   sizes: string[];
   /** Only when settings.show_prices AND override.show_price; otherwise null (S2). */
@@ -100,6 +105,11 @@ async function buildCatalog(db: Db): Promise<CatalogProduct[]> {
       ...new Set(xs.filter((x): x is string => !!x)),
     ];
     const imgs = o?.customImagePath ? [o.customImagePath] : p.localImages;
+    const documents = (p.localDocuments ?? []).map((d) => ({
+      kind: d.kind,
+      label: d.label,
+      url: documentUrl(d.path, `${p.code}-${d.label}`),
+    }));
     out.push({
       code: p.code,
       name: o?.customName ?? p.name,
@@ -109,6 +119,8 @@ async function buildCatalog(db: Db): Promise<CatalogProduct[]> {
       brand: p.brand,
       unit: p.unit,
       variants: vs.map((v) => ({ sku: v.sku, color: v.color, size: v.size, text: v.text })),
+      documents,
+      hasFicha: documents.some((d) => d.kind === "ficha"),
       colors: distinct(vs.map((v) => v.color)),
       sizes: distinct(vs.map((v) => v.size)),
       price: showPrices && o?.showPrice ? (o.customPrice ?? null) : null,

@@ -3,8 +3,11 @@ import os from "node:os";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
+  documentUrl,
   imageContentType,
   imageUrl,
+  resolvePdfFile,
+  resolvePdfPath,
   resolveImageFile,
   resolveImagePath,
 } from "../../src/server/catalog/paths";
@@ -100,5 +103,47 @@ describe("resolveImageFile (S7 symlink confinement)", () => {
   it("rejects a directory named like an image", async () => {
     await mkdir(path.join(rootDir, "dir.png"));
     expect(await resolveImageFile(rootDir, ["dir.png"])).toBeNull();
+  });
+});
+
+describe("documents paths", () => {
+  it("documentUrl maps stored docs/... paths to /docs urls with an optional download name", () => {
+    expect(documentUrl("docs/A B/0-x.pdf")).toBe("/docs/A%20B/0-x.pdf");
+    expect(documentUrl("docs/A/0-x.pdf", "A-Ficha técnica")).toBe("/docs/A/0-x.pdf?n=A-Ficha%20t%C3%A9cnica");
+  });
+  it("resolvePdfPath only accepts .pdf below docs/ and rejects traversal", () => {
+    expect(resolvePdfPath(root, ["docs", "A", "0-x.pdf"])).toBe(path.join(root, "docs", "A", "0-x.pdf"));
+    expect(resolvePdfPath(root, ["docs", "A", "0-x.PDF"])).toBe(path.join(root, "docs", "A", "0-x.PDF"));
+    for (const segs of [["docs", "A", "x.jpg"], ["docs", "..", "x.pdf"], ["docs", "%2e%2e", "x.pdf"], ["docs", "a\\b.pdf"], ["docs", ""], ["docs"], []]) {
+      expect(resolvePdfPath(root, segs)).toBeNull();
+    }
+    expect(resolvePdfPath(root, ["A", "x.pdf"])).toBeNull();
+  });
+});
+
+describe("resolvePdfFile (symlink confinement)", () => {
+  let tmp: string;
+  let rootDir: string;
+  beforeAll(async () => {
+    tmp = await mkdtemp(path.join(os.tmpdir(), "sicor-pdf-"));
+    rootDir = path.join(tmp, "images");
+    await mkdir(path.join(rootDir, "docs", "A"), { recursive: true });
+    await mkdir(path.join(tmp, "outside"));
+    await writeFile(path.join(rootDir, "docs", "A", "ok.pdf"), "%PDF-1");
+    await writeFile(path.join(rootDir, "docs", "A", "pic.png"), "x");
+    await writeFile(path.join(tmp, "outside", "s.pdf"), "%PDF-secret");
+    await symlink(path.join(tmp, "outside"), path.join(rootDir, "docs", "link"));
+    await symlink(path.join(tmp, "outside", "s.pdf"), path.join(rootDir, "docs", "A", "l.pdf"));
+  });
+  afterAll(async () => {
+    await rm(tmp, { recursive: true, force: true });
+  });
+  it("resolves a real pdf and rejects escapes, non-pdf and missing files", async () => {
+    expect(await resolvePdfFile(rootDir, ["docs", "A", "ok.pdf"])).toBe(path.join(await realpath(rootDir), "docs", "A", "ok.pdf"));
+    expect(await resolvePdfFile(rootDir, ["docs", "link", "s.pdf"])).toBeNull();
+    expect(await resolvePdfFile(rootDir, ["docs", "A", "l.pdf"])).toBeNull();
+    expect(await resolvePdfFile(rootDir, ["docs", "A", "pic.png"])).toBeNull();
+    expect(await resolvePdfFile(rootDir, ["docs", "A", "nope.pdf"])).toBeNull();
+    expect(await resolvePdfFile(path.join(tmp, "missing"), ["docs", "A", "ok.pdf"])).toBeNull();
   });
 });

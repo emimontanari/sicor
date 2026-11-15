@@ -210,3 +210,40 @@ describe("getStorefrontSettings", () => {
     expect(await getStorefrontSettings(db)).toEqual({ whatsappNumber: null, messageTemplate: DEFAULT_MESSAGE_TEMPLATE });
   });
 });
+
+describe("documents (S1, S2, S4)", () => {
+  it("exposes only local documents as /docs urls, with hasFicha", async () => {
+    await add(
+      {
+        code: "ZAP13",
+        supplierDocuments: [{ kind: "ficha", label: "Ficha técnica", url: "https://dropbox.com/f.pdf" }],
+        localDocuments: [
+          { kind: "ficha", label: "Ficha técnica", path: "docs/ZAP13/0-abc.pdf" },
+          { kind: "certificacion", label: "Licencia IRAM", path: "docs/ZAP13/1-def.pdf" },
+        ],
+      },
+      shown,
+    );
+    await add({ code: "SNEAKPRO" }, shown);
+    await add({ code: "CERTONLY", localDocuments: [{ kind: "certificacion", label: "ISP", path: "docs/CERTONLY/0-a.pdf" }] }, shown);
+    await add({ code: "REMOTE", supplierDocuments: [{ kind: "ficha", label: "Ficha técnica", url: "https://dropbox.com/r.pdf" }] }, shown);
+    const z = (await getProduct("ZAP13", db))!;
+    expect(z.hasFicha).toBe(true);
+    expect(z.documents).toEqual([
+      { kind: "ficha", label: "Ficha técnica", url: "/docs/ZAP13/0-abc.pdf?n=ZAP13-Ficha%20t%C3%A9cnica" },
+      { kind: "certificacion", label: "Licencia IRAM", url: "/docs/ZAP13/1-def.pdf?n=ZAP13-Licencia%20IRAM" },
+    ]);
+    const s = (await getProduct("SNEAKPRO", db))!;
+    expect(s.hasFicha).toBe(false);
+    expect(s.documents).toEqual([]);
+    expect((await getProduct("CERTONLY", db))!.hasFicha).toBe(false);
+    const r = (await getProduct("REMOTE", db))!;
+    expect(r.hasFicha).toBe(false);
+    expect(JSON.stringify(r)).not.toContain("dropbox");
+  });
+
+  it("does not make hidden products visible", async () => {
+    await add({ code: "H", localDocuments: [{ kind: "ficha", label: "Ficha técnica", path: "docs/H/0-a.pdf" }] }, { visible: false, reviewed: true });
+    expect(await getProduct("H", db)).toBeNull();
+  });
+});
