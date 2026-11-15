@@ -1,7 +1,7 @@
 import { createReadStream } from "node:fs";
 import { stat } from "node:fs/promises";
 import { Readable } from "node:stream";
-import { imageContentType, resolveImagePath } from "../../../server/catalog/paths";
+import { imageContentType, resolveImageFile } from "../../../server/catalog/paths";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +15,7 @@ export async function GET(
   if (!root) return notFound();
   const { path: segments } = await ctx.params;
   const { resolve } = await import("node:path");
-  const file = resolveImagePath(resolve(root), segments ?? []);
+  const file = await resolveImageFile(resolve(root), segments ?? []);
   const type = file ? imageContentType(file) : null;
   if (!file || !type) return notFound();
   try {
