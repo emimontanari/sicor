@@ -22,7 +22,7 @@ export function generateMetadata(): Metadata {
   };
 }
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default function RootLayout({ children, modal }: { children: ReactNode; modal: ReactNode }) {
   return (
     <html lang="es">
       <body>
@@ -30,6 +30,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <SiteHeader />
         <main id="contenido">{children}</main>
         <SiteFooter />
+        {modal}
         <CartButton />
       </body>
     </html>

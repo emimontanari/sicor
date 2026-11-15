@@ -1,5 +1,5 @@
 "use client";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import {
   memo,
   useCallback,
@@ -23,6 +23,7 @@ import {
   type CatalogFilter,
   type CatalogItem,
 } from "../lib/catalog/filters";
+import { effectiveQuery } from "../lib/nav/close";
 import { Icon } from "./Icon";
 import { ProductCard } from "./ProductCard";
 
@@ -48,7 +49,12 @@ export function Catalog({
     }),
     [items, categories],
   );
-  const paramString = params.toString();
+  // While a product sheet is open the URL is /producto/<code>: keep the catalog's last query.
+  const pathname = usePathname();
+  const liveQuery = params.toString();
+  const [frozenQuery, setFrozenQuery] = useState(liveQuery);
+  if (pathname === "/" && frozenQuery !== liveQuery) setFrozenQuery(liveQuery);
+  const paramString = effectiveQuery(pathname, liveQuery, frozenQuery);
   const filter = useMemo(
     () => sanitizeFilter(parseFilter(new URLSearchParams(paramString)), known),
     [paramString, known],

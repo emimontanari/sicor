@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useRef, useState } from "react";
 import { missingVariants } from "../lib/cart/cart";
 import { dispatchCart } from "../lib/cart/store";
@@ -73,7 +74,7 @@ export function AddToQuoteButton({
         {added ? (
           <>
             {" "}
-            <a href="/cotizacion">Ver cotización</a>
+            <Link href="/cotizacion">Ver cotización</Link>
           </>
         ) : null}
       </p>

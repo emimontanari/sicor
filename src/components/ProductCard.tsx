@@ -20,7 +20,7 @@ export function ProductCard({ product, priority = false, quantity = 0, onAdd }: 
   const actions = add || ficha;
   return (
     <li className="card">
-      <Link href={href} className="card__media" tabIndex={-1} aria-hidden>
+      <Link href={href} scroll={false} className="card__media" tabIndex={-1} aria-hidden>
         <ProductImage
           src={product.image}
           alt={product.name}
@@ -35,7 +35,7 @@ export function ProductCard({ product, priority = false, quantity = 0, onAdd }: 
           <span className="card__code">Cód. {product.code}</span>
         </p>
         <h3 className="card__name">
-          <Link href={href}>{product.name}</Link>
+          <Link href={href} scroll={false}>{product.name}</Link>
         </h3>
         {product.price ? <p className="card__price">{product.price}</p> : null}
         <p className="card__cta">Consultar cotización</p>
@@ -69,7 +69,7 @@ function addControl(
 ) {
   if (product.variants) {
     return (
-      <Link href={href} className="add" aria-label={`Elegir talle o color de ${product.name}`}>
+      <Link href={href} scroll={false} className="add" aria-label={`Elegir talle o color de ${product.name}`}>
         <span>Elegir opciones</span>
         <Icon name="options" />
       </Link>
