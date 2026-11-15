@@ -54,7 +54,7 @@ afterEach(async () => {
 });
 
 describe("bootstrapCatalog (S8)", () => {
-  it("seeds categories, mappings, applies sync and publishes only PDF products", async () => {
+  it("seeds categories, mappings, applies sync and publishes every active product", async () => {
     const r = await bootstrapCatalog(deps());
     expect((await ctx.db.select().from(schema.categories)).length).toBe(CATEGORIES.length);
     expect((await ctx.db.select().from(schema.categoryMappings)).length).toBe(DEFAULT_CATEGORY_MAPPINGS.length);
@@ -62,12 +62,14 @@ describe("bootstrapCatalog (S8)", () => {
     const cats = await ctx.db.select().from(schema.categories);
     const ind = cats.find((c) => c.slug === "indumentaria-laboral")!;
     const rows = await overrides();
-    expect(rows.map((o) => o.productCode).sort()).toEqual([noNote.code, withNote.code].sort());
+    expect(rows.map((o) => o.productCode).sort()).toEqual([noNote.code, withNote.code, "OTHER"].sort());
+    expect(rows.find((o) => o.productCode === "OTHER")).toMatchObject({ visible: true, reviewed: true, categoryId: null, customDescription: null });
     const a = rows.find((o) => o.productCode === withNote.code)!;
     expect(a).toMatchObject({ visible: true, reviewed: true, categoryId: ind.id, customDescription: withNote.note });
     const b = rows.find((o) => o.productCode === noNote.code)!;
     expect(b).toMatchObject({ visible: true, reviewed: true, categoryId: ind.id, customDescription: null });
-    expect(r.published).toBe(2);
+    expect(r.published).toBe(3);
+    expect(r.alreadyHidden).toBe(0);
     expect(r.unmatched).toContain(PDF_PRODUCTS.find((p) => ![withNote.code, noNote.code].includes(p.code))!.code);
   });
 
@@ -129,10 +131,35 @@ describe("bootstrapCatalog (S8)", () => {
     expect(rows.find((r) => r.subfamily === first.subfamily && r.family === first.family)!.categoryId).toBe(other.id);
   });
 
+  it("keeps admin-hidden products hidden and counts them", async () => {
+    await bootstrapCatalog(deps());
+    await ctx.db.update(schema.productOverrides).set({ visible: false }).where(eq(schema.productOverrides.productCode, "OTHER"));
+    const r = await bootstrapCatalog(deps());
+    expect((await overrides()).find((o) => o.productCode === "OTHER")!.visible).toBe(false);
+    expect(r).toMatchObject({ published: 2, alreadyHidden: 1 });
+  });
+
+  it("does not publish discontinued products", async () => {
+    await bootstrapCatalog(deps());
+    await ctx.db.delete(schema.productOverrides);
+    // OTHER vanishes from the supplier feed, so sync marks it discontinued.
+    const r = await bootstrapCatalog({ ...deps(), source: source(product(withNote.code), product(noNote.code)) });
+    expect((await ctx.db.select().from(schema.sourceProducts)).find((p) => p.code === "OTHER")!.status).toBe("discontinued");
+    expect((await overrides()).map((o) => o.productCode)).not.toContain("OTHER");
+    expect(r.published).toBe(2);
+  });
+
+  it("fills a null visible on a non-PDF override", async () => {
+    await bootstrapCatalog(deps());
+    await ctx.db.update(schema.productOverrides).set({ visible: null, reviewed: false, customName: "X" }).where(eq(schema.productOverrides.productCode, "OTHER"));
+    await bootstrapCatalog(deps());
+    expect((await overrides()).find((o) => o.productCode === "OTHER")).toMatchObject({ visible: true, reviewed: true, customName: "X" });
+  });
+
   it("skips PDF codes missing from the supplier catalog without failing", async () => {
     const r = await bootstrapCatalog({ ...deps(), source: source(product("OTHER")) });
-    expect(await overrides()).toEqual([]);
-    expect(r.published).toBe(0);
+    expect((await overrides()).map((o) => o.productCode)).toEqual(["OTHER"]);
+    expect(r.published).toBe(1);
     expect(r.unmatched.length).toBe(PDF_PRODUCTS.length);
   });
 });

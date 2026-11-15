@@ -29,6 +29,7 @@ Los tests corren sobre PGlite en memoria: no requieren Postgres ni Docker (`pnpm
 | `pnpm db:migrate:run` | Aplica migraciones + seed de categorías (usa `DATABASE_URL`) |
 | `pnpm build:migrate` | Empaqueta el migrador a `out/migrate.cjs` (lo usa el Dockerfile) |
 | `pnpm sync:check` | Chequeo manual de cambios del proveedor; imprime el resumen JSON, sale con 1 si falla |
+| `pnpm catalog:bootstrap` | Bootstrap inicial idempotente: aplica la sincronización y publica todos los productos activos (los de PDF conservan su categoría y nota; los ocultados por el admin siguen ocultos; los discontinuados no se publican). Imprime `{appliedRunId, published, alreadyHidden, unmatched}` |
 | `pnpm admin:hash-password` | Genera el hash de `ADMIN_PASSWORD_HASH` (contraseña por stdin) |
 | `pnpm masefer:smoke` | Prueba en vivo del cliente Masefer |
 

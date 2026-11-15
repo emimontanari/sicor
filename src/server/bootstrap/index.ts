@@ -1,4 +1,4 @@
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, isNull } from "drizzle-orm";
 import type { PgDb, TestDb } from "../db";
 import { categories, categoryMappings, productOverrides, sourceProducts } from "../db/schema";
 import { seedCategories } from "../db/seed";
@@ -20,8 +20,10 @@ export interface BootstrapDeps {
 export interface BootstrapResult {
   /** Sync run id applied by this bootstrap (null when there was nothing pending). */
   appliedRunId: number | null;
-  /** PDF products now visible (present in the supplier data). */
+  /** Active products visible after the bootstrap. */
   published: number;
+  /** Active products the admin explicitly hid (left hidden). */
+  alreadyHidden: number;
   /** PDF codes that do not exist in the supplier data (skipped). */
   unmatched: string[];
 }
@@ -61,14 +63,14 @@ export async function bootstrapCatalog(deps: BootstrapDeps): Promise<BootstrapRe
     appliedRunId = run.id;
   }
 
-  const present = new Set(
-    (await db.select({ code: sourceProducts.code }).from(sourceProducts).where(
-      inArray(sourceProducts.code, PDF_PRODUCTS.map((p) => p.code)),
-    )).map((r) => r.code),
-  );
-  const unmatched = [...new Set(PDF_PRODUCTS.filter((p) => !present.has(p.code)).map((p) => p.code))];
+  const pdfRows = await db
+    .select({ code: sourceProducts.code, status: sourceProducts.status })
+    .from(sourceProducts)
+    .where(inArray(sourceProducts.code, PDF_PRODUCTS.map((p) => p.code)));
+  const known = new Set(pdfRows.map((r) => r.code));
+  const present = new Set(pdfRows.filter((r) => r.status === "active").map((r) => r.code));
+  const unmatched = [...new Set(PDF_PRODUCTS.filter((p) => !known.has(p.code)).map((p) => p.code))];
 
-  let published = 0;
   for (const p of PDF_PRODUCTS) {
     if (!present.has(p.code)) continue;
     const categoryId = idBySlug.get(p.categorySlug) ?? null;
@@ -90,7 +92,34 @@ export async function bootstrapCatalog(deps: BootstrapDeps): Promise<BootstrapRe
         await db.update(productOverrides).set({ ...patch, updatedAt: now() }).where(eq(productOverrides.productCode, p.code));
       }
     }
-    published++;
   }
-  return { appliedRunId, published, unmatched };
+
+  // Every other active product: create a visible, reviewed override or fill nulls.
+  const activeCodes = (await db.select({ code: sourceProducts.code }).from(sourceProducts).where(eq(sourceProducts.status, "active"))).map((r) => r.code);
+  const withOverride = new Set((await db.select({ code: productOverrides.productCode }).from(productOverrides)).map((r) => r.code));
+  const missing = activeCodes.filter((c) => !withOverride.has(c));
+  for (let i = 0; i < missing.length; i += 200) {
+    await db
+      .insert(productOverrides)
+      .values(missing.slice(i, i + 200).map((productCode) => ({ productCode, visible: true, reviewed: true, updatedAt: now() })))
+      .onConflictDoNothing();
+  }
+  await db
+    .update(productOverrides)
+    .set({ visible: true, reviewed: true, updatedAt: now() })
+    .where(
+      and(
+        isNull(productOverrides.visible),
+        inArray(productOverrides.productCode, db.select({ c: sourceProducts.code }).from(sourceProducts).where(eq(sourceProducts.status, "active"))),
+      ),
+    );
+
+  const activeOverrides = await db
+    .select({ visible: productOverrides.visible })
+    .from(productOverrides)
+    .innerJoin(sourceProducts, eq(sourceProducts.code, productOverrides.productCode))
+    .where(eq(sourceProducts.status, "active"));
+  const published = activeOverrides.filter((o) => o.visible === true).length;
+  const alreadyHidden = activeOverrides.filter((o) => o.visible === false).length;
+  return { appliedRunId, published, alreadyHidden, unmatched };
 }
