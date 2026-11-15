@@ -14,7 +14,7 @@ Redesign the quote cart page with gentle-design, then implement the chosen artbo
 
 | ID | Specs | Task | Route | Status | Commit |
 |----|-------|------|-------|--------|--------|
-| T1 | S1–S5 | gentle-design artboards for /cotizacion (mobile-first, desktop shown) | gentle-ai-worker | pending | |
+| T1 | S1–S5 | gentle-design artboards for /cotizacion (mobile-first, desktop shown) | gentle-ai-worker | done | docs(design) quote cart commit |
 | T2 | S1–S5 | Implement chosen artboard | gentle-ai-worker | blocked: waiting for user's design choice | |
 
 ## Log
