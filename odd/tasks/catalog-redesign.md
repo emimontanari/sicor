@@ -14,7 +14,7 @@ User feedback after testing the local app: only 28 products visible (expected mo
 |----|-------|------|-------|--------|--------|
 | T1 | S1 | Bootstrap publishes all active products (respecting admin-hidden), tests; re-run on dev DB | gentle-ai-worker | done (dev DB: 551 visible) | feat(bootstrap) commit |
 | T2 | S2, S3 | Design system sync + 3 design directions for the single-page public catalog (mobile + desktop) | gentle-ai-worker | done | docs(design) commit |
-| T3 | S2, S3 | Implement chosen artboard `01-chips-y-hoja-de-filtros.html` in Next.js | gentle-ai-worker | in progress | |
+| T3 | S2, S3 | Implement chosen artboard `01-chips-y-hoja-de-filtros.html` in Next.js | gentle-ai-worker | done | feat(ui) single-page commit |
 
 ## Log
 
@@ -23,3 +23,4 @@ User feedback after testing the local app: only 28 products visible (expected mo
 - **L3** (evidence): dev DB: 551 active (Seguridad Industrial 300 / 195 with photo, Calzado 97/90, Indumentaria 78/69, Seguridad Vial 76/65); 28 visible, 523 never reviewed (no override row). `gentle_design list`: no designs, no design/system.md, design source `src/app/globals.css`.
 - **L4** (design, T2): design system synced from `src/app/globals.css` (`design/system.md`, `design/system.html`); 3 directions in `design/catalog-single-page/`: `01-chips-y-hoja-de-filtros.html` (sticky chips + bottom-sheet filters), `02-barra-lateral-y-cajon.html` (sidebar + drawer, grouped collapsible filters), `03-mosaicos-de-categoria.html` (category tiles + grid/list). Waiting for the user to pick one (T3).
 - **L5** (handoff): user chose `design/catalog-single-page/01-chips-y-hoja-de-filtros.html` ("Chips fijos + hoja de filtros") via gentle-design implement; `02-barra-lateral-y-cajon.html` and `03-mosaicos-de-categoria.html` remain alternatives. Visual spec = artboard; tokens = design/system.md.
+- **L6** (evidence): T3 — client-side filtering over slim items (551), URL state `?categoria=&marca=&q=` with push/replace history, quick-add only for products without variants (others → "Elegir opciones"), `/categoria/*` and `/buscar` 308 → `/`. Suite 257/257, build OK. Parent reviewed 390/1280 screenshots. Home HTML ≈622 KB uncompressed in dev (all cards SSR).
