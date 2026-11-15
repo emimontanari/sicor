@@ -29,6 +29,7 @@ Los tests corren sobre PGlite en memoria: no requieren Postgres ni Docker (`pnpm
 | `pnpm db:migrate:run` | Aplica migraciones + seed de categorías (usa `DATABASE_URL`) |
 | `pnpm build:migrate` | Empaqueta el migrador a `out/migrate.cjs` (lo usa el Dockerfile) |
 | `pnpm sync:check` | Chequeo manual de cambios del proveedor; imprime el resumen JSON, sale con 1 si falla |
+| `pnpm admin:hash-password` | Genera el hash de `ADMIN_PASSWORD_HASH` (contraseña por stdin) |
 | `pnpm masefer:smoke` | Prueba en vivo del cliente Masefer |
 
 ## Variables de entorno
@@ -41,6 +42,9 @@ No hay `.env.example`; estas son todas:
 | `IMAGES_DIR` | sí en producción (`/app/data/images`); local por defecto `./data/images` en `sync:check` | Directorio de imágenes copiadas |
 | `SYNC_SECRET` | para el endpoint | Bearer del `POST /api/internal/sync/check`; sin él responde 503 |
 | `POSTGRES_PASSWORD` | solo docker-compose | Password de Postgres |
+| `ADMIN_EMAIL` | para el dashboard | Email del único usuario admin (no distingue mayúsculas). Sin esto el admin queda deshabilitado; el catálogo público sigue funcionando. |
+| `ADMIN_PASSWORD_HASH` | para el dashboard | Hash scrypt de la contraseña. Generarlo con `pnpm admin:hash-password` (lee la contraseña por stdin, nunca por argumento). |
+| `SESSION_SECRET` | para el dashboard | Secreto aleatorio de al menos 32 caracteres (ej. `openssl rand -hex 32`) que firma la cookie de sesión (7 días). Si falta o es más corto, el admin queda deshabilitado. |
 | `WHATSAPP_NUMBER` | no | WhatsApp de SICOR, solo dígitos con código de país (54 + 9 para móvil). Ej. `5493516682089`. Fallback hasta que exista el ajuste del dashboard (Fase 3 lo guarda en `settings.whatsapp_number`, que tiene prioridad). Vacío deshabilita el botón. |
 
 ## Sincronización

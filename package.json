@@ -13,6 +13,7 @@
     "lint": "eslint .",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
+    "admin:hash-password": "tsx src/server/auth/hash-cli.ts",
     "masefer:smoke": "tsx src/server/masefer/smoke.ts",
     "catalog:bootstrap": "tsx src/server/bootstrap/cli.ts",
     "sync:check": "tsx src/server/jobs/cli.ts",

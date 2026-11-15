@@ -10,6 +10,9 @@ services:
       IMAGES_DIR: /app/data/images
       SYNC_SECRET: ${SYNC_SECRET:?SYNC_SECRET is required}
       WHATSAPP_NUMBER: ${WHATSAPP_NUMBER:-}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_PASSWORD_HASH: ${ADMIN_PASSWORD_HASH:-}
+      SESSION_SECRET: ${SESSION_SECRET:-}
     expose:
       - "3000"
     healthcheck:
