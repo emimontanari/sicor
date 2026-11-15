@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AddToQuoteButton } from "../../../components/AddToQuoteButton";
+import { ProductDocuments } from "../../../components/ProductDocuments";
 import { ProductImage } from "../../../components/ProductImage";
 import { VariantChips } from "../../../components/VariantChips";
 import { categoryIcon } from "../../../lib/catalog/categories";
@@ -98,6 +99,7 @@ export default async function ProductPage({ params }: Params) {
           sizes={product.sizes}
           colors={product.colors}
         />
+        <ProductDocuments documents={product.documents} />
       </div>
     </article>
   );

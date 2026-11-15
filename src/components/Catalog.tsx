@@ -124,7 +124,7 @@ export function Catalog({
   const [allBrands, setAllBrands] = useState(false);
 
   const active = activeFilterCount(filter);
-  const sheetCount = filter.categories.length + filter.brands.length;
+  const sheetCount = filter.categories.length + filter.brands.length + (filter.ficha ? 1 : 0);
   const clear = () => {
     setText("");
     go(EMPTY_FILTER);
@@ -232,6 +232,18 @@ export function Catalog({
         </button>
       </div>
 
+      <div className="docbar">
+        <button
+          type="button"
+          className={filter.ficha ? "chip-btn chip-btn--sm is-on" : "chip-btn chip-btn--sm"}
+          aria-pressed={filter.ficha}
+          onClick={() => go({ ...filter, ficha: !filter.ficha })}
+        >
+          <Icon name="pdf" className="chip-btn__pdf" />
+          <span>Con ficha técnica</span> <span className="cnt">{facets.fichaCount}</span>
+        </button>
+      </div>
+
       <div className="status">
         <p className="status__n" role="status">
           {plural(results.length)}
@@ -264,6 +276,17 @@ export function Catalog({
                 <Icon name="x" />
               </button>
             ))}
+            {filter.ficha ? (
+              <button
+                type="button"
+                className="fchip"
+                aria-label="Quitar filtro Con ficha técnica"
+                onClick={() => go({ ...filter, ficha: false })}
+              >
+                <span>Con ficha técnica</span>
+                <Icon name="x" />
+              </button>
+            ) : null}
             {filter.brands.map((b) => (
               <button
                 key={b}
@@ -338,6 +361,21 @@ export function Catalog({
                 <span className="cnt">{facets.categoryCounts[c.slug] ?? 0}</span>
               </label>
             ))}
+          </fieldset>
+          <fieldset className="fs">
+            <legend>Documentos</legend>
+            <label className="chk">
+              <input
+                type="checkbox"
+                checked={filter.ficha}
+                onChange={() => go({ ...filter, ficha: !filter.ficha }, "replace")}
+              />
+              <span className="chk__box" aria-hidden>
+                <Icon name="check" />
+              </span>
+              <span className="chk__txt">Con ficha técnica</span>
+              <span className="cnt">{facets.fichaCount}</span>
+            </label>
           </fieldset>
           <fieldset className="fs">
             <legend>Marca {filter.brands.length > 0 ? `(${filter.brands.length})` : ""}</legend>

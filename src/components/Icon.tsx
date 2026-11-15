@@ -12,7 +12,8 @@ export type IconName =
   | "plus"
   | "check"
   | "cart"
-  | "options";
+  | "options"
+  | "pdf";
 
 /** References a symbol from <IconSprite />. Decorative: always aria-hidden. */
 export function Icon({ name, className }: { name: IconName; className?: string }) {
@@ -73,6 +74,13 @@ export function IconSprite() {
         </symbol>
         <symbol id="i-options" viewBox="0 0 24 24">
           <path d="m9 6 6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" />
+        </symbol>
+        <symbol id="i-pdf" viewBox="0 0 24 24">
+          <path d="M6 2h8l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" fill="#e1202f" />
+          <path d="M14 2v5h5z" fill="#fff" opacity="0.45" />
+          <text x="11.5" y="17.2" textAnchor="middle" fontSize="6.6" fontWeight="800" fontFamily="Arial, sans-serif" fill="#fff">
+            PDF
+          </text>
         </symbol>
         <symbol id="i-cart" viewBox="0 0 24 24">
           <path d="M3 4h3l2.4 11h9.7L20 8H7" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />

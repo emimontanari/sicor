@@ -19,6 +19,7 @@ const item = (over: Partial<CatalogItem> & { code: string }): CatalogItem => ({
   image: null,
   variants: false,
   price: null,
+  hasFicha: false,
   ...over,
 });
 
@@ -33,17 +34,18 @@ const ITEMS: CatalogItem[] = [
 describe("parseFilter / serializeFilter (URL <-> state)", () => {
   it("parses repeated categoria/marca and q from URLSearchParams", () => {
     const f = parseFilter(new URLSearchParams("categoria=a&categoria=b&marca=OMBU&q=guante"));
-    expect(f).toEqual({ categories: ["a", "b"], brands: ["OMBU"], q: "guante" });
+    expect(f).toEqual({ categories: ["a", "b"], brands: ["OMBU"], q: "guante", ficha: false });
   });
   it("trims, drops empties and duplicates", () => {
     const f = parseFilter(new URLSearchParams("categoria=a&categoria= b &categoria=&categoria=a&marca= OMBU &q=%20%20x%20"));
-    expect(f).toEqual({ categories: ["a", "b"], brands: ["OMBU"], q: "x" });
+    expect(f).toEqual({ categories: ["a", "b"], brands: ["OMBU"], q: "x", ficha: false });
   });
   it("accepts a Next searchParams record (string | string[] | undefined)", () => {
     expect(parseFilter({ categoria: ["a", "b"], marca: "OMBU", q: undefined })).toEqual({
       categories: ["a", "b"],
       brands: ["OMBU"],
       q: "",
+      ficha: false,
     });
   });
   it("caps q at 100 chars", () => {
@@ -53,18 +55,19 @@ describe("parseFilter / serializeFilter (URL <-> state)", () => {
     expect(parseFilter(new URLSearchParams(""))).toEqual(EMPTY_FILTER);
   });
   it("serializes in a stable order without a leading '?'", () => {
-    expect(serializeFilter({ categories: ["a", "b"], brands: ["OMBU", "3M"], q: "guante verde" })).toBe(
+    expect(serializeFilter({ categories: ["a", "b"], brands: ["OMBU", "3M"], q: "guante verde", ficha: false })).toBe(
       "categoria=a&categoria=b&marca=OMBU&marca=3M&q=guante+verde",
     );
     expect(serializeFilter(EMPTY_FILTER)).toBe("");
   });
   it("round-trips brands with spaces, accents, commas and ampersands", () => {
-    const f = { categories: ["calzado-de-seguridad"], brands: ["Funcional Ltda", "A&B, Ñandú"], q: "bota 38/48 & más" };
+    const f = { categories: ["calzado-de-seguridad"], brands: ["Funcional Ltda", "A&B, Ñandú"], q: "bota 38/48 & más", ficha: true };
     expect(parseFilter(new URLSearchParams(serializeFilter(f)))).toEqual(f);
   });
   it("counts active filters (q counts as one)", () => {
     expect(activeFilterCount(EMPTY_FILTER)).toBe(0);
-    expect(activeFilterCount({ categories: ["a", "b"], brands: ["x"], q: "y" })).toBe(4);
+    expect(activeFilterCount({ categories: ["a", "b"], brands: ["x"], q: "y", ficha: false })).toBe(4);
+    expect(activeFilterCount({ ...EMPTY_FILTER, ficha: true })).toBe(1);
   });
 });
 
@@ -72,8 +75,8 @@ describe("sanitizeFilter", () => {
   const known = { categories: ["calzado-de-seguridad", "otros"], brands: ["OMBU", "Funcional Ltda"] };
   it("drops unknown categories/brands and canonicalizes brand case/accents", () => {
     expect(
-      sanitizeFilter({ categories: ["otros", "nope", "otros"], brands: ["ombu", "ghost", "FUNCIONAL LTDA"], q: "a" }, known),
-    ).toEqual({ categories: ["otros"], brands: ["OMBU", "Funcional Ltda"], q: "a" });
+      sanitizeFilter({ categories: ["otros", "nope", "otros"], brands: ["ombu", "ghost", "FUNCIONAL LTDA"], q: "a", ficha: true }, known),
+    ).toEqual({ categories: ["otros"], brands: ["OMBU", "Funcional Ltda"], q: "a", ficha: true });
   });
 });
 
@@ -104,14 +107,44 @@ describe("filterItems", () => {
   });
 });
 
+describe("ficha filter (?ficha=1)", () => {
+  const WITH = [
+    item({ code: "A", brand: "OMBU", category: "calzado", hasFicha: true, fichaUrl: "/docs/A/0.pdf" }),
+    item({ code: "B", brand: "OMBU", category: "calzado" }),
+    item({ code: "C", brand: "MSF", category: "otros", hasFicha: true, fichaUrl: "/docs/C/0.pdf" }),
+  ];
+  it("parses only ficha=1 as active and serializes it last", () => {
+    expect(parseFilter(new URLSearchParams("ficha=1")).ficha).toBe(true);
+    expect(parseFilter(new URLSearchParams("ficha=0")).ficha).toBe(false);
+    expect(parseFilter(new URLSearchParams("ficha=si")).ficha).toBe(false);
+    expect(parseFilter({ ficha: "1" }).ficha).toBe(true);
+    expect(serializeFilter({ ...EMPTY_FILTER, ficha: true })).toBe("ficha=1");
+    expect(serializeFilter({ categories: ["a"], brands: [], q: "x", ficha: true })).toBe("categoria=a&q=x&ficha=1");
+    expect(serializeFilter(EMPTY_FILTER)).toBe("");
+  });
+  it("keeps only products with a ficha, combinable with other filters", () => {
+    expect(filterItems(WITH, { ...EMPTY_FILTER, ficha: true }).map((i) => i.code)).toEqual(["A", "C"]);
+    expect(filterItems(WITH, { ...EMPTY_FILTER, ficha: true, brands: ["OMBU"] }).map((i) => i.code)).toEqual(["A"]);
+    expect(filterItems(WITH, EMPTY_FILTER)).toHaveLength(3);
+  });
+  it("facet count ignores its own dimension but respects the others", () => {
+    expect(computeFacets(WITH, EMPTY_FILTER).fichaCount).toBe(2);
+    expect(computeFacets(WITH, { ...EMPTY_FILTER, ficha: true }).fichaCount).toBe(2);
+    expect(computeFacets(WITH, { ...EMPTY_FILTER, brands: ["OMBU"] }).fichaCount).toBe(1);
+    const f = computeFacets(WITH, { ...EMPTY_FILTER, ficha: true });
+    expect(f.resultCount).toBe(2);
+    expect(f.categoryCounts).toEqual({ calzado: 1, otros: 1 });
+  });
+});
+
 describe("computeFacets", () => {
   it("category counts ignore the category filter but respect brand and q", () => {
-    const f = computeFacets(ITEMS, { categories: ["guantes-de-proteccion"], brands: ["OMBU"], q: "" });
+    const f = computeFacets(ITEMS, { categories: ["guantes-de-proteccion"], brands: ["OMBU"], q: "", ficha: false });
     expect(f.categoryCounts).toEqual({ "calzado-de-seguridad": 2 });
     expect(f.categoryTotal).toBe(2);
   });
   it("brand counts ignore the brand filter but respect category and q; brands are sorted, brandless excluded", () => {
-    const f = computeFacets(ITEMS, { categories: ["calzado-de-seguridad"], brands: ["MSF"], q: "" });
+    const f = computeFacets(ITEMS, { categories: ["calzado-de-seguridad"], brands: ["MSF"], q: "", ficha: false });
     expect(f.brands.map((b) => b.name)).toEqual(["Funcional Ltda", "MSF", "OMBU"]);
     expect(Object.fromEntries(f.brands.map((b) => [b.name, b.count]))).toEqual({
       "Funcional Ltda": 0,
@@ -120,7 +153,7 @@ describe("computeFacets", () => {
     });
   });
   it("reports the filtered result count", () => {
-    expect(computeFacets(ITEMS, { categories: [], brands: [], q: "guante" }).resultCount).toBe(1);
+    expect(computeFacets(ITEMS, { categories: [], brands: [], q: "guante", ficha: false }).resultCount).toBe(1);
   });
 });
 

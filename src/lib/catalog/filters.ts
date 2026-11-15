@@ -10,14 +10,20 @@ export type CatalogItem = {
   /** True when the product has talle/color options: quick-add must go through the product page. */
   variants: boolean;
   price: string | null;
-  /** True when the product has a ficha técnica PDF (optional so older fixtures stay valid). */
-  hasFicha?: boolean;
+  /** True when the product has a ficha técnica PDF. */
+  hasFicha: boolean;
   /** App URL of the ficha técnica PDF; present only when `hasFicha`. */
   fichaUrl?: string;
 };
 
-export type CatalogFilter = { categories: string[]; brands: string[]; q: string };
-export const EMPTY_FILTER: CatalogFilter = { categories: [], brands: [], q: "" };
+export type CatalogFilter = {
+  categories: string[];
+  brands: string[];
+  q: string;
+  /** Only products with a ficha técnica (`?ficha=1`). */
+  ficha: boolean;
+};
+export const EMPTY_FILTER: CatalogFilter = { categories: [], brands: [], q: "", ficha: false };
 export const MAX_QUERY = 100;
 
 export function normalizeText(s: string): string {
@@ -42,6 +48,7 @@ export function parseFilter(src: ParamSource): CatalogFilter {
     categories: uniqueTrimmed(all(src, "categoria")),
     brands: uniqueTrimmed(all(src, "marca")),
     q: (all(src, "q")[0] ?? "").trim().slice(0, MAX_QUERY).trim(),
+    ficha: all(src, "ficha")[0]?.trim() === "1",
   };
 }
 
@@ -52,11 +59,12 @@ export function serializeFilter(f: CatalogFilter): string {
   for (const b of f.brands) p.append("marca", b);
   const q = f.q.trim().slice(0, MAX_QUERY);
   if (q) p.set("q", q);
+  if (f.ficha) p.set("ficha", "1");
   return p.toString();
 }
 
 export const activeFilterCount = (f: CatalogFilter): number =>
-  f.categories.length + f.brands.length + (f.q.trim() ? 1 : 0);
+  f.categories.length + f.brands.length + (f.q.trim() ? 1 : 0) + (f.ficha ? 1 : 0);
 
 /** Drops categories/brands that do not exist (stale links) and canonicalizes brand spelling. */
 export function sanitizeFilter(
@@ -76,6 +84,7 @@ export function sanitizeFilter(
       ),
     ],
     q: f.q,
+    ficha: f.ficha,
   };
 }
 
@@ -89,11 +98,12 @@ function haystack(i: CatalogItem): string {
   return h;
 }
 
-type Skip = "categories" | "brands" | undefined;
+type Skip = "categories" | "brands" | "ficha" | undefined;
 
 function matches(i: CatalogItem, f: CatalogFilter, words: string[], skip: Skip): boolean {
   if (skip !== "categories" && f.categories.length > 0 && !f.categories.includes(i.category)) return false;
   if (skip !== "brands" && f.brands.length > 0 && (i.brand === null || !f.brands.includes(i.brand))) return false;
+  if (skip !== "ficha" && f.ficha && !i.hasFicha) return false;
   if (words.length > 0) {
     const h = haystack(i);
     if (!words.every((w) => h.includes(w))) return false;
@@ -116,6 +126,8 @@ export type Facets = {
   categoryTotal: number;
   /** Every brand, sorted, with its count under the other filters (own dimension ignored). */
   brands: { name: string; count: number }[];
+  /** Products with a ficha técnica under the other filters (own dimension ignored). */
+  fichaCount: number;
 };
 
 export function computeFacets(items: readonly CatalogItem[], f: CatalogFilter): Facets {
@@ -124,6 +136,7 @@ export function computeFacets(items: readonly CatalogItem[], f: CatalogFilter): 
   const brandCounts = new Map<string, number>();
   let resultCount = 0;
   let categoryTotal = 0;
+  let fichaCount = 0;
   for (const i of items) {
     if (i.brand !== null && !brandCounts.has(i.brand)) brandCounts.set(i.brand, 0);
     if (matches(i, f, words, undefined)) resultCount++;
@@ -131,6 +144,7 @@ export function computeFacets(items: readonly CatalogItem[], f: CatalogFilter): 
       categoryCounts[i.category] = (categoryCounts[i.category] ?? 0) + 1;
       categoryTotal++;
     }
+    if (i.hasFicha && matches(i, f, words, "ficha")) fichaCount++;
     if (i.brand !== null && matches(i, f, words, "brands")) {
       brandCounts.set(i.brand, (brandCounts.get(i.brand) ?? 0) + 1);
     }
@@ -138,5 +152,5 @@ export function computeFacets(items: readonly CatalogItem[], f: CatalogFilter): 
   const brands = [...brandCounts]
     .map(([name, count]) => ({ name, count }))
     .sort((a, b) => a.name.localeCompare(b.name, "es"));
-  return { resultCount, categoryCounts, categoryTotal, brands };
+  return { resultCount, categoryCounts, categoryTotal, brands, fichaCount };
 }

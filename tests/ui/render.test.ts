@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { AddToQuoteButton } from "../../src/components/AddToQuoteButton";
 import { CategoryList, badgeNumber } from "../../src/components/CategoryList";
 import { ProductCard } from "../../src/components/ProductCard";
+import { ProductDocuments } from "../../src/components/ProductDocuments";
 import { VariantChips } from "../../src/components/VariantChips";
 import type { CatalogItem } from "../../src/lib/catalog/filters";
 
@@ -15,6 +16,7 @@ const product = (over: Partial<CatalogItem> = {}): CatalogItem => ({
   image: "/images/CAM1/a.jpg",
   variants: false,
   price: null,
+  hasFicha: false,
   ...over,
 });
 
@@ -61,6 +63,61 @@ describe("UI smoke renders", () => {
     expect(html).toContain("Sin foto");
     expect(html).toContain("CAM 1");
     expect(html).not.toContain("<img");
+  });
+
+  it("card shows an accessible ficha técnica PDF link that opens in a new tab, only when the product has one", () => {
+    const withFicha = renderToStaticMarkup(
+      createElement(ProductCard, {
+        product: product({ hasFicha: true, fichaUrl: "/docs/CAM%201/0-ficha.pdf" }),
+        onAdd: () => {},
+      }),
+    );
+    expect(withFicha).toContain("Ficha técnica");
+    expect(withFicha).toContain('aria-label="Ver ficha técnica (PDF)"');
+    expect(withFicha).toContain('href="/docs/CAM%201/0-ficha.pdf"');
+    expect(withFicha).toContain('target="_blank"');
+    expect(withFicha).toContain('rel="noopener noreferrer"');
+    expect(withFicha).toContain("#i-pdf");
+    // link, not a button: it cannot trigger add-to-cart; the add button is a separate control
+    expect(withFicha.match(/<button/g)).toHaveLength(1);
+    const without = renderToStaticMarkup(createElement(ProductCard, { product: product(), onAdd: () => {} }));
+    expect(without).not.toContain("Ficha técnica");
+    expect(without).not.toContain("_blank");
+    const flagOnly = renderToStaticMarkup(createElement(ProductCard, { product: product({ hasFicha: true }) }));
+    expect(flagOnly).not.toContain("_blank");
+  });
+
+  it("card with variants and ficha keeps both the options link and the ficha link", () => {
+    const html = renderToStaticMarkup(
+      createElement(ProductCard, { product: product({ variants: true, hasFicha: true, fichaUrl: "/docs/x.pdf" }) }),
+    );
+    expect(html).toContain("Elegir opciones");
+    expect(html).toContain('href="/docs/x.pdf"');
+  });
+
+  it("product page documents: prominent ficha button plus a certifications list of the other PDFs", () => {
+    const docs = [
+      { kind: "ficha" as const, label: "Ficha técnica", url: "/docs/Z/0-ficha.pdf" },
+      { kind: "certificacion" as const, label: "Licencia IRAM", url: "/docs/Z/1-iram.pdf" },
+      { kind: "certificacion" as const, label: "NIOSH", url: "/docs/Z/2-niosh.pdf" },
+    ];
+    const html = renderToStaticMarkup(createElement(ProductDocuments, { documents: docs }));
+    expect(html).toContain("Ver ficha técnica");
+    expect(html).toContain('href="/docs/Z/0-ficha.pdf"');
+    expect(html).toContain("Certificaciones y documentos");
+    expect(html).toContain("Licencia IRAM");
+    expect(html).toContain('href="/docs/Z/2-niosh.pdf"');
+    expect(html.match(/target="_blank"/g)).toHaveLength(3);
+    expect(html.match(/rel="noopener noreferrer"/g)).toHaveLength(3);
+    // ficha is not repeated inside the list
+    expect(html.match(/\/docs\/Z\/0-ficha\.pdf/g)).toHaveLength(1);
+    const onlyCerts = renderToStaticMarkup(createElement(ProductDocuments, { documents: docs.slice(1) }));
+    expect(onlyCerts).not.toContain("Ver ficha técnica");
+    expect(onlyCerts).toContain("Certificaciones y documentos");
+    const onlyFicha = renderToStaticMarkup(createElement(ProductDocuments, { documents: docs.slice(0, 1) }));
+    expect(onlyFicha).toContain("Ver ficha técnica");
+    expect(onlyFicha).not.toContain("Certificaciones");
+    expect(renderToStaticMarkup(createElement(ProductDocuments, { documents: [] }))).toBe("");
   });
 
   it("quick add: plain product gets an Agregar button; variants route to the product page; added state shows quantity", () => {
