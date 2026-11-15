@@ -1,0 +1,9 @@
+{
+  "title": "Acciones de la tarjeta + stepper de cantidad",
+  "brief": "Tarjeta horizontal como la referencia (foto a la izquierda; marca · código, nombre, Consultar cotización; fila de botones secundarios Ficha técnica / Ver detalle sin favorito; botón primario a ancho completo) con stepper − N + al agregar, quitar en 1 con Deshacer y estado para productos con talle/color. Móvil 390 y escritorio 4 columnas.",
+  "feature": "odd/tasks/card-actions.md",
+  "artboards": [
+    { "file": "01-paleta-referencia.html", "title": "Paleta de referencia: rojo + stepper carbón", "tradeoff": "Agregar en rojo sólido y stepper carbón sólido con controles blancos: máximo contraste y coherente con el sistema; el carbón pesa si hay muchas tarjetas agregadas.", "width": 1280, "height": 960 },
+    { "file": "02-stepper-tintado-papelera.html", "title": "Stepper tintado con papelera en 1", "tradeoff": "Stepper blanco con borde rojo y papelera en cantidad 1: quitar es explícito y más liviano en listas largas; el estado agregado se distingue menos del botón rojo.", "width": 1280, "height": 960 }
+  ]
+}
