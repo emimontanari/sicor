@@ -85,7 +85,12 @@ export default async function ProductPage({ params }: Params) {
 
         {product.price ? <p className="price">{product.price}</p> : null}
         <p className="quote-label">Consultar cotización</p>
-        <AddToQuoteButton code={product.code} name={product.name} />
+        <AddToQuoteButton
+          code={product.code}
+          name={product.name}
+          sizes={product.sizes}
+          colors={product.colors}
+        />
       </div>
     </article>
   );

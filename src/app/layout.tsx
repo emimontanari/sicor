@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
+import { CartButton } from "../components/CartButton";
 import { SiteFooter } from "../components/SiteFooter";
 import { SiteHeader } from "../components/SiteHeader";
 import { baseUrl, SITE_DESCRIPTION } from "../lib/seo/metadata";
@@ -27,6 +28,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <SiteHeader />
         <main id="contenido">{children}</main>
         <SiteFooter />
+        <CartButton />
       </body>
     </html>
   );
