@@ -329,6 +329,7 @@ h3 {
 .card__actions {
   display: flex;
   flex-direction: column-reverse; /* ficha badge above the add button in the grid */
+  align-items: flex-start; /* compact buttons: never stretch with the card */
   gap: 0.4rem;
   margin: 0.6rem 0.65rem 0.65rem;
 }
@@ -389,6 +390,9 @@ h3 {
 }
 .card__actions .add {
   margin: 0;
+  padding: 0 0.9rem;
+  max-width: 180px;
+  font-size: 0.76rem;
 }
 .add:hover,
 .add.is-added {
@@ -537,6 +541,14 @@ h3 {
 .product__info .btn {
   width: 100%;
 }
+@media (min-width: 640px) {
+  .product__info .btn {
+    width: auto;
+    min-width: 220px;
+    max-width: 320px;
+    padding-inline: 1.5rem;
+  }
+}
 .notfound {
   text-align: center;
   padding-top: 3rem;
@@ -651,7 +663,7 @@ h3 {
     margin: 0.5rem 0.75rem 0.65rem;
   }
   .card__actions .add {
-    flex: 1 1 auto;
+    flex: 0 1 auto;
     min-width: 0;
   }
   .card__actions .ficha {
