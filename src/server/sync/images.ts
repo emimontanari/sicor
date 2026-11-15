@@ -5,6 +5,8 @@ import path from "node:path";
 export interface ImageStore {
   /** Copies one supplier image into app storage; returns its local path (relative to the store root). */
   save(input: { code: string; index: number; url: string }): Promise<string>;
+  /** Optional: whether a stored relative path still exists on disk. */
+  has?(rel: string): Promise<boolean>;
 }
 
 export interface FsImageStoreOptions {
@@ -51,6 +53,15 @@ export class FsImageStore implements ImageStore {
     if (!dir) throw new Error("IMAGES_DIR is not set");
     this.timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
     this.maxBytes = options.maxBytes ?? DEFAULT_MAX_BYTES;
+  }
+
+  async has(rel: string): Promise<boolean> {
+    try {
+      await access(path.resolve(this.dir!, rel));
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   async save({ code, index, url }: { code: string; index: number; url: string }): Promise<string> {

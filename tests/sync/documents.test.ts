@@ -203,19 +203,75 @@ describe("FsDocumentStore", () => {
     expect(await files(dir)).toEqual([]);
   });
 
-  it("rejects oversize (declared and streamed), default cap is 20 MB, and leaves no files", async () => {
+  it("rejects oversize (declared and streamed), default cap is 40 MB, and leaves no files", async () => {
     const declared = new FsDocumentStore(dir, (async () => new Response("%PDF-1", { headers: { "content-type": "application/pdf", "content-length": "999" } })) as typeof fetch, { maxBytes: 100 });
     await expect(declared.save({ code: "A", index: 0, url: URL_OK })).rejects.toThrow(/too large/i);
     const streamed = new FsDocumentStore(dir, (async () => pdf("%PDF-" + "x".repeat(500))) as typeof fetch, { maxBytes: 100 });
     await expect(streamed.save({ code: "A", index: 1, url: URL_OK })).rejects.toThrow(/too large/i);
-    const big = new FsDocumentStore(dir, (async () => new Response("%PDF-1", { headers: { "content-type": "application/pdf", "content-length": String(21 * 1024 * 1024) } })) as typeof fetch);
+    const big = new FsDocumentStore(dir, (async () => new Response("%PDF-1", { headers: { "content-type": "application/pdf", "content-length": String(41 * 1024 * 1024) } })) as typeof fetch);
     await expect(big.save({ code: "A", index: 2, url: URL_OK })).rejects.toThrow(/too large/i);
     expect(await files(dir)).toEqual([]);
   });
 
+  it("accepts %PDF- anywhere in the first 1024 bytes, rejects it later", async () => {
+    const lead = new FsDocumentStore(dir, (async () => pdf("\n \r\n  %PDF-1.4 x")) as typeof fetch);
+    await expect(lead.save({ code: "A", index: 0, url: URL_OK })).resolves.toMatch(/\.pdf$/);
+    const edge = new FsDocumentStore(dir, (async () => pdf(" ".repeat(1019) + "%PDF-")) as typeof fetch);
+    await expect(edge.save({ code: "B", index: 0, url: URL_OK })).resolves.toMatch(/\.pdf$/);
+    const late = new FsDocumentStore(dir, (async () => pdf(" ".repeat(1020) + "%PDF-")) as typeof fetch);
+    await expect(late.save({ code: "C", index: 0, url: URL_OK })).rejects.toThrow(/PDF/);
+  });
+
+  describe("transient retries", () => {
+    const mk = (responses: (() => Response | Promise<Response>)[], delays: number[] = []) => {
+      let i = 0;
+      const fetchFn = (async () => responses[Math.min(i++, responses.length - 1)]()) as typeof fetch;
+      const store = new FsDocumentStore(dir, fetchFn, { sleep: async (ms) => void delays.push(ms) });
+      return { store, calls: () => i };
+    };
+    const html = () => pdf("<html>", "text/html; charset=utf-8");
+    it.each([
+      ["html content-type", html],
+      ["429", () => new Response("", { status: 429 })],
+      ["503", () => new Response("", { status: 503 })],
+    ])("retries %s then succeeds with backoff", async (_n, bad) => {
+      const delays: number[] = [];
+      const { store, calls } = mk([bad, bad, () => pdf()], delays);
+      await expect(store.save({ code: "A", index: 0, url: URL_OK })).resolves.toMatch(/\.pdf$/);
+      expect(calls()).toBe(3);
+      expect(delays).toHaveLength(2);
+      expect(delays[0]).toBeGreaterThanOrEqual(1000);
+      expect(delays[0]).toBeLessThan(2000);
+      expect(delays[1]).toBeGreaterThanOrEqual(3000);
+      expect(delays[1]).toBeLessThan(4500);
+    });
+    it("retries network errors, gives up after 3 attempts and leaves no files", async () => {
+      const { store, calls } = mk([() => Promise.reject(new TypeError("fetch failed"))]);
+      await expect(store.save({ code: "A", index: 0, url: URL_OK })).rejects.toThrow(/fetch failed/);
+      expect(calls()).toBe(3);
+      expect(await files(dir)).toEqual([]);
+    });
+    it.each([
+      ["404", () => new Response("", { status: 404 })],
+      ["not a pdf", () => pdf("<html>", "application/pdf")],
+      ["too large", () => new Response("%PDF-", { headers: { "content-type": "application/pdf", "content-length": String(50 * 1024 * 1024) } })],
+    ])("does not retry permanent failure: %s", async (_n, bad) => {
+      const { store, calls } = mk([bad]);
+      await expect(store.save({ code: "A", index: 0, url: URL_OK })).rejects.toThrow();
+      expect(calls()).toBe(1);
+    });
+  });
+
+  it("has() reflects files on disk", async () => {
+    const store = new FsDocumentStore(dir, (async () => pdf()) as typeof fetch);
+    const rel = await store.save({ code: "A", index: 0, url: URL_OK });
+    expect(await store.has(rel)).toBe(true);
+    expect(await store.has("docs/A/9-zzz.pdf")).toBe(false);
+  });
+
   it("a hanging fetch rejects within the timeout", async () => {
     const hang = ((_u: string, init?: RequestInit) => new Promise((_r, rej) => init?.signal?.addEventListener("abort", () => rej(init.signal!.reason)))) as unknown as typeof fetch;
-    const store = new FsDocumentStore(dir, hang, { timeoutMs: 50 });
+    const store = new FsDocumentStore(dir, hang, { timeoutMs: 50, sleep: async () => undefined });
     const t = Date.now();
     await expect(store.save({ code: "A", index: 0, url: URL_OK })).rejects.toThrow();
     expect(Date.now() - t).toBeLessThan(2000);
@@ -242,5 +298,113 @@ describe("FsDocumentStore", () => {
     await eng.apply((await eng.check("manual")).id);
     expect((await row("Z")).localDocuments).toEqual([{ kind: "ficha", label: "Ficha técnica", path: documentFileName("Z", 0, "https://dl.example/z.pdf") }]);
     expect(requested).toEqual(["https://dl.example/z.pdf"]);
+  });
+});
+
+describe("document concurrency", () => {
+  it("defaults to 2 simultaneous document downloads", async () => {
+    let active = 0;
+    let max = 0;
+    const slow: DocumentStore = {
+      async save(i) {
+        max = Math.max(max, ++active);
+        await new Promise((r) => setTimeout(r, 5));
+        active--;
+        return `docs/${i.code}/${i.index}-x.pdf`;
+      },
+    };
+    const eng = createSyncEngine({ db: ctx.db, source, imageStore: new FakeImages(), documentStore: slow });
+    setCatalog(product("A", Array.from({ length: 8 }, (_, i) => doc(`c${i}`))));
+    await eng.apply((await eng.check("manual")).id);
+    expect(max).toBe(2);
+  });
+});
+
+describe("repairAssets (self-healing)", () => {
+  class FlakyImages implements ImageStore {
+    failing = new Set<string>();
+    async save(i: { code: string; index: number; url: string }) {
+      if (this.failing.has(i.url)) throw new Error("boom");
+      return `${i.code}/${i.index}.jpg`;
+    }
+  }
+  const withImages = (code: string, documents: SupplierDocument[]) =>
+    product(code, documents, { images: { small: [], large: [`https://dl/${code}-0.jpg`, `https://dl/${code}-1.jpg`] } });
+
+  it("re-downloads only missing documents/images, updates local_* only and reports counts", async () => {
+    const imgs = new FlakyImages();
+    imgs.failing.add("https://dl/A-1.jpg");
+    const eng = createSyncEngine({ db: ctx.db, source, imageStore: imgs, documentStore: docs });
+    const f = doc("f", "ficha", "Ficha técnica");
+    const bad = doc("bad", "certificacion", "ISP");
+    docs.failUrls.add(bad.url);
+    setCatalog(withImages("A", [f, bad]), product("B", [doc("b")]));
+    await eng.apply((await eng.check("manual")).id);
+    await ctx.db.insert(schema.productOverrides).values({ productCode: "A", customName: "Mine", visible: true });
+    expect((await row("A")).localDocuments).toHaveLength(1);
+    expect((await row("A")).localImages).toEqual(["A/0.jpg"]);
+    const callsBefore = docs.calls.length;
+
+    // nothing recovered yet: still missing, with warnings
+    let r = await eng.repairAssets();
+    expect(r.repaired).toBe(0);
+    expect(r.stillMissing).toBe(2);
+    expect(r.warnings.map((w) => w.url).sort()).toEqual(["https://dl.example/bad.pdf", "https://dl/A-1.jpg"]);
+    expect(docs.calls.slice(callsBefore)).toEqual([f.url, bad.url]); // only product A has gaps
+
+    docs.failUrls.clear();
+    imgs.failing.clear();
+    r = await eng.repairAssets();
+    expect(r).toMatchObject({ repaired: 2, stillMissing: 0, warnings: [] });
+    const a = await row("A");
+    expect(a.localDocuments).toEqual([
+      { kind: "ficha", label: "Ficha técnica", path: "docs/A/0-x.pdf" },
+      { kind: "certificacion", label: "ISP", path: "docs/A/1-x.pdf" },
+    ]);
+    expect(a.localImages).toEqual(["A/0.jpg", "A/1.jpg"]);
+    const [o] = await ctx.db.select().from(schema.productOverrides);
+    expect(o).toMatchObject({ productCode: "A", customName: "Mine" });
+    const n = docs.calls.length;
+    expect(await eng.repairAssets()).toEqual({ repaired: 0, stillMissing: 0, warnings: [] });
+    expect(docs.calls.length).toBe(n);
+  });
+
+  it("apply heals gaps of products that are not part of the run", async () => {
+    docs.failUrls.add("https://dl.example/x.pdf");
+    setCatalog(product("A", [doc("x")]));
+    await engine.apply((await engine.check("manual")).id);
+    expect((await row("A")).localDocuments).toEqual([]);
+    docs.failUrls.clear();
+    setCatalog(product("A", [doc("x")]), product("B"));
+    await engine.apply((await engine.check("manual")).id);
+    expect((await row("A")).localDocuments).toHaveLength(1);
+  });
+
+  it("treats local entries whose file vanished from disk as missing (stores with has())", async () => {
+    const present = new Set<string>();
+    const store: DocumentStore & { has(p: string): Promise<boolean> } = {
+      async save(i) {
+        const p = `docs/${i.code}/${i.index}-x.pdf`;
+        present.add(p);
+        return p;
+      },
+      has: async (p) => present.has(p),
+    };
+    const eng = createSyncEngine({ db: ctx.db, source, imageStore: new FakeImages(), documentStore: store });
+    setCatalog(product("A", [doc("x")]));
+    await eng.apply((await eng.check("manual")).id);
+    present.clear();
+    const r = await eng.repairAssets();
+    expect(r.repaired).toBe(1);
+    expect(present.size).toBe(1);
+  });
+
+  it("never fails on store errors and ignores discontinued products", async () => {
+    setCatalog(product("A", [doc("x")]));
+    docs.failUrls.add("https://dl.example/x.pdf");
+    await engine.apply((await engine.check("manual")).id);
+    await ctx.db.update(schema.sourceProducts).set({ status: "discontinued" });
+    docs.failUrls.clear();
+    expect(await engine.repairAssets()).toEqual({ repaired: 0, stillMissing: 0, warnings: [] });
   });
 });

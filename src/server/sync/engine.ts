@@ -37,12 +37,16 @@ export interface SyncDeps {
   clock?: () => Date;
   /** Max simultaneous image downloads during apply (default 6). */
   imageConcurrency?: number;
+  /** Max simultaneous PDF downloads (default 2: Dropbox throttles bursts). */
+  documentConcurrency?: number;
 }
 
 /** Extra fields stored in sync_runs.summary by apply (jsonb; no schema change). */
 export type ImageWarning = { code: string; url: string; reason: string };
 export type DocumentWarning = ImageWarning;
 const MAX_WARNING_LIST = 50;
+
+export type RepairResult = { repaired: number; stillMissing: number; warnings: ImageWarning[] };
 
 /** Thrown when a run is not (or no longer) pending; never recorded as a run failure. */
 export class SyncRunNotPendingError extends Error {
@@ -62,6 +66,7 @@ export function createSyncEngine(deps: SyncDeps) {
     deps.documentStore ?? (imageStore instanceof FsImageStore ? new FsDocumentStore(imageStore.dir, imageStore.fetchFn) : undefined);
   const now = deps.clock ?? (() => new Date());
   const concurrency = Math.max(1, deps.imageConcurrency ?? 6);
+  const docConcurrency = Math.max(1, deps.documentConcurrency ?? 2);
 
   /**
    * Records a failure, but only on a run still pending/checking: a run that
@@ -240,7 +245,7 @@ export function createSyncEngine(deps: SyncDeps) {
           }
         }
       };
-      await Promise.all(Array.from({ length: Math.min(concurrency, docTasks.length) }, docWorker));
+      await Promise.all(Array.from({ length: Math.min(docConcurrency, docTasks.length) }, docWorker));
       docWarnings.sort((x, y) => (x.code === y.code ? 0 : x.code < y.code ? -1 : 1));
       const localDocs = (p: SupplierProduct) =>
         (p.documents ?? []).flatMap((d, index) => {
@@ -328,11 +333,100 @@ export function createSyncEngine(deps: SyncDeps) {
         }
         return claimed;
       });
+      // Heal gaps of OTHER products left by earlier runs (this run's failures were just retried).
+      await repairAssets({ skip: new Set(products.map((p) => p.code)) }).catch(() => undefined);
       return done;
     } catch (e) {
       if (e instanceof SyncRunNotPendingError) throw e;
       return failOrReject(runId, e);
     }
+  }
+
+  /**
+   * Self-healing for copied assets. Hashes cover supplier data only, so a failed download is never
+   * "changed" again; this finds active products whose supplier images/documents are not (or no longer,
+   * if the store can tell via `has`) present locally, re-downloads just those (stores skip files that
+   * exist), and rewrites only local_images / local_documents. Per-asset failures are warnings, never
+   * thrown. Never touches product_overrides or any supplier field.
+   */
+  async function repairAssets(opts: { skip?: ReadonlySet<string> } = {}): Promise<RepairResult> {
+    const rows = await db.select().from(sourceProducts).where(eq(sourceProducts.status, "active"));
+    const present = async (store: { has?(p: string): Promise<boolean> } | undefined, paths: string[]) => {
+      if (!store?.has) return true;
+      for (const p of paths) if (!(await store.has(p))) return false;
+      return true;
+    };
+    type Job = { code: string; kind: "image" | "doc"; run: () => Promise<{ fixed: number; missing: number }> };
+    const jobs: Job[] = [];
+    const warnings: ImageWarning[] = [];
+    for (const r of rows) {
+      if (opts.skip?.has(r.code)) continue;
+      const images = r.supplierImages ?? [];
+      const docs = r.supplierDocuments ?? [];
+      const localImgs = r.localImages ?? [];
+      const localDocs = r.localDocuments ?? [];
+      if (images.length > 0 && (localImgs.length < images.length || !(await present(imageStore, localImgs)))) {
+        jobs.push({
+          code: r.code,
+          kind: "image",
+          run: async () => {
+            const before = localImgs.length < images.length ? localImgs.length : 0;
+            const out: string[] = [];
+            for (const [index, url] of images.entries()) {
+              try {
+                out.push(await imageStore.save({ code: r.code, index, url }));
+              } catch (e) {
+                warnings.push({ code: r.code, url, reason: msg(e) });
+              }
+            }
+            await db.update(sourceProducts).set({ localImages: out }).where(eq(sourceProducts.code, r.code));
+            return { fixed: Math.max(0, out.length - before), missing: images.length - out.length };
+          },
+        });
+      }
+      if (docs.length > 0 && (localDocs.length < docs.length || !(await present(documentStore, localDocs.map((d) => d.path))))) {
+        jobs.push({
+          code: r.code,
+          kind: "doc",
+          run: async () => {
+            const before = localDocs.length < docs.length ? localDocs.length : 0;
+            const out: { kind: "ficha" | "certificacion"; label: string; path: string }[] = [];
+            for (const [index, d] of docs.entries()) {
+              try {
+                if (!documentStore) throw new Error("No document store configured");
+                out.push({ kind: d.kind, label: d.label, path: await documentStore.save({ code: r.code, index, url: d.url }) });
+              } catch (e) {
+                warnings.push({ code: r.code, url: d.url, reason: msg(e) });
+              }
+            }
+            await db.update(sourceProducts).set({ localDocuments: out }).where(eq(sourceProducts.code, r.code));
+            return { fixed: Math.max(0, out.length - before), missing: docs.length - out.length };
+          },
+        });
+      }
+    }
+    let repaired = 0;
+    let stillMissing = 0;
+    const pool = async (list: Job[], size: number) => {
+      let n = 0;
+      const worker = async () => {
+        while (n < list.length) {
+          const j = list[n++];
+          try {
+            const res = await j.run();
+            repaired += res.fixed;
+            stillMissing += res.missing;
+          } catch (e) {
+            warnings.push({ code: j.code, url: "", reason: msg(e) });
+          }
+        }
+      };
+      await Promise.all(Array.from({ length: Math.min(size, list.length) }, worker));
+    };
+    await pool(jobs.filter((j) => j.kind === "image"), concurrency);
+    await pool(jobs.filter((j) => j.kind === "doc"), docConcurrency);
+    warnings.sort((x, y) => (x.code === y.code ? (x.url < y.url ? -1 : 1) : x.code < y.code ? -1 : 1));
+    return { repaired, stillMissing, warnings: warnings.slice(0, MAX_WARNING_LIST) };
   }
 
   async function discard(runId: number): Promise<SyncRun> {
@@ -358,7 +452,7 @@ export function createSyncEngine(deps: SyncDeps) {
     return rows.sort((a, b) => b.id - a.id).slice(0, limit);
   }
 
-  return { check, apply, discard, getPendingRun, getLastRuns };
+  return { check, apply, discard, getPendingRun, getLastRuns, repairAssets };
 }
 
 export type SyncEngine = ReturnType<typeof createSyncEngine>;

@@ -57,3 +57,19 @@ describe("runScheduledCheck", () => {
     expect(await runCheck("manual", { engine })).toEqual({ ok: false, runId: null, status: "failed", summary: null, error: "db gone" });
   });
 });
+
+describe("runCheck repairs assets", () => {
+  it("calls repairAssets after a successful check and never fails because of it", async () => {
+    const run = { id: 1, status: "discarded", summary: { new: 0, changed: 0, removed: 0 }, error: null } as unknown as SyncRun;
+    let repairs = 0;
+    const ok = await runCheck("scheduled", {
+      engine: { check: async () => run, repairAssets: async () => (repairs++, { repaired: 2, stillMissing: 1, warnings: [] }) },
+    });
+    expect(repairs).toBe(1);
+    expect(ok).toMatchObject({ ok: true, repair: { repaired: 2, stillMissing: 1 } });
+    const boom = await runCheck("scheduled", {
+      engine: { check: async () => run, repairAssets: async () => { throw new Error("x"); } },
+    });
+    expect(boom.ok).toBe(true);
+  });
+});
