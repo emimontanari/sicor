@@ -14,8 +14,8 @@ Masefer publishes PDF documents per product (technical sheets and certifications
 
 | ID | Specs | Task | Route | Status | Commit |
 |----|-------|------|-------|--------|--------|
-| T1 | S1, S2, S4 | Data: Masefer mapping of documents, schema column + migration, sync hash/diff + PDF copy store, document serving route, read model fields; tests | gentle-ai-worker | pending | |
-| T2 | S2, S3, S5 | UI: card ficha badge, product page documents, horizontal mobile card, optional "Con ficha técnica" filter; tests + screenshots | gentle-ai-worker | pending | |
+| T1 | S1, S2, S4 | Data: Masefer mapping of documents, schema column + migration, sync hash/diff + PDF copy store, document serving route, read model fields; tests | gentle-ai-worker | done (+ retry/repairAssets fix) | feat(documents), fix(sync) commits |
+| T2 | S2, S3, S5 | UI: card ficha badge, product page documents, horizontal mobile card, optional "Con ficha técnica" filter; tests + screenshots | gentle-ai-worker | done | feat(ui) ficha commit |
 
 ## Log
 
@@ -23,3 +23,4 @@ Masefer publishes PDF documents per product (technical sheets and certifications
 - **L2** (user answers): documents → "Ficha + certificaciones (Recomendado)"; PDFs → "Copiarlos al servidor (Recomendado)"; card → "Horizontal en celular (Recomendado)".
 - **L3** (evidence, live probe of `articulos.genericos` after an 8 s settle): dropbox docs 1889 = `/web/img200` 714, `/web/img500` 751, `/web/catalogos` 424. Example: `{"id":"/web/catalogos/zap13 ficha tecnica.pdf","ownerId":"ZAP13","name":"zap13 ficha tecnica.pdf","shortName":"ficha tecnica","ext":"pdf","link":"https://www.dropbox.com/scl/fi/.../ZAP13-FICHA-TECNICA.pdf?rlkey=...&dl=0&&raw=1","source":"web"}`. SNEAKPRO has no `/web/catalogos/` doc. Note: dropbox docs arrive after the subscription ready; the current client gets them because mapping runs after the variant batches — keep it robust.
 - **L4**: catalog-redesign T4 variants (04–07) not chosen; current catalog design stays.
+- **L5** (evidence): dev DB run 5 applied 283 changed, 57 document warnings (~40 Dropbox text/html throttling, ~15 leading bytes before %PDF-, 1 >20 MB); 229/283 products got local docs, 367 PDFs (404 MB). Fixed: %PDF- within first 1024 bytes, 3 attempts with backoff on transient errors, doc concurrency 2, 40 MB cap, `repairAssets()` after every apply and every check + `pnpm catalog:repair-assets`. Heal run not executed: Docker/colima daemon went down (dev Postgres unreachable). UI: ficha badge on cards, "Ver ficha técnica" + certifications on product page, horizontal cards <640px, `?ficha=1` filter. Parent reviewed 390px home and ZAP13 screenshots. Suite 321/321, typecheck/lint OK.
