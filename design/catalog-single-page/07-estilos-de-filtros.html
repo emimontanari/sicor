@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Estilos de filtros — SICOR catálogo</title>
+<style>
+:root{--red:#e1202f;--red-dark:#b8101e;--charcoal:#2b2a33;--light:#f3f3f5;--line:#d9d9de;--muted:#5d5c66;--white:#fff;--font:"Helvetica Neue",Arial,"Segoe UI",system-ui,sans-serif}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;width:1440px;font-family:var(--font);color:var(--charcoal);background:var(--white);line-height:1.45;border-top:8px solid var(--red)}
+h1,h2,h3,h4{margin:0;text-transform:uppercase;font-weight:800;letter-spacing:.01em;line-height:1.15}
+p{margin:0}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.muted{color:var(--muted)}
+svg{display:inline-block;flex:none}
+svg use{pointer-events:none}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+/* artboard chrome */
+.tb{min-height:72px;display:flex;align-items:center;gap:1.25rem;padding:.75rem 1.5rem;background:var(--white);border-bottom:1px solid var(--line)}
+.tb h1{font-size:1rem;flex:1}
+.tb h1 small{display:block;font-size:.8rem;font-weight:700;color:var(--muted);text-transform:none;letter-spacing:0;margin-top:.15rem}
+.board{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;padding:1.25rem 1.5rem 2rem;background:var(--light)}
+.opt{display:flex;gap:1.25rem;background:var(--white);border:1px solid var(--line);border-radius:8px;padding:1rem;align-items:flex-start}
+.scr{width:390px;flex:none;background:var(--white);border:2px solid var(--charcoal);border-radius:14px;padding:.85rem .75rem 1rem}
+.info{flex:1;min-width:0;font-size:.85rem}
+.info h2{display:flex;gap:.6rem;align-items:center;font-size:1rem;margin-bottom:.6rem}
+.tag{flex:none;width:36px;height:36px;border-radius:6px;background:var(--charcoal);color:var(--white);display:grid;place-items:center;font-weight:900;font-size:1.1rem}
+.info p{margin-bottom:.6rem}
+.info b{text-transform:uppercase;font-size:.75rem;letter-spacing:.04em}
+.info .pro b{color:#1a7f37}.info .con b{color:var(--red-dark)}
+/* shared controls */
+.srow{display:flex;gap:.5rem;align-items:center;margin-bottom:.6rem}
+.search{position:relative;display:flex;flex:1;min-width:0}
+.search input{width:100%;min-height:48px;padding:0 .75rem 0 2.6rem;font-size:1rem;border:2px solid var(--line);border-radius:6px;background:var(--white)}
+.search input:focus{border-color:var(--charcoal)}
+.search>svg{position:absolute;left:.8rem;top:50%;translate:0 -50%;width:20px;height:20px;color:var(--muted);pointer-events:none}
+.row{display:flex;gap:.5rem;overflow-x:auto;scrollbar-width:none;-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 24px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 24px),transparent)}
+.row::-webkit-scrollbar{display:none}
+.row--b{margin-top:.35rem}
+.c,.b,.f,.fc{cursor:pointer}
+.c{flex:none;min-height:44px;border:0;background:none;display:inline-flex;align-items:center;gap:.4rem;white-space:nowrap;font-weight:700;padding:0 .8rem;font-size:.95rem}
+.ci{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linejoin:round}
+.cn{font-weight:700;font-size:.8rem}
+.b{flex:none;min-height:44px;background:none;border:0;padding:0 .2rem;display:inline-flex;align-items:center}
+.bv{display:inline-flex;align-items:center;gap:.35rem;white-space:nowrap;font-weight:700;font-size:.85rem;height:36px;padding:0 .8rem}
+.b:focus-visible,.b.is-focus{outline:0}
+.b:focus-visible .bv,.b.is-focus .bv{outline:3px solid var(--red);outline-offset:2px}
+.f{position:relative;flex:none;min-height:48px;border:0;background:none;display:inline-flex;align-items:center;justify-content:center;gap:.45rem;padding:0 1rem;font-weight:800;text-transform:uppercase;letter-spacing:.02em;font-size:.85rem}
+.f svg{width:20px;height:20px}
+.fb{min-width:22px;height:22px;border-radius:11px;background:var(--red);color:var(--white);font-size:.75rem;display:grid;place-items:center;padding:0 5px;line-height:1}
+.stat{display:flex;align-items:center;flex-wrap:wrap;gap:.1rem .6rem;margin-top:.5rem;min-height:48px}
+.stat__n{font-weight:800;text-transform:uppercase;font-size:.9rem}
+.act{display:flex;flex-wrap:wrap;align-items:center;gap:0 .4rem}
+.fc{border:0;background:none;min-height:44px;padding:0;display:inline-flex;align-items:center}
+.fcv{display:inline-flex;align-items:center;gap:.25rem;min-height:36px;font-weight:700;font-size:.85rem;white-space:nowrap;padding:0 .3rem 0 .75rem}
+.fcv .x{width:26px;height:26px;padding:5px;border-radius:50%}
+.fi{display:none;width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linejoin:round}
+.fc:focus-visible,.fc.is-focus{outline:0}
+.fc:focus-visible .fcv,.fc.is-focus .fcv{outline:3px solid var(--red);outline-offset:2px}
+.link-btn{background:none;border:0;color:var(--red-dark);font-weight:700;text-decoration:underline;min-height:44px;padding:0 .35rem}
+.is-focus{outline:3px solid var(--red);outline-offset:2px}
+/* states specimen */
+.spec{margin-top:.75rem;border-top:1px dashed var(--line);padding-top:.6rem}
+.spec h3{font-size:.75rem;color:var(--muted);margin-bottom:.35rem}
+.spec__r{margin-bottom:.35rem}
+.spec__r h4{font-size:.7rem;letter-spacing:.04em;margin-bottom:.1rem}
+.spec__cells{display:flex;flex-wrap:wrap;gap:.1rem .9rem}
+.spec__cell{display:flex;flex-direction:column;align-items:flex-start;gap:.1rem;font-size:.7rem;color:var(--muted);font-weight:700}
+.spec__cell>.c,.spec__cell>.b,.spec__cell>.f,.spec__cell>.fc{cursor:default}
+.spec__cells{padding-top:.45rem}
+.segw{display:contents}
+.oC .segw{display:inline-flex;background:var(--charcoal);border-radius:6px;padding:4px}
+
+/* ===== A · píldoras suaves ===== */
+.oA .c{border-radius:999px;background:var(--light);padding:0 .65rem 0 .8rem}
+.oA .c .cn{min-width:22px;height:22px;border-radius:11px;background:var(--white);display:grid;place-items:center;font-size:.75rem;padding:0 5px;color:var(--charcoal);line-height:1}
+.oA .c:hover,.oA .c.is-hover{background:var(--line)}
+.oA .c.is-on{background:var(--red);color:var(--white)}
+.oA .c.is-on:hover{background:var(--red-dark)}
+.oA .c.is-on .cn{color:var(--red-dark)}
+.oA .bv{border-radius:999px;background:var(--light)}
+.oA .bv .cn{color:var(--muted)}
+.oA .b:hover .bv,.oA .b.is-hover .bv{background:var(--line)}
+.oA .b.is-on .bv{background:var(--charcoal);color:var(--white)}
+.oA .b.is-on .bv .cn{color:var(--white)}
+.oA .f{border-radius:999px;background:var(--light)}
+.oA .f:hover,.oA .f.is-hover{background:var(--line)}
+.oA .f.is-open{background:var(--charcoal);color:var(--white)}
+.oA .fcv{border-radius:999px;background:var(--light)}
+.oA .fc:hover .fcv,.oA .fc.is-hover .fcv{background:var(--line)}
+.oA .fcv .x{background:var(--white)}
+
+/* ===== B · contorno con acento rojo ===== */
+.oB .c{border:2px solid var(--line);border-radius:6px;background:var(--white);padding:0 .75rem}
+.oB .c .cn{color:var(--muted)}
+.oB .c:hover,.oB .c.is-hover{border-color:var(--charcoal)}
+.oB .c.is-on{border-color:var(--charcoal);box-shadow:inset 0 -4px 0 var(--red);font-weight:800}
+.oB .c.is-on .cn{color:var(--charcoal)}
+.oB .bv{border:2px solid var(--line);border-radius:6px;background:var(--white)}
+.oB .bv .cn{color:var(--muted)}
+.oB .b:hover .bv,.oB .b.is-hover .bv{border-color:var(--charcoal)}
+.oB .b.is-on .bv{border-color:var(--charcoal);box-shadow:inset 0 -3px 0 var(--red);font-weight:800}
+.oB .f{border:2px solid var(--charcoal);border-radius:6px;background:var(--white)}
+.oB .f:hover,.oB .f.is-hover{background:var(--light)}
+.oB .f.is-open{background:var(--light);box-shadow:inset 0 -4px 0 var(--red)}
+.oB .fcv{border:2px solid var(--line);border-left:5px solid var(--red);border-radius:6px;background:var(--white);padding-left:.6rem}
+.oB .fc:hover .fcv,.oB .fc.is-hover .fcv{border-color:var(--charcoal);border-left-color:var(--red)}
+.oB .fcv .x{background:var(--light)}
+
+/* ===== C · barra segmentada ===== */
+.oC .row--c{background:var(--charcoal);border-radius:6px;padding:4px;gap:2px}
+.oC .c{color:var(--white);border-radius:4px;padding:0 .8rem}
+.oC .c .cn{color:var(--line)}
+.oC .c:hover,.oC .c.is-hover{background:rgb(255 255 255/.18)}
+.oC .c.is-on{background:var(--white);color:var(--charcoal);font-weight:800}
+.oC .c.is-on .cn{color:var(--muted)}
+.oC .c:focus-visible,.oC .c.is-focus{outline-color:var(--white);outline-offset:-3px}
+.oC .row--b{background:var(--light);border-radius:6px;padding:0 4px;gap:2px}
+.oC .b{padding:0}
+.oC .bv{border-radius:4px}
+.oC .bv .cn{color:var(--muted)}
+.oC .b:hover .bv,.oC .b.is-hover .bv{background:var(--line)}
+.oC .b.is-on .bv{background:var(--charcoal);color:var(--white)}
+.oC .b.is-on .bv .cn{color:var(--white)}
+.oC .f{background:var(--charcoal);color:var(--white);border-radius:6px}
+.oC .f:hover,.oC .f.is-hover{box-shadow:inset 0 0 0 2px var(--red)}
+.oC .f.is-open{background:var(--white);color:var(--charcoal);box-shadow:inset 0 0 0 2px var(--charcoal)}
+.oC .fcv{background:var(--charcoal);color:var(--white);border-radius:4px}
+.oC .fcv .x{background:rgb(255 255 255/.18)}
+.oC .fc:hover .fcv .x,.oC .fc.is-hover .fcv .x{background:var(--red)}
+
+/* ===== D · mosaicos con ícono arriba ===== */
+.oD .c{flex-direction:column;justify-content:center;gap:.25rem;width:92px;min-height:84px;padding:.4rem .25rem;border:2px solid var(--line);border-radius:6px;background:var(--white);position:relative;font-size:.75rem;line-height:1.1;text-align:center;white-space:normal}
+.oD .ci{width:28px;height:28px}
+.oD .c .cn{position:absolute;top:3px;right:6px;font-size:.7rem;color:var(--muted)}
+.oD .c:hover,.oD .c.is-hover{border-color:var(--charcoal)}
+.oD .c.is-on{background:var(--charcoal);border-color:var(--charcoal);color:var(--white)}
+.oD .c.is-on .cn{color:var(--white)}
+.oD .c.is-on .ci{stroke:var(--white)}
+.oD .bv{height:32px;padding:0 .65rem;border:2px solid var(--line);border-radius:999px;font-size:.8rem}
+.oD .bv .cn{color:var(--muted);font-size:.72rem}
+.oD .b:hover .bv,.oD .b.is-hover .bv{border-color:var(--charcoal)}
+.oD .b.is-on .bv{background:var(--charcoal);border-color:var(--charcoal);color:var(--white)}
+.oD .b.is-on .bv .cn{color:var(--white)}
+.oD .f{flex-direction:column;gap:.1rem;width:64px;min-height:64px;padding:.3rem;border:2px solid var(--charcoal);border-radius:6px;background:var(--white);font-size:.66rem}
+.oD .f:hover,.oD .f.is-hover{background:var(--light)}
+.oD .f.is-open{background:var(--charcoal);color:var(--white)}
+.oD .f .fb{position:absolute;top:-8px;right:-8px;border:2px solid var(--white)}
+.oD .fi{display:block}
+.oD .fcv{border:2px solid var(--line);border-radius:6px;padding-left:.5rem;gap:.3rem;background:var(--white)}
+.oD .fc:hover .fcv,.oD .fc.is-hover .fcv{border-color:var(--charcoal)}
+.oD .fcv .x{background:var(--light)}
+</style></head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+<defs>
+<symbol id="logo" viewBox="0 0 330 120"><circle cx="46" cy="52" r="40" fill="none" stroke="#e1202f" stroke-width="11" stroke-dasharray="9 8"/><circle cx="46" cy="52" r="32" fill="none" stroke="#e1202f" stroke-width="6"/><path d="M46 24a28 28 0 0 0 0 56z" fill="#5d5c66"/><text x="100" y="82" font-family="Arial Narrow,Helvetica Neue,Arial,sans-serif" font-weight="900" font-size="92" textLength="224" lengthAdjust="spacingAndGlyphs"><tspan fill="#2b2a33">SI</tspan><tspan fill="#b8101e">COR</tspan></text><text x="100" y="108" font-family="Arial Narrow,Arial,sans-serif" font-weight="700" font-size="18" fill="#2b2a33" textLength="224" lengthAdjust="spacingAndGlyphs">SUMINISTROS INDUSTRIALES</text></symbol>
+<symbol id="i-shoe" viewBox="0 0 48 48"><path d="M5 30c0-7 2-13 4-17l8 4 4-4c2 6 8 10 17 12 5 1 8 3 8 7v4H5z"/><path d="M5 38h38M18 17l4 5M24 20l4 5"/></symbol>
+<symbol id="i-shirt" viewBox="0 0 48 48"><path d="M17 6 6 12l4 9 5-2v23h18V19l5 2 4-9-11-6c-1 4-4 6-7 6s-6-2-7-6z"/></symbol>
+<symbol id="i-helmet" viewBox="0 0 48 48"><path d="M8 32c0-10 7-18 16-18s16 8 16 18z"/><path d="M3 32h42v5H3zM22 14v12h4V14"/></symbol>
+<symbol id="i-goggles" viewBox="0 0 48 48"><path d="M3 18h42v9c0 5-3 8-8 8h-5c-3 0-5-2-6-4h-4c-1 2-3 4-6 4h-5c-5 0-8-3-8-8z"/><path d="M3 22H1M45 22h2"/></symbol>
+<symbol id="i-glove" viewBox="0 0 48 48"><path d="M13 44V29l-6-8c-1-2 1-4 3-3l5 5V9c0-2 4-2 4 0v12V6c0-2 4-2 4 0v15V8c0-2 4-2 4 0v14V14c0-2 4-2 4 0v16c0 8-4 14-10 14z"/><path d="M13 38h20"/></symbol>
+<symbol id="i-cone" viewBox="0 0 48 48"><path d="M24 5 35 37H13z"/><path d="M5 43h38v-6H5zM19 24h10M16 31h16"/></symbol>
+<symbol id="i-box" viewBox="0 0 48 48"><path d="M5 14 24 6l19 8v22l-19 8-19-8z"/><path d="m5 14 19 8 19-8M24 22v22"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+<symbol id="i-filter" viewBox="0 0 24 24"><path d="M3 6h18M6 12h12M10 18h4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="i-list" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+<symbol id="i-grid" viewBox="0 0 24 24"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/></symbol>
+<symbol id="i-cart" viewBox="0 0 24 24"><path d="M3 4h3l2.4 11h9.7L20 8H7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.5" cy="19.5" r="1.6" fill="currentColor"/><circle cx="17" cy="19.5" r="1.6" fill="currentColor"/></symbol>
+<symbol id="i-chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</defs></svg>
+<header class="tb"><h1>Estilos de filtros · 4 opciones para rubros, marcas, filtros activos y botón “Filtros”<small>Cada opción se ve a ancho móvil (390) y es interactiva: tocá los chips para activarlos y desactivarlos, y pasá el mouse o el teclado por encima. Debajo de cada una están los estados forzados.</small></h1></header>
+<main><div class="board" id="board"></div></main>
+<script>
+const CATS=[
+ {id:'indumentaria',name:'Indumentaria laboral',short:'Indumentaria',icon:'shirt'},
+ {id:'calzado',name:'Calzado de seguridad',short:'Calzado',icon:'shoe'},
+ {id:'epp',name:'Elementos de protección personal',short:'EPP',icon:'helmet'},
+ {id:'ocular',name:'Protección ocular y auditiva',short:'Ocular y auditiva',icon:'goggles'},
+ {id:'guantes',name:'Guantes de protección',short:'Guantes',icon:'glove'},
+ {id:'vial',name:'Seguridad vial',short:'Seguridad vial',icon:'cone'},
+ {id:'otros',name:'Otros productos',short:'Otros',icon:'box'}];
+const P=[
+ {id:1,name:'ZAPATILLA SNEAKER PRO COMPOSITE',brand:'OMBU',code:'SNEAKPRO',cat:'calzado',photo:1},
+ {id:2,name:'PANTALON CARGO ELASTIZADO PAMPERO 38/54',brand:'PAMPERO',code:'ELASTIZA',cat:'indumentaria',photo:1},
+ {id:3,name:'REMERA ALGODON PEINADO 24/1 M/CORTA MSF',brand:'MSF',code:'REM01',cat:'indumentaria',photo:1},
+ {id:4,name:'CAMISA DE TRABAJO PAMPERO T. 38 / 48',brand:'PAMPERO',code:'CAM01',cat:'indumentaria',photo:1},
+ {id:5,name:'CHOMBA DE PIQUE M/C',brand:'MSF',code:'CHO01',cat:'indumentaria',photo:0},
+ {id:6,name:'BOTIN DE SEGURIDAD CUERO PUNTERA ACERO',brand:'OMBU',code:'BOT100',cat:'calzado',photo:0},
+ {id:7,name:'BOTA DE GOMA PVC CAÑA ALTA',brand:'OMBU',code:'BOG20',cat:'calzado',photo:1},
+ {id:8,name:'CASCO DE SEGURIDAD CON REGULACION',brand:'LIBUS',code:'CAS200',cat:'epp',photo:1},
+ {id:9,name:'BARBIJO RESPIRADOR P2 CON VALVULA',brand:'3M',code:'RES300',cat:'epp',photo:0},
+ {id:10,name:'ANTIPARRA TRANSPARENTE ANTIEMPAÑANTE',brand:'LIBUS',code:'ANT10',cat:'ocular',photo:1},
+ {id:11,name:'PROTECTOR AUDITIVO TIPO MUFLA',brand:'3M',code:'AUD22',cat:'ocular',photo:0},
+ {id:12,name:'LENTES DE SEGURIDAD POLICARBONATO',brand:'STEELPRO',code:'LEN55',cat:'ocular',photo:1},
+ {id:13,name:'GUANTE DE VAQUETA REFORZADO',brand:'FUNCIONAL',code:'GUA12',cat:'guantes',photo:1},
+ {id:14,name:'GUANTE NITRILO RECUBIERTO EN PALMA',brand:'LIBUS',code:'GUA48',cat:'guantes',photo:0},
+ {id:15,name:'CONO VIAL FLEXIBLE 75 CM',brand:'STEELPRO',code:'VIA10',cat:'vial',photo:1},
+ {id:16,name:'MATAFUEGO ABC 5 KG CON SOPORTE',brand:'FUNCIONAL',code:'EXT05',cat:'otros',photo:0}];
+const BRANDS=[...new Set(P.map(p=>p.brand))].sort();
+const CAT=Object.fromEntries(CATS.map(c=>[c.id,c]));
+
+const OPTS=[
+{k:'A',name:'Píldoras suaves con ícono y contador',desc:'Chips redondeados sobre gris claro, sin borde, con ícono y la cantidad en una burbuja. El filtro activo se rellena de rojo SICOR; la marca activa, de carbón.',pro:'Amigable y fácil de escanear; la cantidad se ve sin esfuerzo; el rojo marca el estado desde lejos.',con:'El rojo compite con los botones primarios (Consultar cotización); ícono + burbuja ensanchan cada chip y obligan a más scroll lateral.'},
+{k:'B',name:'Contorno con subrayado rojo',desc:'Es la línea actual (borde fino) pero el activo se marca con borde carbón, subrayado rojo grueso y negrita, sobre fondo blanco. El botón Filtros copia el mismo trazo.',pro:'Sobrio, industrial y el más bajo en altura; el estado no depende solo del color (borde + subrayado + peso).',con:'Es el cambio más tímido: sigue pareciéndose a un formulario y el subrayado fino se pierde con luz fuerte en la calle.'},
+{k:'C',name:'Barra segmentada carbón',desc:'Los rubros viven dentro de una barra carbón continua; el activo es un segmento blanco. Las marcas van en una segunda barra clara. Filtros es un botón carbón sólido.',pro:'Se lee como un único control (selector de rubro), contraste altísimo y estado inequívoco.',con:'Banda oscura de mucho peso en una barra que queda fija; con 7 rubros siempre hay scroll lateral y los segmentos se ven apretados.'},
+{k:'D',name:'Mosaicos con ícono arriba + marcas compactas',desc:'Rubros como mosaicos cuadrados con el ícono grande y el nombre debajo (activo = carbón); marcas como píldoras finas; Filtros es otro mosaico con el contador en la esquina.',pro:'Reconocimiento visual inmediato por ícono, blancos de toque grandes y cómodos con guantes o una mano.',con:'Más alto (≈ 84 px frente a 44): si queda fijo al bajar le saca pantalla a los productos; mejor que no sea pegajoso.'}];
+const STATE={};
+OPTS.forEach(o=>STATE[o.k]={cats:new Set(['calzado','epp']),brands:new Set(),q:'',open:false});
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const norm=s=>s.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+const ic=(id,cls)=>`<svg class="${cls}" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><use href="#i-${id}"/></svg>`;
+const ui=(id)=>`<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#i-${id}"/></svg>`;
+const xi='<svg class="x" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#i-x"/></svg>';
+const plural=n=>n===1?'1 producto':n+' productos';
+function pass(s,p,skip){
+ if(skip!=='q'&&s.q.trim()){const t=norm(p.name+' '+p.brand+' '+p.code);if(!norm(s.q).split(/\s+/).filter(Boolean).every(w=>t.includes(w)))return false}
+ if(skip!=='cats'&&s.cats.size&&!s.cats.has(p.cat))return false;
+ if(skip!=='brands'&&s.brands.size&&!s.brands.has(p.brand))return false;return true}
+const catBtn=c=>`<button type="button" class="c" data-cat="${c.id}" aria-pressed="false">${ic(c.icon,'ci')}<span class="cl">${esc(c.short)}</span><span class="cn" data-cn="${c.id}"></span></button>`;
+const brandBtn=b=>`<button type="button" class="b" data-brand="${esc(b)}" aria-pressed="false"><span class="bv"><span class="bl">${esc(b)}</span><span class="cn" data-bn="${esc(b)}"></span></span></button>`;
+const sc=(cls,inner,cap)=>`<span class="spec__cell">${inner.replace('class="X"','class="'+cls+'"')}<span>${cap}</span></span>`;
+function spec(){
+ const cat=(cls)=>`<span class="segw"><span class="c ${cls}">${ic('helmet','ci')}<span class="cl">EPP</span><span class="cn">12</span></span></span>`;
+ const br=(cls)=>`<span class="b ${cls}"><span class="bv"><span class="bl">OMBU</span><span class="cn">3</span></span></span>`;
+ const fb=(cls,n)=>`<span class="f ${cls}">${ui('filter')}<span class="fl">Filtros</span>${n?`<span class="fb">${n}</span>`:''}</span>`;
+ const fc=(cls)=>`<span class="fc ${cls}"><span class="fcv">${ic('shoe','fi')}<span>Calzado</span>${xi}</span></span>`;
+ const cell=(h,t)=>`<span class="spec__cell">${h}<span>${t}</span></span>`;
+ return `<div class="spec"><h3>Estados</h3>
+ <div class="spec__r"><h4>Rubro</h4><div class="spec__cells">${cell(cat(''),'Normal')}${cell(cat('is-hover is-focus'),'Hover + foco')}${cell(cat('is-on'),'Activo')}</div></div>
+ <div class="spec__r"><h4>Marca</h4><div class="spec__cells">${cell(br(''),'Normal')}${cell(br('is-hover is-focus'),'Hover + foco')}${cell(br('is-on'),'Activo')}</div></div>
+ <div class="spec__r"><h4>Botón Filtros</h4><div class="spec__cells">${cell(fb('',0),'Normal')}${cell(fb('is-hover is-focus',0),'Hover + foco')}${cell(fb('is-open',2),'Abierto, 2 filtros')}</div></div>
+ <div class="spec__r"><h4>Filtro activo</h4><div class="spec__cells">${cell(fc(''),'Normal')}${cell(fc('is-hover is-focus'),'Hover + foco')}</div></div></div>`}
+function optHTML(o){
+ return `<section class="opt o${o.k}" data-o="${o.k}" aria-labelledby="t${o.k}">
+ <div class="scr"><form class="srow" role="search"><label class="search"><span class="sr-only">Buscar productos</span>${ui('search')}<input type="search" data-q placeholder="Buscar producto" aria-label="Buscar por nombre, marca o código" autocomplete="off"></label>
+ <button type="button" class="f" data-fbtn aria-haspopup="dialog" aria-expanded="false">${ui('filter')}<span class="fl">Filtros</span><span class="fb" data-fb hidden>0</span></button></form>
+ <div class="row row--c" role="group" aria-label="Rubros">${CATS.map(catBtn).join('')}</div>
+ <div class="row row--b" role="group" aria-label="Marca">${BRANDS.map(brandBtn).join('')}</div>
+ <div class="stat"><p class="stat__n" role="status" data-n></p><div class="act" data-act></div></div>
+ ${spec()}</div>
+ <div class="info"><h2 id="t${o.k}"><span class="tag" aria-hidden="true">${o.k}</span>Opción ${o.k}</h2><p><b>${esc(o.name)}</b></p><p>${esc(o.desc)}</p><p class="pro"><b>A favor</b><br>${esc(o.pro)}</p><p class="con"><b>En contra</b><br>${esc(o.con)}</p></div></section>`}
+function render(k){
+ const s=STATE[k],root=$(`[data-o="${k}"]`),r=P.filter(p=>pass(s,p));
+ const cc={},bc={};P.filter(p=>pass(s,p,'cats')).forEach(p=>cc[p.cat]=(cc[p.cat]||0)+1);P.filter(p=>pass(s,p,'brands')).forEach(p=>bc[p.brand]=(bc[p.brand]||0)+1);
+ $$('[data-cat]',root).forEach(e=>{const on=s.cats.has(e.dataset.cat);e.setAttribute('aria-pressed',on);e.classList.toggle('is-on',on)});
+ $$('[data-cn]',root).forEach(e=>e.textContent=cc[e.dataset.cn]||0);
+ $$('[data-brand]',root).forEach(e=>{const on=s.brands.has(e.dataset.brand);e.setAttribute('aria-pressed',on);e.classList.toggle('is-on',on)});
+ $$('[data-bn]',root).forEach(e=>e.textContent=bc[e.dataset.bn]||0);
+ const n=s.cats.size+s.brands.size;
+ const fb=$('[data-fb]',root);fb.textContent=n;fb.hidden=!n;
+ const fbtn=$('[data-fbtn]',root);fbtn.classList.toggle('is-open',s.open);fbtn.setAttribute('aria-expanded',s.open);
+ $('[data-n]',root).textContent=plural(r.length);
+ const a=[];
+ s.q.trim()&&a.push(['q','','Búsqueda: “'+esc(s.q.trim())+'”','']);
+ CATS.filter(c=>s.cats.has(c.id)).forEach(c=>a.push(['cats',c.id,esc(c.short),ic(c.icon,'fi')]));
+ BRANDS.filter(b=>s.brands.has(b)).forEach(b=>a.push(['brands',b,'Marca: '+esc(b),'']));
+ $('[data-act]',root).innerHTML=a.map(([kk,v,t,i])=>`<button type="button" class="fc" data-rm="${kk}" data-v="${esc(v)}" aria-label="Quitar filtro ${t}"><span class="fcv">${i}<span>${t}</span>${xi}</span></button>`).join('')+(a.length?'<button type="button" class="link-btn" data-clear>Limpiar filtros</button>':'');
+}
+$('#board').innerHTML=OPTS.map(optHTML).join('');
+OPTS.forEach(o=>render(o.k));
+document.addEventListener('click',e=>{
+ const t=e.target.closest('button');const root=t&&t.closest('[data-o]');if(!root)return;
+ const k=root.dataset.o,s=STATE[k];let focus=null;
+ if(t.dataset.cat){s.cats.has(t.dataset.cat)?s.cats.delete(t.dataset.cat):s.cats.add(t.dataset.cat)}
+ else if(t.dataset.brand){s.brands.has(t.dataset.brand)?s.brands.delete(t.dataset.brand):s.brands.add(t.dataset.brand)}
+ else if(t.dataset.rm){const kk=t.dataset.rm;if(kk==='q'){s.q='';$('[data-q]',root).value=''}else{s[kk].delete(t.dataset.v);focus=kk==='cats'?`[data-cat="${t.dataset.v}"]`:`[data-brand="${t.dataset.v}"]`}}
+ else if('clear' in t.dataset){s.cats.clear();s.brands.clear();s.q='';$('[data-q]',root).value='';focus='[data-q]'}
+ else if('fbtn' in t.dataset){s.open=!s.open}
+ else return;
+ render(k);if(focus)$(focus,root)?.focus();
+});
+document.addEventListener('input',e=>{const t=e.target;if(!t.matches('[data-q]'))return;const k=t.closest('[data-o]').dataset.o;STATE[k].q=t.value;render(k)});
+document.addEventListener('submit',e=>e.preventDefault());
+
+</script></body></html>

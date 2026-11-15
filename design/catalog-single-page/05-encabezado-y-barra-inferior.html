@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Encabezado + barra inferior — SICOR catálogo</title>
+<style>
+:root{--red:#e1202f;--red-dark:#b8101e;--charcoal:#2b2a33;--light:#f3f3f5;--line:#d9d9de;--muted:#5d5c66;--white:#fff;--font:"Helvetica Neue",Arial,"Segoe UI",system-ui,sans-serif;--pad:1rem;--max:72rem;--hdr:64px}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;width:1440px;height:900px;overflow:hidden;font-family:var(--font);color:var(--charcoal);background:var(--light);line-height:1.45;border-top:8px solid var(--red)}
+h1,h2,h3{margin:0;text-transform:uppercase;font-weight:800;letter-spacing:.01em;line-height:1.15}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.muted{color:var(--muted)}
+svg{display:inline-block;flex:none}
+svg use{pointer-events:none}
+/* artboard chrome (not part of the product) */
+.tb{height:56px;display:flex;align-items:center;gap:1.25rem;padding:0 1.5rem;background:var(--white);border-bottom:1px solid var(--line)}
+.tb h1{font-size:1rem;flex:1}
+.tb h1 small{display:block;font-size:.75rem;font-weight:700;color:var(--muted);text-transform:none;letter-spacing:0}
+.seg{display:inline-flex;border:2px solid var(--charcoal);border-radius:6px;overflow:hidden}
+.seg button{min-height:40px;padding:0 1rem;border:0;background:var(--white);font-weight:800;text-transform:uppercase;font-size:.8rem;letter-spacing:.02em}
+.seg button[aria-pressed="true"]{background:var(--charcoal);color:var(--white)}
+.stage{height:836px;display:flex;justify-content:center;align-items:center;gap:2.5rem}
+.notes{width:340px;font-size:.9rem}
+.notes h2{font-size:.9rem;padding-left:.6rem;border-left:5px solid var(--red);margin-bottom:.6rem}
+.notes ul{margin:0 0 1.25rem;padding-left:1.1rem}.notes li{margin:.35rem 0}
+body[data-mode="desktop"] .notes{display:none}
+.frame{background:var(--white);border:1px solid var(--line);border-radius:8px;overflow:hidden;box-shadow:0 4px 14px rgb(43 42 51/.15)}
+body[data-mode="mobile"] .frame{background:var(--charcoal);border-color:var(--charcoal);border-radius:34px;padding:0 8px 8px}
+.urlbar{height:34px;display:flex;align-items:center;justify-content:center;gap:.5rem;font-size:.75rem;color:var(--muted);background:var(--light);border-bottom:1px solid var(--line);white-space:nowrap;overflow:hidden}
+body[data-mode="mobile"] .urlbar{background:var(--charcoal);color:var(--white);border:0;margin:4px 0 0}
+body[data-mode="mobile"] .urlbar span{background:rgb(255 255 255/.15);border-radius:999px;padding:.25rem .8rem;max-width:340px;overflow:hidden;text-overflow:ellipsis}
+.urlbar span{padding:.2rem .8rem;border-radius:999px;background:var(--white);border:1px solid var(--line)}
+body[data-mode="mobile"] .urlbar span{border:0}
+.dev{position:relative;height:740px;overflow:hidden;background:var(--white);display:flex;flex-direction:column}
+body[data-mode="mobile"] .dev{width:390px;border-radius:0 0 26px 26px}
+body[data-mode="desktop"] .dev{width:1280px}
+.site{flex:1;min-height:0;overflow:auto;position:relative;scroll-behavior:smooth;background:var(--white)}
+@media (prefers-reduced-motion:reduce){.site{scroll-behavior:auto}*{transition:none!important;animation:none!important}}
+/* product: header / footer */
+.hdr{position:sticky;top:0;z-index:20;background:#f8f8f8;border-bottom:1px solid var(--line);min-height:var(--hdr);display:flex;align-items:center;justify-content:space-between;padding:.5rem var(--pad);gap:1rem}
+.logo{display:inline-flex;min-height:44px;align-items:center}
+.logo svg{height:48px;width:auto;aspect-ratio:330/120}
+.hdr__tag{display:none;font-size:.85rem;color:var(--muted);font-weight:700}
+body[data-mode="desktop"] .hdr{padding-inline:2rem}
+body[data-mode="desktop"] .hdr__tag{display:block}
+.icon-btn{width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;border:0;background:none;color:var(--charcoal);border-radius:6px}
+.icon-btn svg{width:22px;height:22px}
+body[data-mode="desktop"] .icon-btn--m{display:none}
+.ftr{background:var(--charcoal);color:var(--white);padding:1.5rem var(--pad) 5.5rem;margin-top:1.5rem}
+.ftr p{margin:0 auto;max-width:var(--max);font-weight:700;font-size:.85rem;letter-spacing:.02em}
+body[data-mode="desktop"] .ftr{padding-inline:2rem}
+/* controls */
+.btn{min-height:48px;padding:0 1.25rem;font-weight:800;text-transform:uppercase;letter-spacing:.02em;border:0;border-radius:6px;background:var(--charcoal);color:var(--white);display:inline-flex;align-items:center;justify-content:center;gap:.5rem}
+.btn--primary{background:var(--red)}
+.btn--ghost{background:transparent;color:var(--charcoal);border:2px solid var(--charcoal)}
+.btn--wa{background:#1a7f37}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.btn svg{width:20px;height:20px}
+.search{position:relative;display:flex;flex:1;min-width:0}
+.search input{width:100%;min-height:48px;padding:0 .75rem 0 2.6rem;font-size:1rem;border:2px solid var(--line);border-radius:6px;background:var(--white)}
+.search input:focus{border-color:var(--charcoal)}
+.search>svg{position:absolute;left:.8rem;top:50%;translate:0 -50%;width:20px;height:20px;color:var(--muted);pointer-events:none}
+.link-btn{background:none;border:0;color:var(--red-dark);font-weight:700;text-decoration:underline;min-height:44px;padding:0 .35rem}
+.cnt{font-weight:700;font-size:.8rem;color:var(--muted)}
+.chip{min-height:44px;padding:0 .9rem;border:2px solid var(--line);border-radius:6px;background:var(--white);font-weight:700;display:inline-flex;align-items:center;gap:.4rem;white-space:nowrap}
+.chip--sm{min-height:40px;padding:0 .75rem}
+.chip.is-on{background:var(--charcoal);border-color:var(--charcoal);color:var(--white)}
+.chip.is-on .cnt{color:var(--white)}
+.chip__ico{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linejoin:round}
+.fchip{min-height:36px;padding:0 .3rem 0 .75rem;border:2px solid var(--charcoal);border-radius:999px;background:var(--white);font-weight:700;font-size:.85rem;display:inline-flex;align-items:center;gap:.25rem}
+.fchip svg{width:26px;height:26px;padding:5px;border-radius:50%;background:var(--light)}
+.fchip:hover svg{background:var(--line)}
+.active{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem}
+.chk{display:flex;align-items:center;gap:.7rem;min-height:44px;padding-block:.3rem;line-height:1.2;cursor:pointer;position:relative;padding:0 .25rem}
+.chk input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.chk__box{width:24px;height:24px;border:2px solid var(--muted);border-radius:4px;display:grid;place-items:center;background:var(--white);color:var(--white)}
+.chk__box svg{width:16px;height:16px}
+.chk input:checked~.chk__box{background:var(--charcoal);border-color:var(--charcoal)}
+.chk input:focus-visible~.chk__box{outline:3px solid var(--red);outline-offset:2px}
+.chk__txt{flex:1;min-width:0;font-weight:700;font-size:.95rem}
+.chk .cnt{min-width:1.5rem;text-align:right}
+.chk.is-on .chk__txt{font-weight:800}
+.status{display:flex;align-items:center;gap:.4rem .75rem;flex-wrap:wrap}
+.status__n{font-weight:800;text-transform:uppercase;font-size:.95rem}
+.title{font-size:clamp(1.3rem,6vw,2rem);font-weight:900;padding-left:.7rem;border-left:5px solid var(--red)}
+/* cards */
+.grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem}
+.card{height:100%;display:flex;flex-direction:column;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--white);position:relative}
+.card__media{display:block;text-decoration:none}
+.img{aspect-ratio:1/1;background:var(--light);display:grid;place-items:center;position:relative;overflow:hidden}
+.img .pic{width:54%;height:54%}
+.img.photo .pic{fill:var(--charcoal);stroke:var(--white);stroke-width:1.2;stroke-linejoin:round;stroke-linecap:round}
+.img.photo[data-tone="r"] .pic{fill:var(--red)}
+.img.photo::after{content:"";position:absolute;left:22%;right:22%;bottom:12%;height:8%;border-radius:50%;background:radial-gradient(closest-side,rgb(43 42 51/.18),transparent)}
+.img.empty{background:repeating-linear-gradient(135deg,var(--light) 0 10px,rgb(217 217 222/.5) 10px 20px);border-bottom:4px solid var(--line);aspect-ratio:1/1;align-content:center;justify-items:center;gap:.15rem}
+.img.empty .pic{fill:none;stroke:var(--muted);stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round;width:40%;height:40%;opacity:.7}
+.img__lbl{font-size:.7rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.img__code{font-weight:900;font-size:.85rem;letter-spacing:.08em;color:var(--charcoal)}
+.card__body{padding:.6rem .65rem 0;flex:1}
+.card__meta{margin:0 0 .2rem;font-size:.75rem;color:var(--muted);display:flex;flex-direction:column;gap:0;line-height:1.3}
+body[data-mode="desktop"] .card__meta{flex-direction:row;gap:.5rem}
+body[data-mode="desktop"] .img{aspect-ratio:4/3}
+.card__brand{font-weight:800;color:var(--charcoal);text-transform:uppercase}
+.card__name{font-size:.85rem;display:-webkit-box;-webkit-line-clamp:3;line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;line-height:1.2}
+.card__name a{text-decoration:none}
+.card__name a::after{content:"";position:absolute;inset:0}
+.card__cta{margin:.4rem 0 0;font-size:.72rem;font-weight:800;text-transform:uppercase;color:var(--red-dark)}
+.add{margin:.6rem .65rem .65rem;min-height:44px;border:2px solid var(--charcoal);border-radius:6px;background:var(--white);color:var(--charcoal);font-weight:800;text-transform:uppercase;font-size:.8rem;letter-spacing:.02em;display:inline-flex;align-items:center;justify-content:center;gap:.35rem;position:relative;z-index:1}
+.add svg{width:18px;height:18px}
+.add:hover{background:var(--charcoal);color:var(--white)}
+.add.is-added{background:var(--charcoal);color:var(--white)}
+.empty-state{padding:2.5rem 1rem;text-align:center;border:2px dashed var(--line);border-radius:8px}
+.empty-state h2{font-size:1.1rem;margin-bottom:.5rem}
+.empty-state p{margin:0 0 1rem;color:var(--muted)}
+@media (prefers-reduced-motion:no-preference){.card{transition:box-shadow .15s ease}.card:hover{box-shadow:0 4px 14px rgb(43 42 51/.15)}}
+/* overlays */
+.scrim{position:absolute;inset:0;background:rgb(43 42 51/.55);z-index:40;border:0;padding:0}
+.ov{position:absolute;z-index:50;background:var(--white)}
+.ov[inert]{visibility:hidden}
+.ov__head{display:flex;align-items:center;justify-content:space-between;gap:.75rem;padding:.5rem var(--pad);border-bottom:1px solid var(--line);min-height:56px}
+.ov__head h2{font-size:1.05rem}
+.ov__foot{display:flex;gap:.75rem;padding:.75rem var(--pad);border-top:1px solid var(--line);background:var(--white)}
+.ov__foot .btn{flex:1;padding:0 .75rem;font-size:.85rem;white-space:nowrap}
+.ov__foot .btn--ghost{flex:none}
+/* cart */
+.fab{position:absolute;right:1rem;bottom:1rem;z-index:30;min-height:56px;padding:0 1.1rem;display:inline-flex;align-items:center;gap:.5rem;background:var(--red);color:var(--white);border:0;border-radius:999px;font-weight:800;text-transform:uppercase;font-size:.85rem;box-shadow:0 4px 14px rgb(43 42 51/.35)}
+.fab svg{width:22px;height:22px}
+.fab__badge{position:absolute;top:-6px;right:-4px;min-width:24px;height:24px;padding:0 6px;border-radius:12px;background:var(--charcoal);color:var(--white);font-size:.8rem;display:grid;place-items:center;border:2px solid var(--white)}
+#cartpanel{right:1rem;bottom:5rem;width:min(360px,calc(100% - 2rem));max-height:62%;display:flex;flex-direction:column;border:1px solid var(--line);border-radius:8px;box-shadow:0 4px 14px rgb(43 42 51/.35);overflow:hidden}
+#cartpanel .cp__list{list-style:none;margin:0;padding:.5rem var(--pad);overflow:auto;flex:1;display:grid;gap:.6rem;align-content:start;font-size:.85rem}
+#cartpanel .cp__list li{display:flex;justify-content:space-between;gap:.75rem;align-items:center;border-bottom:1px solid var(--line);padding-bottom:.6rem}
+.cp__q{display:inline-flex;align-items:center;gap:.25rem}
+.cp__q output{min-width:1.6rem;text-align:center;font-weight:800}
+.step{width:44px;height:44px;border:0;border-radius:6px;background:var(--light);font-size:1.3rem;font-weight:800}
+.toast{position:absolute;left:1rem;right:5.5rem;bottom:1.1rem;z-index:35;background:var(--charcoal);color:var(--white);padding:.7rem .9rem;border-radius:6px;font-size:.85rem;font-weight:700;opacity:0;translate:0 8px;pointer-events:none}
+.toast.show{opacity:1;translate:0 0}
+@media (prefers-reduced-motion:no-preference){.toast{transition:opacity .2s,translate .2s}}
+
+.a-main{padding:.75rem var(--pad) 0}
+.a-intro{margin-bottom:.6rem}.a-lead{display:none;margin:0;font-size:.95rem}
+.a-search{display:flex;gap:.5rem;margin-bottom:.75rem}
+.a-filterbtn{position:relative;padding:0 .8rem;font-size:.85rem}
+.a-badge{min-width:22px;height:22px;border-radius:11px;background:var(--red);color:var(--white);font-size:.75rem;display:grid;place-items:center;padding:0 5px}
+.a-cats{position:sticky;top:var(--hdr);z-index:15;background:var(--white);margin:0 calc(var(--pad)*-1);border-bottom:1px solid var(--line);}
+.a-cats__row{display:flex;gap:.5rem;overflow-x:auto;padding:.6rem var(--pad);scroll-snap-type:x proximity;scrollbar-width:none;-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent)}
+.a-cats__row::-webkit-scrollbar{display:none}
+.a-cats__row .chip{scroll-snap-align:start}
+.a-brands{display:none}
+.a-status{padding:.7rem 0 .6rem;min-height:48px}
+.a-grab{display:block;width:44px;height:5px;border-radius:3px;background:var(--line);margin:.5rem auto 0}
+.a-sheet{left:0;right:0;bottom:0;max-height:88%;border-radius:12px 12px 0 0;display:flex;flex-direction:column;box-shadow:0 4px 14px rgb(43 42 51/.35);translate:0 100%}
+.a-sheet.open{translate:0 0}
+@media (prefers-reduced-motion:no-preference){.a-sheet{transition:translate .22s ease}}
+.a-sheet__body{overflow:auto;padding:.5rem var(--pad) 1rem;flex:1}
+.a-fs{border:0;padding:0;margin:.5rem 0 1rem}
+.a-fs legend{padding:0;margin-bottom:.25rem;font-weight:800;text-transform:uppercase;font-size:.85rem;color:var(--muted)}
+.a-fs__cols{display:grid;grid-template-columns:1fr 1fr;gap:0 .75rem}
+body[data-mode="desktop"] .a-main{padding:1.5rem 2rem 0}
+body[data-mode="desktop"] .a-lead{display:block}
+body[data-mode="desktop"] .a-intro{display:flex;align-items:baseline;gap:1.5rem}
+body[data-mode="desktop"] .a-search{max-width:560px}
+body[data-mode="desktop"] .a-filterbtn{display:none}
+body[data-mode="desktop"] .a-cats{margin:0 -2rem}
+body[data-mode="desktop"] .a-cats__row .chip{padding:0 .65rem;gap:.35rem}
+body[data-mode="desktop"] .a-cats__row{gap:.4rem;padding:.6rem 2rem;flex-wrap:wrap;-webkit-mask-image:none;mask-image:none;overflow:visible}
+body[data-mode="desktop"] .a-brands{display:flex;align-items:center;gap:.75rem;padding-top:.75rem}
+body[data-mode="desktop"] .a-brands__lbl{font-weight:800;text-transform:uppercase;font-size:.8rem;color:var(--muted)}
+body[data-mode="desktop"] .a-brands__row{display:flex;flex-wrap:wrap;gap:.4rem}
+body[data-mode="desktop"] .grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:1rem}
+body[data-mode="desktop"] .card__name{font-size:.95rem}
+body[data-mode="desktop"] #sheet,body[data-mode="desktop"] [data-scrim]{display:none}
+
+/* ===== variante: búsqueda compacta en la barra de rubros ===== */
+.a-cats__in{display:flex;align-items:flex-start}
+.cs-btn{position:relative;flex:none;margin:.6rem 0 0 var(--pad);width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;border:2px solid var(--line);border-radius:6px;background:var(--white);color:var(--charcoal)}
+.cs-btn:hover{border-color:var(--charcoal)}
+.cs-btn svg{width:22px;height:22px}
+.cs-dot{position:absolute;top:-5px;right:-5px;width:12px;height:12px;border-radius:50%;background:var(--red);border:2px solid var(--white)}
+.a-cats__row{flex:1;min-width:0}
+.cs-btn:not([hidden])+.a-cats__row{padding-left:.5rem}
+.cs-field{position:absolute;inset:0;display:flex;align-items:center;gap:.5rem;padding:0 var(--pad);background:var(--white)}
+body[data-mode="desktop"] .cs-btn{margin-left:2rem}
+body[data-mode="desktop"] .cs-field{padding:0 2rem}
+body[data-mode="desktop"] .cs-field .search{max-width:560px}
+
+/* ===== carrito en el encabezado ===== */
+.hcart{position:relative;min-width:44px;min-height:44px;padding:0 .6rem;display:inline-flex;align-items:center;justify-content:center;gap:.5rem;border:2px solid transparent;border-radius:6px;background:none;color:var(--charcoal);font-weight:800;text-transform:uppercase;font-size:.85rem;letter-spacing:.02em}
+.hcart:hover{background:var(--line)}
+.hcart svg{width:24px;height:24px}
+.hcart__lbl{display:none}
+body[data-mode="desktop"] .hcart{border-color:var(--charcoal);padding:0 .9rem}
+body[data-mode="desktop"] .hcart__lbl{display:inline}
+.hcart__badge{position:absolute;top:-6px;right:-6px;min-width:22px;height:22px;padding:0 6px;border-radius:11px;background:var(--red);color:var(--white);font-size:.75rem;display:grid;place-items:center;border:2px solid var(--white);line-height:1}
+@keyframes bump{50%{scale:1.35}}
+@media (prefers-reduced-motion:no-preference){.hcart__badge.bump{animation:bump .3s ease}}
+.ftr{padding-bottom:1.5rem}
+
+/* barra inferior (solo móvil, solo con productos) */
+.cbar{position:absolute;left:0;right:0;bottom:0;z-index:30;padding:.5rem var(--pad) calc(.5rem + env(safe-area-inset-bottom));background:var(--white);border-top:1px solid var(--line);translate:0 100%;visibility:hidden}
+.cbar.on{translate:0 0;visibility:visible}
+@media (prefers-reduced-motion:no-preference){.cbar{transition:translate .2s ease,visibility .2s}}
+.cbar__btn{width:100%;min-height:56px;border:0;border-radius:6px;background:var(--red);color:var(--white);font-weight:800;text-transform:uppercase;letter-spacing:.02em;font-size:.9rem;display:flex;align-items:center;justify-content:center;gap:.6rem}
+.cbar__btn svg{width:22px;height:22px}
+body[data-mode="desktop"] .cbar{display:none}
+body[data-mode="mobile"] .site{scroll-padding-bottom:88px}
+body[data-mode="mobile"].bar-on .ftr{padding-bottom:calc(1.5rem + 72px)}
+#cartpanel{left:0;right:0;bottom:0;top:auto;width:auto;max-height:70%;border-radius:12px 12px 0 0}
+body[data-mode="desktop"] #cartpanel{left:auto;right:2rem;top:calc(var(--hdr) + .5rem);bottom:auto;width:380px;border-radius:8px}
+.toast{left:1rem;right:1rem;bottom:1rem}
+body[data-mode="mobile"].bar-on .toast{bottom:5rem}
+body[data-mode="desktop"] .toast{left:auto;right:2rem;width:380px}
+
+</style></head>
+<body data-mode="mobile">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+<defs>
+<symbol id="logo" viewBox="0 0 330 120"><circle cx="46" cy="52" r="40" fill="none" stroke="#e1202f" stroke-width="11" stroke-dasharray="9 8"/><circle cx="46" cy="52" r="32" fill="none" stroke="#e1202f" stroke-width="6"/><path d="M46 24a28 28 0 0 0 0 56z" fill="#5d5c66"/><text x="100" y="82" font-family="Arial Narrow,Helvetica Neue,Arial,sans-serif" font-weight="900" font-size="92" textLength="224" lengthAdjust="spacingAndGlyphs"><tspan fill="#2b2a33">SI</tspan><tspan fill="#b8101e">COR</tspan></text><text x="100" y="108" font-family="Arial Narrow,Arial,sans-serif" font-weight="700" font-size="18" fill="#2b2a33" textLength="224" lengthAdjust="spacingAndGlyphs">SUMINISTROS INDUSTRIALES</text></symbol>
+<symbol id="i-shoe" viewBox="0 0 48 48"><path d="M5 30c0-7 2-13 4-17l8 4 4-4c2 6 8 10 17 12 5 1 8 3 8 7v4H5z"/><path d="M5 38h38M18 17l4 5M24 20l4 5"/></symbol>
+<symbol id="i-shirt" viewBox="0 0 48 48"><path d="M17 6 6 12l4 9 5-2v23h18V19l5 2 4-9-11-6c-1 4-4 6-7 6s-6-2-7-6z"/></symbol>
+<symbol id="i-helmet" viewBox="0 0 48 48"><path d="M8 32c0-10 7-18 16-18s16 8 16 18z"/><path d="M3 32h42v5H3zM22 14v12h4V14"/></symbol>
+<symbol id="i-goggles" viewBox="0 0 48 48"><path d="M3 18h42v9c0 5-3 8-8 8h-5c-3 0-5-2-6-4h-4c-1 2-3 4-6 4h-5c-5 0-8-3-8-8z"/><path d="M3 22H1M45 22h2"/></symbol>
+<symbol id="i-glove" viewBox="0 0 48 48"><path d="M13 44V29l-6-8c-1-2 1-4 3-3l5 5V9c0-2 4-2 4 0v12V6c0-2 4-2 4 0v15V8c0-2 4-2 4 0v14V14c0-2 4-2 4 0v16c0 8-4 14-10 14z"/><path d="M13 38h20"/></symbol>
+<symbol id="i-cone" viewBox="0 0 48 48"><path d="M24 5 35 37H13z"/><path d="M5 43h38v-6H5zM19 24h10M16 31h16"/></symbol>
+<symbol id="i-box" viewBox="0 0 48 48"><path d="M5 14 24 6l19 8v22l-19 8-19-8z"/><path d="m5 14 19 8 19-8M24 22v22"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+<symbol id="i-filter" viewBox="0 0 24 24"><path d="M3 6h18M6 12h12M10 18h4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="i-list" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+<symbol id="i-grid" viewBox="0 0 24 24"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/></symbol>
+<symbol id="i-cart" viewBox="0 0 24 24"><path d="M3 4h3l2.4 11h9.7L20 8H7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.5" cy="19.5" r="1.6" fill="currentColor"/><circle cx="17" cy="19.5" r="1.6" fill="currentColor"/></symbol>
+<symbol id="i-chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</defs></svg>
+
+<div class="tb"><h1>Variante 2 · Encabezado + barra inferior con productos<small>Carrito en el encabezado y, en móvil, una barra “Ver cotización” solo cuando hay productos</small></h1>
+<div class="seg" role="group" aria-label="Tamaño de pantalla"><button type="button" data-mode="mobile" aria-pressed="true">Móvil 390</button><button type="button" data-mode="desktop" aria-pressed="false">Escritorio 1280</button></div></div>
+<div class="stage">
+<aside class="notes" aria-label="Notas del diseño"><h2>Qué cambia respecto de la variante 1 (04)</h2><ul><li>Todo lo de la variante 1 (carrito en el encabezado, lupa compacta en la barra de rubros).</li><li>En móvil, con al menos un producto, aparece una barra completa al pie: “N productos · Ver cotización”. Sin productos no existe.</li><li>La lista y el pie reservan ese espacio y los botones enfocados se desplazan por encima de la barra: nada queda tapado.</li><li>En escritorio no hay barra: alcanza el encabezado.</li></ul>
+<h2>Probá</h2><ul><li>Agregá un producto: la barra sube desde abajo.</li><li>Llegá al final de la lista: el pie queda entero sobre la barra.</li><li>Tocá la barra: se abre la cotización como hoja inferior.</li></ul>
+</aside>
+<div class="frame"><div class="urlbar"><span data-url>sicor.com.ar/</span></div>
+<div class="dev" id="dev">
+<div class="site" id="site">
+<header class="hdr"><a class="logo" href="#" aria-label="SICOR — inicio"><svg viewBox="0 0 330 120"><use href="#logo"/></svg></a><span class="hdr__tag">Catálogo comercial · Consultá cotización por WhatsApp</span><button type="button" class="hcart" data-open="cartpanel" aria-haspopup="dialog" aria-label="Cotización: vacía"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-cart"/></svg><span class="hcart__lbl">Cotización</span><span class="hcart__badge" data-cart-count hidden>0</span></button></header>
+<main class="a-main">
+<div class="a-intro"><h1 class="title">Catálogo</h1><p class="muted a-lead">Todos los productos en una sola lista. Filtrá por rubro y marca, y pedí tu cotización.</p></div>
+<form class="a-search" role="search"><label class="search"><span class="sr-only">Buscar productos</span><svg viewBox="0 0 24 24"><use href="#i-search"/></svg><input type="search" data-q placeholder="Buscar producto" aria-label="Buscar por nombre, marca o código" autocomplete="off"></label><button type="button" class="btn btn--ghost a-filterbtn" data-open="sheet" aria-haspopup="dialog"><svg viewBox="0 0 24 24"><use href="#i-filter"/></svg>Filtros<span class="a-badge" data-filter-badge hidden>0</span></button></form>
+<nav class="a-cats" aria-label="Categorías"><div class="a-cats__in"><button type="button" class="cs-btn" id="csOpen" hidden aria-label="Buscar productos" aria-expanded="false" aria-controls="csField"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-search"/></svg><span class="cs-dot" hidden></span></button><div class="a-cats__row" id="catRow"></div></div>
+<form class="cs-field" id="csField" role="search" hidden><label class="search"><span class="sr-only">Buscar productos</span><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-search"/></svg><input type="search" data-q placeholder="Buscar producto" aria-label="Buscar por nombre, marca o código" autocomplete="off"></label><button type="button" class="icon-btn" id="csClose" aria-label="Cerrar búsqueda"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-x"/></svg></button></form></nav>
+<div class="a-brands" role="group" aria-label="Marca"><span class="a-brands__lbl">Marca</span><div class="a-brands__row" id="brandRow"></div></div>
+<div class="a-status status"><p class="status__n" role="status" data-count></p><div class="active" data-active></div></div>
+<ul class="grid" data-grid></ul>
+<div class="empty-state" data-empty hidden><h2>No encontramos productos</h2><p>Probá con otra búsqueda o quitá algún filtro.</p><button type="button" class="btn btn--primary" data-clear>Limpiar filtros</button></div>
+</main>
+<footer class="ftr"><p>SICOR | SUMINISTROS INDUSTRIALES CÓRDOBA</p></footer>
+
+</div>
+<section class="ov a-sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetT" inert>
+<span class="a-grab" aria-hidden="true"></span>
+<div class="ov__head"><h2 id="sheetT">Filtros</h2><button type="button" class="icon-btn" data-close data-autofocus aria-label="Cerrar filtros"><svg viewBox="0 0 24 24"><use href="#i-x"/></svg></button></div>
+<div class="a-sheet__body"><fieldset class="a-fs"><legend>Categoría <span data-group-count="cats"></span></legend><div id="sheetCats"></div></fieldset><fieldset class="a-fs"><legend>Marca <span data-group-count="brands"></span></legend><div class="a-fs__cols" id="sheetBrands"></div></fieldset></div>
+<div class="ov__foot"><button type="button" class="btn btn--ghost" data-clear>Limpiar</button><button type="button" class="btn btn--primary" data-close data-result-btn></button></div></section>
+
+<button class="scrim" data-scrim hidden tabindex="-1" aria-label="Cerrar"></button>
+<section class="ov" id="cartpanel" role="dialog" aria-label="Tu cotización" inert><div class="ov__head"><h2>Tu cotización</h2><button type="button" class="icon-btn" data-close aria-label="Cerrar cotización"><svg viewBox="0 0 24 24"><use href="#i-x"/></svg></button></div><ul class="cp__list"></ul><div class="ov__foot"><button type="button" class="btn btn--wa" data-wa disabled>Enviar por WhatsApp</button></div></section>
+
+<div class="cbar" id="cbar"><button type="button" class="cbar__btn" data-open="cartpanel" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-cart"/></svg><span data-bar-text>0 productos · Ver cotización</span></button></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+</div></div>
+</div>
+<script>
+const CATS=[
+ {id:'indumentaria',name:'Indumentaria laboral',short:'Indumentaria',icon:'shirt'},
+ {id:'calzado',name:'Calzado de seguridad',short:'Calzado',icon:'shoe'},
+ {id:'epp',name:'Elementos de protección personal',short:'EPP',icon:'helmet'},
+ {id:'ocular',name:'Protección ocular y auditiva',short:'Ocular y auditiva',icon:'goggles'},
+ {id:'guantes',name:'Guantes de protección',short:'Guantes',icon:'glove'},
+ {id:'vial',name:'Seguridad vial',short:'Seguridad vial',icon:'cone'},
+ {id:'otros',name:'Otros productos',short:'Otros',icon:'box'}];
+const P=[
+ {id:1,name:'ZAPATILLA SNEAKER PRO COMPOSITE',brand:'OMBU',code:'SNEAKPRO',cat:'calzado',photo:1},
+ {id:2,name:'PANTALON CARGO ELASTIZADO PAMPERO 38/54',brand:'PAMPERO',code:'ELASTIZA',cat:'indumentaria',photo:1},
+ {id:3,name:'REMERA ALGODON PEINADO 24/1 M/CORTA MSF',brand:'MSF',code:'REM01',cat:'indumentaria',photo:1},
+ {id:4,name:'CAMISA DE TRABAJO PAMPERO T. 38 / 48',brand:'PAMPERO',code:'CAM01',cat:'indumentaria',photo:1},
+ {id:5,name:'CHOMBA DE PIQUE M/C',brand:'MSF',code:'CHO01',cat:'indumentaria',photo:0},
+ {id:6,name:'BOTIN DE SEGURIDAD CUERO PUNTERA ACERO',brand:'OMBU',code:'BOT100',cat:'calzado',photo:0},
+ {id:7,name:'BOTA DE GOMA PVC CAÑA ALTA',brand:'OMBU',code:'BOG20',cat:'calzado',photo:1},
+ {id:8,name:'CASCO DE SEGURIDAD CON REGULACION',brand:'LIBUS',code:'CAS200',cat:'epp',photo:1},
+ {id:9,name:'BARBIJO RESPIRADOR P2 CON VALVULA',brand:'3M',code:'RES300',cat:'epp',photo:0},
+ {id:10,name:'ANTIPARRA TRANSPARENTE ANTIEMPAÑANTE',brand:'LIBUS',code:'ANT10',cat:'ocular',photo:1},
+ {id:11,name:'PROTECTOR AUDITIVO TIPO MUFLA',brand:'3M',code:'AUD22',cat:'ocular',photo:0},
+ {id:12,name:'LENTES DE SEGURIDAD POLICARBONATO',brand:'STEELPRO',code:'LEN55',cat:'ocular',photo:1},
+ {id:13,name:'GUANTE DE VAQUETA REFORZADO',brand:'FUNCIONAL',code:'GUA12',cat:'guantes',photo:1},
+ {id:14,name:'GUANTE NITRILO RECUBIERTO EN PALMA',brand:'LIBUS',code:'GUA48',cat:'guantes',photo:0},
+ {id:15,name:'CONO VIAL FLEXIBLE 75 CM',brand:'STEELPRO',code:'VIA10',cat:'vial',photo:1},
+ {id:16,name:'MATAFUEGO ABC 5 KG CON SOPORTE',brand:'FUNCIONAL',code:'EXT05',cat:'otros',photo:0}];
+const BRANDS=[...new Set(P.map(p=>p.brand))].sort();
+const CAT=Object.fromEntries(CATS.map(c=>[c.id,c]));
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const norm=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+const S={q:'',cats:new Set(),brands:new Set(),view:'grid'};
+const cart=new Map();const hooks=[];
+function pass(p,skip){
+ if(skip!=='q'&&S.q.trim()){const t=norm(p.name+' '+p.brand+' '+p.code);if(!norm(S.q).split(/\s+/).filter(Boolean).every(w=>t.includes(w)))return false}
+ if(skip!=='cats'&&S.cats.size&&!S.cats.has(p.cat))return false;
+ if(skip!=='brands'&&S.brands.size&&!S.brands.has(p.brand))return false;return true}
+const list=skip=>P.filter(p=>pass(p,skip));
+function counts(key,skip){const m={};list(skip).forEach(p=>m[p[key]]=(m[p[key]]||0)+1);return m}
+const nFilters=()=>S.cats.size+S.brands.size+(S.q.trim()?1:0);
+const plural=n=>n===1?'1 producto':n+' productos';
+function icon(id,cls=''){return `<svg class="${cls}" aria-hidden="true" focusable="false"><use href="#i-${id}"/></svg>`}
+function media(p,i){
+ const c=CAT[p.cat];
+ if(p.photo)return `<div class="img photo" data-tone="${p.id%2?'r':'c'}"><svg class="pic" viewBox="0 0 48 48" aria-hidden="true"><use href="#i-${c.icon}"/></svg></div>`;
+ return `<div class="img empty"><svg class="pic" viewBox="0 0 48 48" aria-hidden="true"><use href="#i-${c.icon}"/></svg><span class="img__lbl">Sin foto</span><span class="img__code">${esc(p.code)}</span></div>`}
+function card(p){
+ const n=cart.get(p.id)||0;
+ return `<li><article class="card" aria-labelledby="n${p.id}"><a class="card__media" href="#" aria-label="Ver ${esc(p.name)}" tabindex="-1">${media(p)}</a>
+ <div class="card__body"><p class="card__meta"><span class="card__brand">${esc(p.brand)}</span> <span class="card__code">Cód. ${esc(p.code)}</span></p>
+ <h3 class="card__name" id="n${p.id}"><a href="#">${esc(p.name)}</a></h3><p class="card__cta">Consultar cotización</p></div>
+ <button type="button" class="add${n?' is-added':''}" data-add="${p.id}" aria-label="Agregar ${esc(p.name)} a la cotización">${icon(n?'check':'plus')}<span>${n?'Agregado ('+n+')':'Agregar'}</span></button></article></li>`}
+const catBtn=(c,cls='chip',label='short')=>`<button type="button" class="${cls}" data-cat="${c.id}" aria-pressed="false">${icon(c.icon,'chip__ico')}<span>${esc(c[label])}</span> <span class="cnt" data-cat-count="${c.id}"></span></button>`;
+const catCheck=c=>`<label class="chk"><input type="checkbox" data-cat="${c.id}"><span class="chk__box" aria-hidden="true">${icon('check')}</span><span class="chk__txt">${esc(c.name)}</span><span class="cnt" data-cat-count="${c.id}"></span></label>`;
+const brandCheck=b=>`<label class="chk"><input type="checkbox" data-brand="${esc(b)}"><span class="chk__box" aria-hidden="true">${icon('check')}</span><span class="chk__txt">${esc(b)}</span><span class="cnt" data-brand-count="${esc(b)}"></span></label>`;
+const brandBtn=b=>`<button type="button" class="chip chip--sm" data-brand="${esc(b)}" aria-pressed="false"><span>${esc(b)}</span> <span class="cnt" data-brand-count="${esc(b)}"></span></button>`;
+function chipsHTML(){
+ const a=[];
+ S.q.trim()&&a.push(['q','',`Búsqueda: “${esc(S.q.trim())}”`]);
+ CATS.filter(c=>S.cats.has(c.id)).forEach(c=>a.push(['cats',c.id,esc(c.name)]));
+ BRANDS.filter(b=>S.brands.has(b)).forEach(b=>a.push(['brands',b,'Marca: '+esc(b)]));
+ if(!a.length)return '';
+ return a.map(([k,v,t])=>`<button type="button" class="fchip" data-rm="${k}" data-v="${esc(v)}" aria-label="Quitar filtro ${t}"><span>${t}</span>${icon('x')}</button>`).join('')+`<button type="button" class="link-btn" data-clear>Limpiar filtros</button>`}
+function update(){
+ const r=list();
+ $$('[data-grid]').forEach(g=>{g.classList.toggle('is-list',S.view==='list');g.innerHTML=r.map(card).join('');g.hidden=!r.length});
+ $$('[data-empty]').forEach(e=>e.hidden=!!r.length);
+ $$('[data-count]').forEach(e=>e.textContent=plural(r.length));
+ $$('[data-count-n]').forEach(e=>e.textContent=r.length);
+ $$('[data-active]').forEach(e=>{e.innerHTML=chipsHTML();e.hidden=!nFilters()});
+ $$('[data-filter-badge]').forEach(e=>{const n=S.cats.size+S.brands.size;e.textContent=n;e.hidden=!n});
+ $$('[data-group-count]').forEach(e=>{const n=S[e.dataset.groupCount].size;e.textContent=n?'('+n+')':''});
+ const cc=counts('cat','cats'),bc=counts('brand','brands');
+ $$('[data-cat-count]').forEach(e=>e.textContent=cc[e.dataset.catCount]||0);
+ $$('[data-brand-count]').forEach(e=>e.textContent=bc[e.dataset.brandCount]||0);
+ $$('[data-cat]').forEach(e=>{const on=S.cats.has(e.dataset.cat);e.tagName==='INPUT'?e.checked=on:e.setAttribute('aria-pressed',on);e.closest('label,button')?.classList.toggle('is-on',on);e.classList.toggle('is-on',on)});
+ $$('[data-cat-all]').forEach(e=>{e.setAttribute('aria-pressed',!S.cats.size);e.classList.toggle('is-on',!S.cats.size)});
+ $$('[data-brand]').forEach(e=>{const on=S.brands.has(e.dataset.brand);e.tagName==='INPUT'?e.checked=on:e.setAttribute('aria-pressed',on);e.closest('label')?.classList.toggle('is-on',on);e.classList.toggle('is-on',on)});
+ $$('[data-brand-select]').forEach(e=>e.value=S.brands.size===1?[...S.brands][0]:'');
+ $$('[data-q]').forEach(e=>{if(e!==document.activeElement)e.value=S.q});
+ $$('[data-view]').forEach(e=>{const on=e.dataset.view===S.view;e.setAttribute('aria-pressed',on);e.classList.toggle('is-on',on)});
+ $$('[data-result-btn]').forEach(e=>e.textContent=r.length?'Ver '+plural(r.length):'Sin resultados');
+ const q=[];S.cats.size&&q.push('categoria='+[...S.cats].join(','));S.brands.size&&q.push('marca='+[...S.brands].map(b=>b.toLowerCase()).join(','));S.q.trim()&&q.push('q='+encodeURIComponent(S.q.trim()));
+ $$('[data-url]').forEach(e=>e.textContent='sicor.com.ar/'+(q.length?'?'+q.join('&'):''));
+ try{history.replaceState(null,'','?'+q.join('&'))}catch(e){}
+ renderCart();hooks.forEach(f=>f());
+}
+function renderCart(){
+ let tot=0;cart.forEach(v=>tot+=v);
+ $$('[data-cart-count]').forEach(e=>{e.textContent=tot;e.hidden=!tot});
+ const fab=$('.fab');fab&&fab.setAttribute('aria-label','Cotización: '+tot+(tot===1?' producto':' productos'));
+ const cp=$('#cartpanel .cp__list');if(!cp)return;
+ cp.innerHTML=tot?[...cart].map(([id,n])=>{const p=P.find(x=>x.id===id);return `<li><span><b>${esc(p.name)}</b><br><span class="muted">${esc(p.brand)} · Cód. ${esc(p.code)}</span></span><span class="cp__q"><button type="button" class="step" data-dec="${id}" aria-label="Quitar uno de ${esc(p.name)}">−</button><output>${n}</output><button type="button" class="step" data-inc="${id}" aria-label="Sumar uno de ${esc(p.name)}">+</button></span></li>`}).join(''):'<li class="muted">Todavía no agregaste productos. Tocá “Agregar” en cualquier producto.</li>';
+ $('#cartpanel [data-wa]')&&($('#cartpanel [data-wa]').disabled=!tot)}
+let toastT;function toast(t){const e=$('#toast');if(!e)return;e.textContent=t;e.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove('show'),2200)}
+function toggle(set,v){set.has(v)?set.delete(v):set.add(v)}
+let lastFocus=null;
+function openOv(id){const el=$('#'+id);if(!el)return;lastFocus=document.activeElement;el.classList.add('open');el.removeAttribute('inert');$$('[data-scrim]').forEach(s=>s.hidden=false);document.body.classList.add('ov-open');(el.querySelector('[data-autofocus]')||el.querySelector('button,input,summary'))?.focus()}
+function closeOv(){$$('.ov.open').forEach(e=>{e.classList.remove('open');e.setAttribute('inert','')});$$('[data-scrim]').forEach(s=>s.hidden=true);document.body.classList.remove('ov-open');lastFocus&&lastFocus.focus&&lastFocus.focus();lastFocus=null}
+document.addEventListener('click',e=>{
+ const t=e.target.closest('button,a,[data-scrim]');if(!t){return}
+ if(t.matches('a[href="#"]')){e.preventDefault();return}
+ if(t.dataset.cat){toggle(S.cats,t.dataset.cat);update();return}
+ if(t.dataset.brand&&t.tagName==='BUTTON'){toggle(S.brands,t.dataset.brand);update();return}
+ if('catAll' in t.dataset){S.cats.clear();update();return}
+ if('clear' in t.dataset){S.cats.clear();S.brands.clear();S.q='';update();return}
+ if(t.dataset.rm){const k=t.dataset.rm;k==='q'?S.q='':S[k].delete(t.dataset.v);update();return}
+ if(t.dataset.view){S.view=t.dataset.view;update();return}
+ if(t.dataset.add){const id=+t.dataset.add,p=P.find(x=>x.id===id);cart.set(id,(cart.get(id)||0)+1);update();toast('Agregado: '+p.name+' · '+[...cart.values()].reduce((a,b)=>a+b,0)+' en tu cotización');$(`[data-add="${id}"]`)?.focus();return}
+ if(t.dataset.inc||t.dataset.dec){const id=+(t.dataset.inc||t.dataset.dec),n=(cart.get(id)||0)+(t.dataset.inc?1:-1);n>0?cart.set(id,n):cart.delete(id);update();return}
+ if(t.dataset.open){openOv(t.dataset.open);return}
+ if('close' in t.dataset||'scrim' in t.dataset){closeOv();return}
+ if('focusQ' in t.dataset){const s=$('.site');s&&s.scrollTo({top:0});$('[data-q]')?.focus();return}
+ if(t.dataset.mode){setMode(t.dataset.mode);return}
+ if(t.dataset.wa!==undefined){toast('Se abre WhatsApp con tu cotización (demo)');return}
+});
+document.addEventListener('change',e=>{const t=e.target;
+ if(t.matches('input[data-cat]')){t.checked?S.cats.add(t.dataset.cat):S.cats.delete(t.dataset.cat);update()}
+ else if(t.matches('input[data-brand]')){t.checked?S.brands.add(t.dataset.brand):S.brands.delete(t.dataset.brand);update()}
+ else if(t.matches('[data-brand-select]')){S.brands.clear();t.value&&S.brands.add(t.value);update()}});
+document.addEventListener('input',e=>{if(e.target.matches('[data-q]')){S.q=e.target.value;update()}});
+document.addEventListener('submit',e=>e.preventDefault());
+document.addEventListener('keydown',e=>{
+ if(e.key==='Escape')closeOv();
+ if(e.key==='Tab'){const ov=$('.ov.open');if(!ov)return;const f=$$('button:not([disabled]),input,summary,[href]',ov).filter(x=>x.offsetParent);if(!f.length)return;const a=f[0],z=f[f.length-1];
+  if(e.shiftKey&&document.activeElement===a){e.preventDefault();z.focus()}else if(!e.shiftKey&&document.activeElement===z){e.preventDefault();a.focus()}}});
+function setMode(m){closeOv();document.body.dataset.mode=m;$$('[data-mode]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mode===m));hooks.forEach(f=>f())}
+
+$('#catRow').innerHTML=`<button type="button" class="chip is-on" data-cat-all aria-pressed="true"><span>Todas</span></button>`+CATS.map(c=>catBtn(c)).join('');
+$('#brandRow').innerHTML=BRANDS.map(brandBtn).join('');
+$('#sheetCats').innerHTML=CATS.map(catCheck).join('');
+$('#sheetBrands').innerHTML=BRANDS.map(brandCheck).join('');
+/* ===== variante: búsqueda compacta aparece cuando la grande sale de la vista ===== */
+const siteEl=$('#site'),bigS=$('.a-search'),csOpen=$('#csOpen'),csField=$('#csField'),csIn=$('input',csField);
+let bigVisible=true;
+function csSet(open,refocus){csField.hidden=!open;csOpen.setAttribute('aria-expanded',String(open));if(open)csIn.focus();else if(refocus&&!csOpen.hidden)csOpen.focus()}
+new IntersectionObserver(([en])=>{bigVisible=en.isIntersecting;csOpen.hidden=bigVisible;if(bigVisible&&!csField.contains(document.activeElement))csSet(false)},{root:siteEl,rootMargin:'-64px 0px 0px 0px'}).observe(bigS);
+csOpen.addEventListener('click',()=>csSet(true));
+$('#csClose').addEventListener('click',()=>csSet(false,true));
+csField.addEventListener('focusout',e=>{if(bigVisible&&!csField.contains(e.relatedTarget))csSet(false)});
+csField.addEventListener('keydown',e=>{if(e.key==='Escape'){e.stopPropagation();csSet(false,true)}});
+const total=()=>{let t=0;cart.forEach(v=>t+=v);return t};
+hooks.push(()=>{$('.cs-dot').hidden=!S.q.trim()});
+
+let prevTot=0;
+hooks.push(()=>{const t=total();$('.hcart').setAttribute('aria-label','Cotización: '+(t?plural(t):'vacía'));if(t>prevTot){const b=$('.hcart__badge');b.classList.remove('bump');void b.offsetWidth;b.classList.add('bump')}prevTot=t});
+
+const barEl=$('#cbar');
+hooks.push(()=>{const t=total();barEl.classList.toggle('on',t>0);document.body.classList.toggle('bar-on',t>0);$('[data-bar-text]').textContent=plural(t)+' · Ver cotización'});
+
+update();
+
+</script></body></html>

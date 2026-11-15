@@ -3,12 +3,13 @@
   "chosen": "01-chips-y-hoja-de-filtros.html",
   "handoffs": {
     "01-chips-y-hoja-de-filtros.html": {
-      "status": "in_progress",
+      "status": "implemented",
       "queued": true,
       "sentAt": "2026-11-15T04:24:45.457Z",
       "startedAt": "2026-11-15T04:25:09.289Z",
-      "implementedAt": null,
-      "feature": "odd/tasks/catalog-redesign.md"
+      "implementedAt": "2026-11-15T11:56:08.415Z",
+      "feature": "odd/tasks/catalog-redesign.md",
+      "previewUrl": "http://localhost:3000/"
     }
   }
 }
