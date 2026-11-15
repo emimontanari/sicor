@@ -1,0 +1,9 @@
+{
+  "title": "Carrito de cotización (/cotizacion)",
+  "brief": "Rediseño compacto de /cotizacion, mobile-first, con la familia de botones del catálogo (34px, 1px charcoal, 6px): foto de producto, − N + con Deshacer, nota colapsable, resumen N productos · M unidades, botón verde 'Enviar por WhatsApp' con el logo oficial, vista previa del mensaje, vaciar con confirmación, estado vacío y WhatsApp no configurado. Ambos artboards comparten la base y solo difieren en dónde viven el resumen y el envío.",
+  "feature": "odd/tasks/quote-cart-redesign.md",
+  "artboards": [
+    { "file": "01-barra-inferior-y-panel.html", "title": "Barra inferior en móvil, panel en escritorio", "tradeoff": "Envío siempre al alcance del pulgar (barra fija con unidades y botón) y la lista queda limpia; a cambio la barra ocupa ~60px permanentes de pantalla y el resumen completo (comentario, mensaje, vaciar) queda al final de la lista. En escritorio el panel va a la derecha sin fijarse, así que se pierde de vista al bajar en listas largas.", "width": 1280, "height": 960 },
+    { "file": "02-resumen-en-linea-y-panel-fijo.html", "title": "Resumen en línea en móvil, panel fijo en escritorio", "tradeoff": "Sin barra fija: más pantalla para la lista y un único lugar con todo el resumen y el envío, pero en móvil hay que llegar al final para enviar (más scroll con listas largas). En escritorio el panel derecho queda fijo y el botón siempre visible.", "width": 1280, "height": 960 }
+  ]
+}
