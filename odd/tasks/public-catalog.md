@@ -17,8 +17,8 @@ Phase 2 of `docs/idea.md`, built on Phase 1 (`odd/tasks/catalog-sync.md`: Masefe
 
 | ID | Specs | Task | Route | Status | Commit |
 |----|-------|------|-------|--------|--------|
-| T1 | S2, S4, S5, S7 | Catalog read model `src/server/catalog/` (categories with counts, list/search/get product with effective fields, settings + env fallback) + image serving route with path confinement; PGlite tests | gentle-ai-worker | pending | |
-| T2 | S5, S8 | Bootstrap: default category mappings from live Masefer taxonomy + PDF product list matched to Masefer codes + `pnpm catalog:bootstrap`; tests | gentle-ai-worker | pending | |
+| T1 | S2, S4, S5, S7 | Catalog read model `src/server/catalog/` (categories with counts, list/search/get product with effective fields, settings + env fallback) + image serving route with path confinement; PGlite tests | gentle-ai-worker | done | see git log feat(catalog) |
+| T2 | S5, S8 | Bootstrap: default category mappings from live Masefer taxonomy + PDF product list matched to Masefer codes + `pnpm catalog:bootstrap`; tests | gentle-ai-worker | done (real-Postgres run in progress) | see git log feat(bootstrap) |
 | T3 | S1, S2, S5, S6 | Public UI: layout/brand, home (categories, destacados, search), category page, product page (variant picker), search, OG tags | gentle-ai-worker | pending | |
 | T4 | S3 | Quote cart (localStorage) + WhatsApp message builder + send button; tests | gentle-ai-worker | pending | |
 
@@ -29,3 +29,5 @@ Phase 2 of `docs/idea.md`, built on Phase 1 (`odd/tasks/catalog-sync.md`: Masefe
 - **L3** (verbatim): "\"Consultar cotización\" y se van a agregar a un carrtio y el carrtio se manda por whatapp con un mensaje con la api de whatapp simple como usa en todos lados y estaria bueno que cuando haya una actualizacion de masefer, se haga automatico"
 - **L4** (source PDF): `/Users/emimontanari/Downloads/SICOR_catalogo_interior_editable_Canva.pptx.pdf` (14 pages; cover with logo, numbered category index, product cards: name, note, "CONSULTAR COTIZACIÓN").
 - **L5** (decision, parent): rendering is dynamic (DB not available at Docker build time). SICOR's real WhatsApp number is unknown → `WHATSAPP_NUMBER` env fallback until the dashboard sets it.
+- **L6** (evidence): Phase 1 Docker proof — `docker compose up --build` OK, migrations + 7 categories seeded on boot, images volume writable by non-root, doc trigger via in-container wget returned 200 {runId:1,status:pending,summary:{new:551}}.
+- **L7** (evidence): T2 PDF finding — only INDUMENTARIA LABORAL (pp. 2–6) has real products; other PDF sections are Canva placeholders. 20 PDF names → 28 Masefer codes (series heuristics: CAMISA/PANTALON OMBU, CAMISA PAMPERO; BUZ01 chosen over BUZCOL01). 50 taxonomy mappings; BOTIQUINES, SOGAS, CONFECCION COLEGIAL left as Otros. Suite 121/121.
