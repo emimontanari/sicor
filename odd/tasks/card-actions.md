@@ -12,7 +12,7 @@ Redesign the catalog card actions following the user's reference screenshot, and
 
 | ID | Specs | Task | Route | Status | Commit |
 |----|-------|------|-------|--------|--------|
-| T1 | S1, S2, S3 | Design artboards for card actions + stepper (mobile-first, desktop shown) | gentle-ai-worker | pending | |
+| T1 | S1, S2, S3 | Design artboards for card actions + stepper (mobile-first, desktop shown) | gentle-ai-worker | done | docs(design) card-actions commit |
 | T2 | S1, S2 | Implement chosen artboard | gentle-ai-worker | blocked: waiting for user's design choice | |
 
 ## Log
