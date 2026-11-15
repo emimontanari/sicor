@@ -47,6 +47,12 @@ No hay `.env.example`; estas son todas:
 | `SESSION_SECRET` | para el dashboard | Secreto aleatorio de al menos 32 caracteres (ej. `openssl rand -hex 32`) que firma la cookie de sesión (7 días). Si falta o es más corto, el admin queda deshabilitado. |
 | `WHATSAPP_NUMBER` | no | WhatsApp de SICOR, solo dígitos con código de país (54 + 9 para móvil). Ej. `5493516682089`. Fallback hasta que exista el ajuste del dashboard (Fase 3 lo guarda en `settings.whatsapp_number`, que tiene prioridad). Vacío deshabilita el botón. |
 
+## Seguridad del admin
+
+- Salir borra la cookie del navegador, pero el token firmado sigue siendo válido hasta que vence (7 días); no hay revocación por sesión.
+- Para invalidar todas las sesiones al instante, rotar `SESSION_SECRET`.
+- El login tiene límite de intentos por IP+email (5 / 15 min) y por cuenta (10 / 15 min); el contador vive en memoria y se reinicia con el proceso.
+
 ## Sincronización
 
 El chequeo (programado cada 15 días o manual) solo guarda un aviso pendiente; el admin lo confirma en el dashboard (Fase 3). Ver el deploy para configurar el schedule.

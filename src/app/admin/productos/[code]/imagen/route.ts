@@ -5,6 +5,7 @@ import {
   MAX_IMAGE_BYTES,
   saveCustomImage,
 } from "../../../../../server/admin";
+import { isSameOrigin } from "../../../../../server/auth/origin";
 import { getAdminSession } from "../../../../../server/auth/session";
 import { getAdminDb, getImagesDir } from "../../../../../lib/admin/products/db";
 
@@ -14,9 +15,17 @@ const json = (body: unknown, status: number) => Response.json(body, { status, he
 
 // Route handler (not a server action): Server Actions cap bodies at 1 MB and next.config is out of scope here.
 export async function POST(req: Request, ctx: { params: Promise<{ code: string }> }): Promise<Response> {
+  if (!isSameOrigin(req.headers.get("origin"), req.headers.get("host"), req.headers.get("x-forwarded-host"))) {
+    return json({ ok: false, error: "Origen no permitido" }, 403);
+  }
   if (!(await getAdminSession())) return json({ ok: false, error: "No autorizado" }, 401);
   const { code: raw } = await ctx.params;
-  const code = decodeURIComponent(raw);
+  let code: string;
+  try {
+    code = decodeURIComponent(raw);
+  } catch {
+    return json({ ok: false, error: "Código inválido" }, 400);
+  }
   let file: FormDataEntryValue | null;
   try {
     file = (await req.formData()).get("image");
