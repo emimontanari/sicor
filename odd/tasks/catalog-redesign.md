@@ -18,7 +18,7 @@ User feedback after testing the local app: only 28 products visible (expected mo
 | T1 | S1 | Bootstrap publishes all active products (respecting admin-hidden), tests; re-run on dev DB | gentle-ai-worker | done (dev DB: 551 visible) | feat(bootstrap) commit |
 | T2 | S2, S3 | Design system sync + 3 design directions for the single-page public catalog (mobile + desktop) | gentle-ai-worker | done | docs(design) commit |
 | T3 | S2, S3 | Implement chosen artboard `01-chips-y-hoja-de-filtros.html` in Next.js | gentle-ai-worker | done | feat(ui) single-page commit |
-| T4 | S3, S4, S5 | Design variants: cart placement + search access (3) and filter chip styles (options) | gentle-ai-worker | in progress | |
+| T4 | S3, S4, S5 | Design variants: cart placement + search access (3) and filter chip styles (options) | gentle-ai-worker | done; none chosen (L10) | docs(design) variants commit |
 
 ## Log
 
@@ -31,3 +31,4 @@ User feedback after testing the local app: only 28 products visible (expected mo
 - **L7** (verbatim): "el boton de cotizacion ahi me parece que cuando estas scroleando podes clickear, estaria mejor para que analisemos con gentle desing si la lupa esa no cumple ninguna funcion por que el buscador ya esta arriba esta medio al pedo ese boton, nose que opinas"
 - **L8** (verbatim): "dale y podrias enbellecer un poco los botones del filtro dame unas opciones y elegimos" (approving parent proposal: variants 1) cart in header + compact search in sticky category bar, 2) variant 1 + bottom bar only when cart has items, 3) small icon FAB that hides on scroll down / shows on scroll up).
 - **L9** (design, T4): added to `design/catalog-single-page/` (01–03 untouched): `04-carrito-en-encabezado.html` (cart in header + compact search in sticky category bar), `05-encabezado-y-barra-inferior.html` (04 + mobile bottom bar "N productos · Ver cotización" only with items), `06-boton-flotante-compacto.html` (small FAB, only with items, hides on scroll down), `07-estilos-de-filtros.html` (4 filter-chip styles A–D to choose from). Waiting for the user to pick a cart variant (S4) and a filter style (S5).
+- **L10** (verbatim): "No, vos sabés que no me gusta ninguno. Ahora como está el producto, está perfecto" — variants 04–07 not chosen; current design stays. Follow-up work moved to odd/tasks/product-documents.md.
