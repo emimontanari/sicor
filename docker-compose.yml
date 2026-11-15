@@ -9,6 +9,7 @@ services:
       DATABASE_URL: postgres://sicor:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/sicor
       IMAGES_DIR: /app/data/images
       SYNC_SECRET: ${SYNC_SECRET:?SYNC_SECRET is required}
+      WHATSAPP_NUMBER: ${WHATSAPP_NUMBER:-}
     expose:
       - "3000"
     healthcheck:

@@ -41,6 +41,7 @@ No hay `.env.example`; estas son todas:
 | `IMAGES_DIR` | sí en producción (`/app/data/images`); local por defecto `./data/images` en `sync:check` | Directorio de imágenes copiadas |
 | `SYNC_SECRET` | para el endpoint | Bearer del `POST /api/internal/sync/check`; sin él responde 503 |
 | `POSTGRES_PASSWORD` | solo docker-compose | Password de Postgres |
+| `WHATSAPP_NUMBER` | no | WhatsApp de SICOR, solo dígitos con código de país (54 + 9 para móvil). Ej. `5493516682089`. Fallback hasta que exista el ajuste del dashboard (Fase 3 lo guarda en `settings.whatsapp_number`, que tiene prioridad). Vacío deshabilita el botón. |
 
 ## Sincronización
 

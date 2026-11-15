@@ -16,6 +16,7 @@ Cargarlas en la pestaña **Environment** del compose:
 |---|---|
 | `POSTGRES_PASSWORD` | Password del usuario `sicor` de Postgres (obligatoria). |
 | `SYNC_SECRET` | Secreto largo y aleatorio (ej. `openssl rand -hex 32`). Autoriza el endpoint del chequeo. Si no está definido, el endpoint responde 503 (deshabilitado). |
+| `WHATSAPP_NUMBER` | Opcional. WhatsApp de SICOR, solo dígitos con código de país (54 + 9 para móvil): `WHATSAPP_NUMBER=5493516682089`. Fallback hasta que exista el ajuste del dashboard (Fase 3 lo guarda en `settings.whatsapp_number`, que tiene prioridad). Vacío deshabilita el botón. |
 
 `docker-compose.yml` ya define para `app`: `DATABASE_URL=postgres://sicor:${POSTGRES_PASSWORD}@postgres:5432/sicor` e `IMAGES_DIR=/app/data/images`. Si se usa un Postgres externo, sobrescribir `DATABASE_URL`.
 
