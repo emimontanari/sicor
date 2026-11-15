@@ -12,8 +12,8 @@ User feedback after testing the local app: only 28 products visible (expected mo
 
 | ID | Specs | Task | Route | Status | Commit |
 |----|-------|------|-------|--------|--------|
-| T1 | S1 | Bootstrap publishes all active products (respecting admin-hidden), tests; re-run on dev DB | gentle-ai-worker | pending | |
-| T2 | S2, S3 | Design system sync + 3 design directions for the single-page public catalog (mobile + desktop) | gentle-ai-worker | pending | |
+| T1 | S1 | Bootstrap publishes all active products (respecting admin-hidden), tests; re-run on dev DB | gentle-ai-worker | done (dev DB: 551 visible) | feat(bootstrap) commit |
+| T2 | S2, S3 | Design system sync + 3 design directions for the single-page public catalog (mobile + desktop) | gentle-ai-worker | done | docs(design) commit |
 | T3 | S2, S3 | Implement the chosen direction (after user choice) | gentle-ai-worker | blocked: waiting for user's design choice | |
 
 ## Log
