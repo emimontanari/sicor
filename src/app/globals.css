@@ -328,10 +328,10 @@ h3 {
 }
 .card__actions {
   display: flex;
-  flex-direction: column; /* links row, then the add control */
-  align-items: flex-start; /* compact buttons: never stretch with the card */
-  gap: 0.4rem;
-  margin: 0.6rem 0.65rem 0.65rem;
+  flex-direction: column; /* row 1: ficha + detalle; row 2: add / stepper / options */
+  align-items: flex-start; /* natural widths, left edges aligned */
+  gap: 0.6rem;
+  margin: 0.7rem 0.65rem 0.7rem;
 }
 .card__actions > * {
   position: relative;
@@ -340,28 +340,25 @@ h3 {
 .card__links {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.25rem;
+  gap: 0.6rem 0.35rem;
 }
-.card__links > *,
+/* One control family: same height, border, radius, type, padding and icon size. */
+.ficha,
 .card__actions .add,
-.card-step button {
-  position: relative; /* 44px hit area around the ~34px visible surface */
-}
-.card__links > *::after,
-.card__actions .add::after {
-  content: "";
-  position: absolute;
-  inset: -5px 0;
-}
-.ficha {
-  min-height: 34px;
-  padding: 0 0.4rem;
-  border: 2px solid var(--line);
+.card-step {
+  position: relative;
+  box-sizing: border-box;
+  height: 34px;
+  min-width: 5.6rem; /* same minimum width: Agregar, Ver detalle and the stepper line up */
+  padding: 0 0.45rem;
+  border: 1px solid var(--charcoal);
   border-radius: 6px;
   background: var(--white);
   color: var(--charcoal);
-  font-size: 0.66rem;
+  font: inherit;
+  font-size: 0.65rem;
   font-weight: 800;
+  line-height: 1;
   text-transform: uppercase;
   letter-spacing: 0.02em;
   text-decoration: none;
@@ -369,49 +366,26 @@ h3 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.25rem;
-}
-.ficha:hover {
-  border-color: var(--charcoal);
-}
-.ficha--text {
-  border-color: transparent;
-  padding: 0 0.2rem;
-  text-decoration: underline;
-}
-.card__actions .ficha__ico {
-  width: 18px;
-  height: 18px;
-}
-.card-step {
-  display: inline-flex;
-  align-items: center;
-  border: 2px solid var(--line);
-  border-radius: 6px;
-  background: var(--white);
-  color: var(--charcoal);
-  font-weight: 800;
-}
-.card-step button {
-  width: 34px;
-  height: 30px;
-  border: 0;
-  background: none;
-  color: inherit;
-  font: inherit;
-  font-size: 1.1rem;
-  line-height: 1;
+  gap: 0.3rem;
   cursor: pointer;
 }
-.card-step button::after {
-  content: "";
-  position: absolute;
-  inset: -7px -5px; /* 44px hit area */
+.ficha:hover,
+.card__actions .add:hover {
+  background: var(--light);
 }
-.card-step output {
-  min-width: 2ch;
-  text-align: center;
-  font-size: 0.85rem;
+.card__actions .add {
+  margin: 0;
+  background: var(--charcoal); /* emphasis by color only, same geometry */
+  color: var(--white);
+}
+.card__actions .add:hover {
+  background: #000;
+}
+.ficha svg,
+.card__actions .add svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
 }
 .ficha__ico,
 .chip-btn__pdf,
@@ -421,38 +395,36 @@ h3 {
   height: 22px;
   flex: none;
 }
-.add {
-  min-height: 34px;
-  border: 2px solid var(--charcoal);
-  border-radius: 6px;
-  background: var(--white);
-  color: var(--charcoal);
+.card__links > *::after,
+.card__actions .add::after,
+.card-step button::after {
+  content: "";
+  position: absolute;
+  inset: -5px 0; /* 44px hit area around the 34px visible surface */
+}
+.card-step {
+  padding: 0;
+  gap: 0;
+}
+.card-step button {
+  position: relative;
+  width: 32px;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
   font: inherit;
-  font-weight: 800;
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.35rem;
+  font-size: 1rem;
+  line-height: 1;
   cursor: pointer;
 }
-.add svg {
-  width: 16px;
-  height: 16px;
+.card-step button::after {
+  inset: -5px -2px;
 }
-.card__actions .add {
-  margin: 0;
-  padding: 0 0.9rem;
-  max-width: 180px;
-  font-size: 0.76rem;
-}
-.add:hover,
-.add.is-added {
-  background: var(--charcoal);
-  color: var(--white);
+.card-step output {
+  min-width: 2ch;
+  text-align: center;
 }
 .img-box {
   aspect-ratio: 1 / 1;

@@ -60,7 +60,7 @@ export function ProductCard({ product, priority = false, quantity = 0, onAdd }: 
                 </a>
               ) : null}
               {product.variants ? null : (
-                <Link href={href} scroll={false} className="ficha ficha--text">
+                <Link href={href} scroll={false} className="ficha">
                   <span>Ver detalle</span>
                 </Link>
               )}
