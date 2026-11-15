@@ -71,4 +71,24 @@ describe("mapCatalog", () => {
     expect(c.products.find((p) => p.code === base.fields.GENERICO)!.supplierPrice).toBe(base.fields.PRECIO);
     expect(c.products.some((p) => p.code === "NOPE")).toBe(false);
   });
+
+  it("keeps only image URLs (jpg/jpeg/png/webp/gif, case-insensitive, ignoring query)", () => {
+    const dbx = (id: string, link: string): DdpDoc =>
+      ({ collection: "dropbox", id, fields: { source: "web", ownerId: "PAC25", link } }) as unknown as DdpDoc;
+    const docs = [
+      ...catalogDocs.filter((d) => d.collection !== "dropbox"),
+      dbx("/web/img500/1", "https://www.dropbox.com/scl/fi/x/PAC25-1.JPG?rlkey=a&raw=1"),
+      dbx("/web/img500/2", "https://www.dropbox.com/scl/fi/x/PAC25-2.mp4?rlkey=a&raw=1"),
+      dbx("/web/img500/3", "https://www.dropbox.com/scl/fi/x/ficha.pdf?raw=1"),
+      dbx("/web/img500/4", "https://www.dropbox.com/scl/fi/x/PAC25-4.webp?raw=1"),
+      dbx("/web/img200/5", "https://www.dropbox.com/scl/fi/x/PAC25-5.mp4?raw=1"),
+      dbx("/web/img200/6", "https://www.dropbox.com/scl/fi/x/PAC25-6.png?raw=1"),
+    ];
+    const pac = mapCatalog(docs).products.find((p) => p.code === "PAC25")!;
+    expect(pac.images.large).toEqual([
+      "https://www.dropbox.com/scl/fi/x/PAC25-1.JPG?rlkey=a&raw=1",
+      "https://www.dropbox.com/scl/fi/x/PAC25-4.webp?raw=1",
+    ]);
+    expect(pac.images.small).toEqual(["https://www.dropbox.com/scl/fi/x/PAC25-6.png?raw=1"]);
+  });
 });

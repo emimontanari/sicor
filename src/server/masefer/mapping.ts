@@ -5,6 +5,18 @@ export type { DdpDoc };
 
 const SUPPLIER_PRICE_LIST = 5;
 
+const IMAGE_EXT = /\.(jpe?g|png|webp|gif)$/i;
+
+/** True when the URL path (query ignored) ends in a raster image extension; videos/PDFs are not images. */
+export function isImageUrl(link: unknown): link is string {
+  if (typeof link !== "string") return false;
+  try {
+    return IMAGE_EXT.test(new URL(link).pathname);
+  } catch {
+    return false;
+  }
+}
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 function mapVariant(f: Record<string, any>): SupplierVariant {
   const stock = (f.stock ?? {}) as Record<string, number>;
@@ -26,7 +38,7 @@ export function mapCatalog(docs: DdpDoc[]): SupplierCatalog {
   for (const d of of("dropbox")) {
     if (d.fields.source !== "web") continue;
     const m = /^\/web\/img(200|500)\//.exec(d.id);
-    if (!m) continue;
+    if (!m || !isImageUrl(d.fields.link)) continue;
     const e = images.get(d.fields.ownerId) ?? { small: [], large: [] };
     (m[1] === "200" ? e.small : e.large).push(d.fields.link);
     images.set(d.fields.ownerId, e);

@@ -299,18 +299,70 @@ describe("sync engine", () => {
     expect(last[0].id).toBe(run.id);
   });
 
-  it("8: image store failure during apply fails the run, DB untouched (S6, S7)", async () => {
+  it("8: a failing image is skipped with a warning; the run still applies (S6)", async () => {
     await seedBase();
-    const before = await products();
-    const beforeVariants = await variants();
-    source.next = catalog(product("A", { name: "New A" }), product("B"), product("C"), product("D"));
+    source.next = catalog(product("A"), product("B"), product("C"), product("D"));
     const run = await engine.check("manual");
     images.fail = true;
     const res = await engine.apply(run.id);
-    expect(res.status).toBe("failed");
-    expect(res.error).toContain("disk full");
-    expect(await products()).toEqual(before);
-    expect(await variants()).toEqual(beforeVariants);
+    expect(res.status).toBe("applied");
+    const d = (await products()).find((p) => p.code === "D")!;
+    expect(d.localImages).toEqual([]);
+    expect(d.supplierImages).toHaveLength(2);
+    const summary = res.summary as unknown as { new: number; imageWarnings: number; imageWarningList: unknown[] };
+    expect(summary.new).toBe(1);
+    expect(summary.imageWarnings).toBe(2);
+    expect(summary.imageWarningList[0]).toEqual({ code: "D", url: "https://dl/D-a.jpg", reason: "disk full" });
+  });
+
+  it("8c: one bad asset keeps the good image of the same product, with a warning", async () => {
+    source.next = catalog(product("A"));
+    const run = await engine.check("manual");
+    const orig = images.save.bind(images);
+    images.save = async (i) => {
+      if (i.url.endsWith("-a.jpg")) throw new Error('Unexpected content-type "video/mp4"');
+      return orig(i);
+    };
+    const res = await engine.apply(run.id);
+    expect(res.status).toBe("applied");
+    const [p] = await products();
+    expect(p.localImages).toEqual(["A/1.jpg"]); // deterministic index of the surviving image
+    const summary = res.summary as unknown as { imageWarnings: number; imageWarningList: { code: string; reason: string }[] };
+    expect(summary.imageWarnings).toBe(1);
+    expect(summary.imageWarningList).toEqual([
+      { code: "A", url: "https://dl/A-a.jpg", reason: 'Unexpected content-type "video/mp4"' },
+    ]);
+  });
+
+  it("8d: warning list is bounded to 50 while the count is exact", async () => {
+    source.next = catalog(
+      ...Array.from({ length: 30 }, (_, i) => product(`P${String(i).padStart(2, "0")}`)),
+    );
+    const run = await engine.check("manual");
+    images.fail = true;
+    const res = await engine.apply(run.id);
+    const summary = res.summary as unknown as { imageWarnings: number; imageWarningList: unknown[] };
+    expect(summary.imageWarnings).toBe(60);
+    expect(summary.imageWarningList).toHaveLength(50);
+  });
+
+  it("8e: image downloads respect the concurrency limit", async () => {
+    source.next = catalog(...Array.from({ length: 10 }, (_, i) => product(`Q${i}`)));
+    const run = await engine.check("manual");
+    let inFlight = 0;
+    let max = 0;
+    images.save = async (i) => {
+      inFlight++;
+      max = Math.max(max, inFlight);
+      await new Promise((r) => setTimeout(r, 5));
+      inFlight--;
+      return `${i.code}/${i.index}.jpg`;
+    };
+    const limited = createSyncEngine({ db: ctx.db, source, imageStore: images, imageConcurrency: 3 });
+    const res = await limited.apply(run.id);
+    expect(res.status).toBe("applied");
+    expect(max).toBe(3);
+    expect((await products()).every((p) => p.localImages.length === 2)).toBe(true);
   });
 
   it("8b: DB error mid-apply rolls back everything", async () => {

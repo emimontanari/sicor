@@ -27,7 +27,13 @@ export interface SyncDeps {
   source: MaseferSource;
   imageStore: ImageStore;
   clock?: () => Date;
+  /** Max simultaneous image downloads during apply (default 6). */
+  imageConcurrency?: number;
 }
+
+/** Extra fields stored in sync_runs.summary by apply (jsonb; no schema change). */
+export type ImageWarning = { code: string; url: string; reason: string };
+const MAX_WARNING_LIST = 50;
 
 /** Thrown when a run is not (or no longer) pending; never recorded as a run failure. */
 export class SyncRunNotPendingError extends Error {
@@ -44,6 +50,7 @@ export function createSyncEngine(deps: SyncDeps) {
   const db = deps.db as TestDb;
   const { source, imageStore } = deps;
   const now = deps.clock ?? (() => new Date());
+  const concurrency = Math.max(1, deps.imageConcurrency ?? 6);
 
   /**
    * Records a failure, but only on a run still pending/checking: a run that
@@ -171,16 +178,40 @@ export function createSyncEngine(deps: SyncDeps) {
     if (!payload) return failOrReject(runId, new Error("Pending run has no payload"));
     const products = payload.products as SupplierProduct[];
     try {
-      // S6: copy images BEFORE touching the DB, so an image failure leaves it untouched.
-      const local = new Map<string, string[]>();
-      for (const p of products) {
-        const paths: string[] = [];
-        let i = 0;
-        for (const url of imageUrls(p)) {
-          paths.push(await imageStore.save({ code: p.code, index: i++, url }));
+      // S6: copy images BEFORE touching the DB. A bad image is skipped with a
+      // warning (never fatal); only DB/transaction errors fail the run.
+      const tasks = products.flatMap((p) =>
+        imageUrls(p).map((url, index) => ({ code: p.code, index, url })),
+      );
+      const saved = new Map<string, Map<number, string>>();
+      const warnings: ImageWarning[] = [];
+      let next = 0;
+      const worker = async () => {
+        while (next < tasks.length) {
+          const t = tasks[next++];
+          try {
+            const rel = await imageStore.save(t);
+            const m = saved.get(t.code) ?? new Map<number, string>();
+            m.set(t.index, rel);
+            saved.set(t.code, m);
+          } catch (e) {
+            warnings.push({ code: t.code, url: t.url, reason: msg(e) });
+          }
         }
-        local.set(p.code, paths);
-      }
+      };
+      await Promise.all(Array.from({ length: Math.min(concurrency, tasks.length) }, worker));
+      warnings.sort((x, y) => (x.code === y.code ? 0 : x.code < y.code ? -1 : 1));
+      const local = new Map<string, string[]>(
+        products.map((p) => [
+          p.code,
+          [...(saved.get(p.code) ?? new Map<number, string>()).entries()].sort((x, y) => x[0] - y[0]).map(([, v]) => v),
+        ]),
+      );
+      const summary = {
+        ...(run.summary as SyncSummary),
+        imageWarnings: warnings.length,
+        imageWarningList: warnings.slice(0, MAX_WARNING_LIST),
+      } as SyncSummary;
 
       const at = now();
       const done = await db.transaction(async (tx) => {
@@ -188,7 +219,7 @@ export function createSyncEngine(deps: SyncDeps) {
         // The loser claims 0 rows and throws, rolling back before touching any data.
         const [claimed] = await tx
           .update(syncRuns)
-          .set({ status: "applied", appliedAt: at, finishedAt: at })
+          .set({ status: "applied", appliedAt: at, finishedAt: at, summary })
           .where(and(eq(syncRuns.id, runId), eq(syncRuns.status, "pending")))
           .returning();
         if (!claimed) throw new SyncRunNotPendingError(runId);
