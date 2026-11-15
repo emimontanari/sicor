@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Paleta de referencia: rojo + stepper carbón · SICOR</title>
+<title>Catálogo compacto · SICOR</title>
 <style>
 :root{--red:#e1202f;--red-dark:#b8101e;--charcoal:#2b2a33;--light:#f3f3f5;--line:#d9d9de;--muted:#5d5c66;--white:#fff;--font:"Helvetica Neue",Arial,"Segoe UI",system-ui,sans-serif}
 *{box-sizing:border-box}
@@ -38,9 +38,9 @@ svg.i.fill{fill:currentColor;stroke:none}
 .device.d .list{grid-template-columns:repeat(4,minmax(0,1fr));gap:1rem;align-items:stretch}
 .sectitle{margin:1rem 1rem 0;font-size:1rem;text-transform:uppercase;font-weight:800;border-left:5px solid var(--red);padding-left:.6rem;line-height:1.15}
 
-/* card */
-.card{position:relative;border:1px solid var(--line);border-radius:6px;background:var(--white);padding:.6rem;display:grid;grid-template-columns:112px minmax(0,1fr);grid-template-areas:"media body" "sec sec" "pri pri";gap:.6rem .75rem}
-.card__media{grid-area:media;width:112px;height:112px;border-radius:4px;background:var(--light);display:flex;align-items:center;justify-content:center;overflow:hidden}
+/* Compact catalog actions: 44px hit areas, 32px visible surfaces. */
+.card{position:relative;border:1px solid var(--line);border-radius:6px;background:var(--white);padding:.5rem;display:grid;grid-template-columns:88px minmax(0,1fr);grid-template-areas:"media body" "sec sec" "pri pri";gap:0 .75rem}
+.card__media{grid-area:media;width:88px;height:88px;border-radius:4px;background:var(--light);display:flex;align-items:center;justify-content:center;overflow:hidden}
 .card__media svg.photo{width:84%;height:84%;mix-blend-mode:multiply}
 .nofoto{display:flex;flex-direction:column;align-items:center;gap:.15rem;text-align:center;padding:.3rem}
 .nofoto svg{width:34px;height:34px;fill:none;stroke:var(--line);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
@@ -49,40 +49,43 @@ svg.i.fill{fill:currentColor;stroke:none}
 .card__body{grid-area:body;min-width:0}
 .meta{font-size:.75rem;color:var(--muted);line-height:1.3;margin-bottom:.2rem}
 .meta b{color:var(--charcoal);text-transform:uppercase;font-weight:800}
-.name{font-size:.9rem;line-height:1.2;text-transform:uppercase;font-weight:800;letter-spacing:.01em;display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.name{font-size:.85rem;line-height:1.2;text-transform:uppercase;font-weight:800;letter-spacing:.01em;display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
 .cta{margin-top:.4rem;font-size:.72rem;font-weight:800;text-transform:uppercase;color:var(--red-dark)}
-.sec{grid-area:sec;display:flex;gap:.5rem}
-.sec>*{flex:1 1 0;min-width:0}
-.btn2{min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:.4rem;padding:0 .5rem;border-radius:6px;border:2px solid var(--charcoal);background:var(--white);color:var(--charcoal);font-weight:800;text-transform:uppercase;letter-spacing:.02em;font-size:.78rem;text-decoration:none;line-height:1.1}
+.sec{grid-area:sec;display:flex;gap:.5rem;align-items:center}
+.sec>*{flex:none;min-width:0}
+.btn2{position:relative;isolation:isolate;min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:.3rem;padding:0 .5rem;border:0;background:transparent;color:var(--charcoal);font-weight:800;text-transform:uppercase;letter-spacing:.02em;font-size:.72rem;text-decoration:none;line-height:1.1}
+.btn2::before{content:"";position:absolute;inset:6px 0;border:1px solid var(--line);border-radius:6px;background:var(--white);z-index:-1}
+.btn2 .i{width:16px;height:16px}
 .btn2.ficha{border-color:var(--line)}
 .btn2.ficha svg{color:var(--red-dark)}
-.btn2:hover{background:var(--light)}
-.pri-wrap{grid-area:pri}
-.pri,.stepper{width:100%;min-height:48px;border-radius:6px}
-.pri{display:flex;align-items:center;justify-content:center;gap:.5rem;border:0;background:var(--red);color:var(--white);font-weight:800;text-transform:uppercase;letter-spacing:.02em;font-size:.85rem;padding:.4rem .75rem}
-.pri:hover{background:var(--red-dark)}
-.pri--edit{justify-content:space-between;background:var(--charcoal);text-align:left}
-.pri--edit:hover{background:var(--charcoal);filter:brightness(1.25)}
+.btn2:hover::before{background:var(--light)}
+.pri-wrap{grid-area:pri;width:140px;justify-self:start}
+.pri,.stepper{position:relative;isolation:isolate;width:140px;min-height:44px;border-radius:6px}
+.pri{display:flex;align-items:center;justify-content:center;gap:.5rem;border:0;background:transparent;color:var(--white);font-weight:800;text-transform:uppercase;letter-spacing:.02em;font-size:.75rem;padding:0 .75rem}
+.pri::before{content:"";position:absolute;inset:6px 0;border-radius:6px;background:var(--red);z-index:-1}
+.pri:hover::before{background:var(--red-dark)}
+.pri--edit{color:var(--charcoal)}
+.pri--edit::before{background:var(--white);border:1px solid var(--line)}
+.pri--edit:hover::before{background:var(--light)}
 .pri--edit strong{font-size:1rem}
 .pri--edit .edit{text-decoration:underline;text-underline-offset:3px}
 .pri--edit .l{display:flex;align-items:center;gap:.5rem}
-.stepper{display:grid;grid-template-columns:56px 1fr 56px;background:var(--charcoal);color:var(--white);overflow:hidden}
-.stepper button{border:0;background:transparent;color:inherit;min-height:48px;min-width:44px;display:flex;align-items:center;justify-content:center}
-.stepper button:hover{background:rgb(255 255 255 / .14)}
-.stepper button:focus-visible{outline-color:var(--white);outline-offset:-4px}
-.stepper .q{display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1;padding:.2rem 0}
-.stepper .q strong{font-size:1.2rem;font-weight:900}
-.stepper .q span{font-size:.68rem;text-transform:uppercase;font-weight:800;letter-spacing:.02em}
-.card.in{border-color:var(--charcoal)}
+.stepper{display:grid;grid-template-columns:44px 1fr 44px;background:transparent;color:var(--charcoal)}
+.stepper::before{content:"";position:absolute;inset:6px 0;border:1px solid var(--line);border-radius:6px;background:var(--white);z-index:-1}
+.stepper button{border:0;background:transparent;color:inherit;min-height:44px;min-width:44px;display:flex;align-items:center;justify-content:center}
+.stepper button:hover{color:var(--red-dark)}
+.stepper button:focus-visible{outline-offset:-3px}
+.stepper .i{width:16px;height:16px}
+.stepper .q{display:flex;align-items:center;justify-content:center;line-height:1.1}
+.stepper .q strong{font-size:.85rem;font-weight:800}
 
-/* desktop card = vertical */
-.device.d .card{grid-template-columns:minmax(0,1fr);grid-template-areas:"media" "body" "sec" "pri";grid-template-rows:auto 1fr auto auto;padding:.65rem;gap:.6rem}
-.device.d .pri--edit{font-size:.78rem}
-.device.d .pri--edit .l{gap:.35rem}
-.device.d .card__media{width:100%;height:auto;aspect-ratio:4/3}
-.device.d .name{min-height:2.4em;font-size:.95rem}
-.device.d .sec{flex-wrap:wrap}
-.device.d .sec>*{flex:1 1 7rem}
+/* Same horizontal product structure in the desktop grid. */
+.device.d .card{grid-template-columns:64px minmax(0,1fr)}
+.device.d .card__media{width:64px;height:88px}
+.device.d .name{font-size:.85rem}
+.device.d .meta{font-size:.72rem}
+.device.m{max-width:100%}
+@media(max-width:430px){.stage{padding:0 0 1rem}.top{padding:.75rem}.device.m{border-left:0;border-right:0}}
 
 /* overlays */
 .layer{position:absolute;inset:0;pointer-events:none;z-index:20}
@@ -133,7 +136,6 @@ svg.i.fill{fill:currentColor;stroke:none}
   <symbol id="minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
   <symbol id="trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></symbol>
   <symbol id="close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
-  <symbol id="check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
   <symbol id="cart" viewBox="0 0 24 24"><path d="M3 4h3l2.5 11h9.5l2-8H7"/><circle cx="10" cy="19.5" r="1.3"/><circle cx="17" cy="19.5" r="1.3"/></symbol>
   <symbol id="opts" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></symbol>
   <symbol id="img" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="M4 18l5-5 4 4 3-3 4 4"/></symbol>
@@ -146,15 +148,15 @@ svg.i.fill{fill:currentColor;stroke:none}
 
 <header class="top">
  <div>
-  <h1>Paleta de referencia: rojo + stepper carbón</h1>
-  <p>Agregar en rojo sólido; al sumar, el botón pasa a stepper carbón sólido con controles blancos. Máximo contraste y consistente con el sistema; el carbón pesa visualmente si muchas tarjetas están agregadas.</p>
+  <h1>Catálogo compacto</h1>
+  <p>Acciones cortas y discretas. Dos filas ajustadas conservan el espacio de toque sin agrandar los botones.</p>
  </div>
  <div class="seg" role="group" aria-label="Vista">
   <button type="button" data-view="m" aria-pressed="true">Móvil</button>
   <button type="button" data-view="d" aria-pressed="false">Escritorio</button>
  </div>
 </header>
-<p class="hint">Probá: agregar, + / −, “−” en 1 para quitar y Deshacer. Zapatilla Soul: elegir talle y color en la hoja. Sneaker Pro ya tiene 3 unidades en variantes (Editar).</p>
+
 
 <main class="stage">
  <div class="device m" id="device">
@@ -195,14 +197,13 @@ function live(t){$("live").textContent="";setTimeout(function(){$("live").textCo
 function primary(p){
  var t=total(p.code),n=p.name;
  if(p.v){
-  if(!t) return '<button type="button" class="pri" data-act="open" data-code="'+p.code+'" aria-label="Elegir talle y color de '+n+'">'+ic("opts")+'<span>Elegir talle y color</span></button>';
-  return '<button type="button" class="pri pri--edit" data-act="open" data-code="'+p.code+'" aria-label="'+t+' en tu cotización, editar variantes de '+n+'"><span class="l">'+ic("check")+'<span><strong>'+t+'</strong> en tu cotización</span></span><span class="edit">Editar</span></button>';
+  return '<button type="button" class="pri pri--edit" data-act="open" data-code="'+p.code+'" aria-label="Elegir o editar talle y color de '+n+', cantidad '+t+'"><span>'+(t?'Editar · '+t:'Opciones')+'</span></button>';
  }
- if(!t) return '<button type="button" class="pri" data-act="add" data-code="'+p.code+'" aria-label="Agregar '+n+' a la cotización">'+ic("cart")+'<span>Agregar a la cotización</span></button>';
+ if(!t) return '<button type="button" class="pri" data-act="add" data-code="'+p.code+'" aria-label="Agregar '+n+' a la cotización"><span>Agregar</span></button>';
  var minus=(TRASH&&t===1)
   ? '<button type="button" data-act="dec" data-code="'+p.code+'" aria-label="Quitar '+n+' de la cotización" class="rm">'+ic("trash")+'</button>'
   : '<button type="button" data-act="dec" data-code="'+p.code+'" aria-label="Quitar una unidad de '+n+'">'+ic("minus")+'</button>';
- return '<div class="stepper" role="group" aria-label="Cantidad de '+n+' en tu cotización">'+minus+'<div class="q"><strong aria-live="polite">'+t+'</strong><span>en tu cotización</span></div><button type="button" data-act="inc" data-code="'+p.code+'" aria-label="Sumar una unidad de '+n+'">'+ic("plus")+'</button></div>';
+ return '<div class="stepper" role="group" aria-label="Cantidad de '+n+'">'+minus+'<div class="q"><strong aria-live="polite">'+t+'</strong></div><button type="button" data-act="inc" data-code="'+p.code+'" aria-label="Sumar una unidad de '+n+'">'+ic("plus")+'</button></div>';
 }
 function card(p){
  var media=p.photo
@@ -258,7 +259,7 @@ function renderSheet(keepFocus){
   var ok=selT&&selC;
   h+='<button type="button" class="pri" data-sheet="add" aria-disabled="'+(!ok)+'">'+(ok?ic("plus")+'<span>Agregar Talle '+selT+' · '+selC+'</span>':'<span>Elegí talle y color</span>')+'</button><p class="msg" id="sheet-msg" role="status"></p>';
   var ls=cart[p.code]||[];
-  h+='<div class="lines"><h3>En tu cotización ('+total(p.code)+')</h3>'+(ls.length?'<ul style="list-style:none;margin:0;padding:0">'+ls.map(function(l){return '<li class="line"><span class="t">'+l.l+'</span><div class="mini" role="group" aria-label="Cantidad de '+l.l+'"><button type="button" data-sheet="dec" data-k="'+l.k+'" aria-label="'+(l.q===1?'Quitar ':'Restar uno a ')+l.l+'">'+ic(TRASH&&l.q===1?"trash":"minus")+'</button><strong>'+l.q+'</strong><button type="button" data-sheet="inc" data-k="'+l.k+'" aria-label="Sumar uno a '+l.l+'">'+ic("plus")+'</button></div></li>'}).join("")+'</ul>':'<p class="note">Todavía no agregaste variantes de este producto.</p>')+'</div>';
+  h+='<div class="lines"><h3>Variantes ('+total(p.code)+')</h3>'+(ls.length?'<ul style="list-style:none;margin:0;padding:0">'+ls.map(function(l){return '<li class="line"><span class="t">'+l.l+'</span><div class="mini" role="group" aria-label="Cantidad de '+l.l+'"><button type="button" data-sheet="dec" data-k="'+l.k+'" aria-label="'+(l.q===1?'Quitar ':'Restar uno a ')+l.l+'">'+ic(TRASH&&l.q===1?"trash":"minus")+'</button><strong>'+l.q+'</strong><button type="button" data-sheet="inc" data-k="'+l.k+'" aria-label="Sumar uno a '+l.l+'">'+ic("plus")+'</button></div></li>'}).join("")+'</ul>':'<p class="note">Todavía no agregaste variantes de este producto.</p>')+'</div>';
  }else{
   h+='<p class="note">Detalle del producto (maqueta). La cantidad se cambia desde la tarjeta con − N +.</p>';
  }
