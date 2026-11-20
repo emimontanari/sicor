@@ -144,9 +144,6 @@ body:has(.admin-shell) .cart-fab {
 .set-check input{width:22px;height:22px}
 .set-preview pre{white-space:pre-wrap;overflow-wrap:anywhere;background:var(--light);border:1px solid var(--line);border-radius:4px;padding:.75rem;margin:.25rem 0 0;font:inherit}
 .set-note{margin:0;font-size:.9rem;opacity:.8}
-.cat-filter{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center}
-.cat-filter input[type=search]{flex:1 1 12rem;font:inherit;padding:.7rem;min-height:44px;border:1px solid var(--line);border-radius:4px}
-.cat-filter__check{display:flex;align-items:center;gap:.4rem;min-height:44px}
 .cat-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.5rem}
 .cat-row{background:var(--white);border:1px solid var(--line);border-radius:6px;padding:.75rem;display:flex;flex-direction:column;gap:.5rem}
 .cat-row__info{display:flex;flex-direction:column;gap:.15rem;overflow-wrap:anywhere}
@@ -154,6 +151,10 @@ body:has(.admin-shell) .cart-fab {
 .cat-row__form{display:flex;gap:.5rem}
 .cat-row__form select{flex:1;min-width:0;font:inherit;min-height:44px;padding:.5rem;border:1px solid var(--line);border-radius:4px}
 .cat-row__ok{margin:0;font-size:.85rem}
+.cat-page__hint{margin:0;opacity:.8}
+.cat-page h2{font-size:1.05rem;margin:0}
+.cat-page__empty{margin:0;opacity:.75}
+.cat-assigned summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-weight:600}
 @media (min-width:48rem){.cat-row{flex-direction:row;align-items:center;justify-content:space-between}.cat-row__form{width:24rem}}
 
 /* ===== T3: admin products (pr-*) ===== */

@@ -21,9 +21,7 @@ export function MappingRow(p: Props) {
     <li className="cat-row">
       <div className="cat-row__info">
         <strong>{label}</strong>
-        <span className="cat-row__meta">
-          {p.productCount} productos · {p.effectiveName ?? "Otros"}
-        </span>
+        <span className="cat-row__meta">{p.productCount} productos</span>
       </div>
       <form action={action} className="cat-row__form">
         <input type="hidden" name="metaCategory" value={p.metaCategory} />
@@ -34,6 +32,7 @@ export function MappingRow(p: Props) {
           defaultValue={p.mappedId ?? ""}
           aria-label={`Categoría para ${label}`}
           disabled={pending}
+          onChange={(e) => e.currentTarget.form?.requestSubmit()}
         >
           <option value="">Sin asignar (Otros)</option>
           {p.categories.map((c) => (
@@ -42,12 +41,9 @@ export function MappingRow(p: Props) {
             </option>
           ))}
         </select>
-        <button type="submit" className="admin-btn" disabled={pending} aria-busy={pending}>
-          {pending ? "…" : "Guardar"}
-        </button>
       </form>
       {state.error ? <p role="alert" className="admin-error">{state.error}</p> : null}
-      {state.ok ? <p role="status" className="cat-row__ok">Guardado</p> : null}
+      {state.ok && state.error === undefined ? <p role="status" className="cat-row__ok">✓ Guardado</p> : null}
     </li>
   );
 }

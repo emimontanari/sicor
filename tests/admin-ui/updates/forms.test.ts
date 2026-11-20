@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseSettingsForm } from "../../../src/lib/admin/forms/settings";
-import { filterMappings, parseMappingFilter, parseMappingForm } from "../../../src/lib/admin/forms/mappings";
+import { parseMappingForm } from "../../../src/lib/admin/forms/mappings";
 import { changeKindLabel, noticeText, parseRunId } from "../../../src/lib/admin/forms/updates";
 
 const fd = (o: Record<string, string>) => {
@@ -43,25 +43,6 @@ describe("parseMappingForm", () => {
   it("empty category means unassign; garbage is invalid", () => {
     expect(parseMappingForm(fd({ metaCategory: "A", categoryId: "" })).categoryId).toBeNull();
     expect(parseMappingForm(fd({ metaCategory: "A", categoryId: "x" })).categoryId).toBe(Number.NaN);
-  });
-});
-
-describe("mapping filters", () => {
-  const rows = [
-    { metaCategory: "Ropa", family: "Camisas", subfamily: "", mappedCategory: null, effectiveCategory: null },
-    { metaCategory: "Ropa", family: "Botas", subfamily: "", mappedCategory: { id: 1, slug: "a", name: "A" }, effectiveCategory: { id: 1, slug: "a", name: "A" } },
-    { metaCategory: "Epp", family: "Cascos", subfamily: "", mappedCategory: null, effectiveCategory: { id: 2, slug: "b", name: "B" } },
-  ];
-  it("parses query string", () => {
-    expect(parseMappingFilter({ sin: "1", q: " cas " })).toEqual({ unmapped: true, q: "cas" });
-    expect(parseMappingFilter({})).toEqual({ unmapped: false, q: "" });
-    expect(parseMappingFilter({ sin: ["1"], q: ["x", "y"] })).toEqual({ unmapped: true, q: "x" });
-  });
-  it("unmapped = no effective category (Otros)", () => {
-    expect(filterMappings(rows, { unmapped: true, q: "" }).map((r) => r.family)).toEqual(["Camisas"]);
-  });
-  it("search matches any part, case-insensitive", () => {
-    expect(filterMappings(rows, { unmapped: false, q: "EPP" }).map((r) => r.family)).toEqual(["Cascos"]);
   });
 });
 
