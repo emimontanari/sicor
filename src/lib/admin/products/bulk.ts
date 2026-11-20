@@ -26,3 +26,21 @@ export function bulkDisabled(selected: number): boolean {
 export function selectAllLabel(pageRows: number): string {
   return `Seleccionar página (${pageRows})`;
 }
+
+export const CLEAR_SELECTION_LABEL = "Quitar selección";
+
+/** S5: second option next to the page: the whole filtered list (total of the current filter). */
+export function selectFilteredLabel(total: number): string {
+  return `Seleccionar todos los filtrados (${total})`;
+}
+
+/** Selection-bar text while the whole filtered list is selected. */
+export function selectedCountText(total: number): string {
+  return `${total} producto${total === 1 ? "" : "s"} seleccionado${total === 1 ? "" : "s"}`;
+}
+
+/** Real scope inside the bulk sheet, so the admin confirms scale before acting. */
+export function sheetScopeText(scope: "codes" | "all", count: number): string {
+  if (scope === "all") return `Se aplicará a ${count} producto${count === 1 ? "" : "s"}`;
+  return `${count} seleccionado${count === 1 ? "" : "s"} en esta página`;
+}

@@ -310,3 +310,10 @@ body:has(dialog.drawer[open]) { overflow: hidden; }
   .pr-toast { left: auto; right: 1.5rem; width: 26rem; }
 }
 /* ===== end T3 row menu ===== */
+
+/* ===== S5: bulk over the whole filtered list + page-size options ===== */
+.pr-bulk__scope { display: inline-flex; align-items: center; min-height: 44px; padding: 0 .25rem; font-weight: 700; font-size: .85rem; }
+.pr-pagesize { display: inline-flex; gap: .5rem; align-items: center; margin-left: .25rem; }
+.pr-pagesize a { color: var(--red-dark); font-weight: 700; padding: .1rem .05rem; text-decoration: none; }
+.pr-pagesize a[aria-current] { color: var(--charcoal); text-decoration: underline; }
+/* ===== end S5 ===== */

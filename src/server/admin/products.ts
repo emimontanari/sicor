@@ -60,7 +60,8 @@ export type ListAdminProductsInput = {
   categorySlug?: string;
   search?: string;
   page?: number;
-  pageSize?: number;
+  /** Rows per page, or "all" for the unpaginated "Todos" view. */
+  pageSize?: number | "all";
 };
 
 const score = (m: { metaCategory: string; family: string; subfamily: string }) =>
@@ -115,17 +116,8 @@ const matches = (row: AdminProductRow, filter: AdminFilter): boolean => {
   return false;
 };
 
-/** S3/S4: every supplier product with its override, filterable, searchable, paginated. */
-export async function listAdminProducts(
-  db: Db,
-  input: ListAdminProductsInput = {},
-): Promise<AdminProductList> {
-  const d = db as TestDb;
-  const filter = input.filter ?? "all";
-  if (!ADMIN_FILTERS.includes(filter)) throw new AdminValidationError({ filter: "Filtro inválido" });
-  const pageSize = Math.min(Math.max(Math.trunc(input.pageSize ?? 25) || 25, 1), MAX_PAGE_SIZE);
-  const requestedPage = Math.max(Math.trunc(input.page ?? 1) || 1, 1);
-
+/** Loads every supplier product with its override as an admin row (shared by the list and the scope=all bulk). */
+async function loadAdminRows(d: TestDb): Promise<AdminProductRow[]> {
   const [settingsRow] = await d.select().from(settings).where(eq(settings.id, 1));
   const autoPublishNew = settingsRow?.autoPublishNew ?? false;
   const [products, overrides, mappings, cats] = await Promise.all([
@@ -138,7 +130,7 @@ export async function listAdminProducts(
   const catById = new Map(cats.map((c) => [c.id, c]));
   const ranked = rankMappings(mappings);
 
-  const rows: AdminProductRow[] = products.map((p) => {
+  return products.map((p) => {
     const o = ovByCode.get(p.code) ?? null;
     const catId = o?.categoryId ?? resolveMappedCategory(ranked, p);
     const c = catId === null ? undefined : catById.get(catId);
@@ -158,23 +150,48 @@ export async function listAdminProducts(
       override: o ? toOverrideView(o) : null,
     };
   });
+}
+
+/** The exact same matching the list page uses: estado + categoria + busqueda. */
+function adminFilteredList(
+  rows: AdminProductRow[],
+  filter: AdminFilter,
+  categorySlug: string | undefined,
+  search: string | undefined,
+): AdminProductRow[] {
+  const q = normalizeText(search ?? "").trim();
+  const slug = categorySlug;
+  return rows.filter((r) => {
+    if (!matches(r, filter)) return false;
+    if (slug && (slug === OTHERS_SLUG ? r.category !== null : r.category?.slug !== slug)) return false;
+    if (q && ![r.name, r.supplierName, r.brand ?? "", r.code].some((f) => normalizeText(f).includes(q))) return false;
+    return true;
+  });
+}
+
+/** S3/S4: every supplier product with its override, filterable, searchable, paginated. */
+export async function listAdminProducts(
+  db: Db,
+  input: ListAdminProductsInput = {},
+): Promise<AdminProductList> {
+  const d = db as TestDb;
+  const filter = input.filter ?? "all";
+  if (!ADMIN_FILTERS.includes(filter)) throw new AdminValidationError({ filter: "Filtro inválido" });
+  const rows = await loadAdminRows(d);
 
   const counts = Object.fromEntries(
     ADMIN_FILTERS.map((f) => [f, rows.filter((r) => matches(r, f)).length]),
   ) as AdminCounts;
 
-  const q = normalizeText(input.search ?? "").trim();
-  const slug = input.categorySlug;
-  const list = rows.filter((r) => {
-    if (!matches(r, filter)) return false;
-    if (slug && (slug === OTHERS_SLUG ? r.category !== null : r.category?.slug !== slug)) return false;
-    if (q && ![r.name, r.supplierName, r.brand ?? "", r.code].some((f) => normalizeText(f).includes(q)))
-      return false;
-    return true;
-  });
+  const list = adminFilteredList(rows, filter, input.categorySlug, input.search);
   const total = list.length;
+  const pageSize =
+    input.pageSize === "all"
+      ? Math.max(total, 1)
+      : Math.min(Math.max(Math.trunc(input.pageSize ?? 25) || 25, 1), MAX_PAGE_SIZE);
   const lastPage = Math.max(Math.ceil(total / pageSize), 1);
-  const page = Math.min(requestedPage, lastPage);
+  const requestedPage = Math.max(Math.trunc(input.page ?? 1) || 1, 1);
+  const page = input.pageSize === "all" ? 1 : Math.min(requestedPage, lastPage);
   return { items: list.slice((page - 1) * pageSize, page * pageSize), total, page, pageSize, counts };
 }
 
@@ -354,14 +371,9 @@ export async function updateOverride(db: Db, code: string, patch: OverridePatch)
 
 export type BulkPatch = { visible?: boolean; categoryId?: number | null; reviewed?: boolean };
 
-/** S2/S4: bulk show/hide, set category, mark reviewed. Max 200 codes, one transaction. */
-export async function bulkUpdate(db: Db, codes: string[], patch: BulkPatch): Promise<{ updated: number }> {
-  const d = db as TestDb;
+/** Validates a BulkPatch; shared by the per-code and the scope=all bulk paths. */
+function cleanBulkPatch(patch: unknown): { set: Clean; errors: Record<string, string> } {
   const errors: Record<string, string> = {};
-  if (!Array.isArray(codes) || codes.some((c) => typeof c !== "string" || c === "")) errors.codes = "Códigos inválidos";
-  const unique = Array.isArray(codes) ? [...new Set(codes)] : [];
-  if (unique.length === 0) errors.codes = errors.codes ?? "Seleccioná al menos un producto";
-  if (unique.length > MAX_BULK) errors.codes = `Máximo ${MAX_BULK} productos por operación`;
   const set: Clean = {};
   const p = (patch ?? {}) as Record<string, unknown>;
   for (const k of Object.keys(p)) if (!["visible", "categoryId", "reviewed"].includes(k)) errors[k] = "Campo desconocido";
@@ -380,6 +392,19 @@ export async function bulkUpdate(db: Db, codes: string[], patch: BulkPatch): Pro
   }
   if (Object.keys(set).length === 0 && !errors.visible && !errors.reviewed && !errors.categoryId && Object.keys(errors).length === 0)
     errors.patch = "Nada que actualizar";
+  return { set, errors };
+}
+
+/** S2/S4: bulk show/hide, set category, mark reviewed. Max 200 codes, one transaction. */
+export async function bulkUpdate(db: Db, codes: string[], patch: BulkPatch): Promise<{ updated: number }> {
+  const d = db as TestDb;
+  const errors: Record<string, string> = {};
+  if (!Array.isArray(codes) || codes.some((c) => typeof c !== "string" || c === "")) errors.codes = "Códigos inválidos";
+  const unique = Array.isArray(codes) ? [...new Set(codes)] : [];
+  if (unique.length === 0) errors.codes = errors.codes ?? "Seleccioná al menos un producto";
+  if (unique.length > MAX_BULK) errors.codes = `Máximo ${MAX_BULK} productos por operación`;
+  const { set, errors: patchErrors } = cleanBulkPatch(patch);
+  Object.assign(errors, patchErrors);
   if (Object.keys(errors).length) throw new AdminValidationError(errors);
   if (set.reviewed === undefined && typeof set.visible === "boolean") set.reviewed = true;
 
@@ -396,6 +421,43 @@ export async function bulkUpdate(db: Db, codes: string[], patch: BulkPatch): Pro
       .values(unique.map((productCode) => ({ productCode, ...set, updatedAt })))
       .onConflictDoUpdate({ target: productOverrides.productCode, set: { ...set, updatedAt } });
     return { updated: unique.length };
+  });
+}
+
+export type BulkFilteredInput = { filter?: AdminFilter; categorySlug?: string; search?: string };
+
+/**
+ * S5: bulk over the whole filtered list. The codes are resolved server-side with the exact
+ * same matching the admin list uses (the client only sends the filter state, never codes);
+ * updates run in MAX_BULK-sized chunks inside ONE transaction, so the scale is bounded
+ * only by the data, unlike the explicit per-code path which keeps its 200 cap.
+ */
+export async function bulkUpdateFiltered(
+  db: Db,
+  input: BulkFilteredInput,
+  patch: BulkPatch,
+): Promise<{ updated: number }> {
+  const d = db as TestDb;
+  const filter = input.filter ?? "all";
+  if (!ADMIN_FILTERS.includes(filter) || filter === "eliminados")
+    throw new AdminValidationError({ filter: "Filtro inválido" });
+  const { set, errors } = cleanBulkPatch(patch);
+  if (Object.keys(errors).length) throw new AdminValidationError(errors);
+  if (set.reviewed === undefined && typeof set.visible === "boolean") set.reviewed = true;
+  const rows = await loadAdminRows(d);
+  const codes = adminFilteredList(rows, filter, input.categorySlug, input.search).map((r) => r.code);
+  if (codes.length === 0) throw new AdminValidationError({ codes: "No hay productos para este filtro" });
+  await assertCategory(d, set.categoryId);
+  const updatedAt = new Date();
+  return d.transaction(async (tx) => {
+    for (let i = 0; i < codes.length; i += MAX_BULK) {
+      const chunk = codes.slice(i, i + MAX_BULK);
+      await tx
+        .insert(productOverrides)
+        .values(chunk.map((productCode) => ({ productCode, ...set, updatedAt })))
+        .onConflictDoUpdate({ target: productOverrides.productCode, set: { ...set, updatedAt } });
+    }
+    return { updated: codes.length };
   });
 }
 

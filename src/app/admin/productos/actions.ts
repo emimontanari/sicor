@@ -6,6 +6,7 @@ import {
   AdminValidationError,
   archiveProducts,
   bulkUpdate,
+  bulkUpdateFiltered,
   restoreProducts,
   resetCustomImage,
   updateOverride,
@@ -61,14 +62,22 @@ export async function reviewAction(formData: FormData): Promise<void> {
   revalidateProducts([code]);
 }
 
+const updatedMessage = (updated: number) => `${updated} producto${updated === 1 ? "" : "s"} actualizado${updated === 1 ? "" : "s"}`;
+
 export async function bulkAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   await requireAdmin();
   const parsed = parseBulkForm(formData);
   if (!parsed.ok) return { ok: false, message: parsed.error };
   try {
+    if (parsed.scope === "all") {
+      // S5: the server resolves the codes from the same filter; no client code list at this scale.
+      const { updated } = await bulkUpdateFiltered(getAdminDb(), parsed.filter, parsed.patch);
+      revalidateProducts([]);
+      return { ok: true, message: updatedMessage(updated) };
+    }
     const { updated } = await bulkUpdate(getAdminDb(), parsed.codes, parsed.patch);
     revalidateProducts(parsed.codes);
-    return { ok: true, message: `${updated} producto${updated === 1 ? "" : "s"} actualizado${updated === 1 ? "" : "s"}` };
+    return { ok: true, message: updatedMessage(updated) };
   } catch (e) {
     const s = toState(e);
     return { ...s, message: s.errors ? Object.values(s.errors).join(". ") : s.message };

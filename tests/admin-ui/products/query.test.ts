@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  PAGE_SIZE_LABELS,
+  PAGE_SIZE_OPTIONS,
   listHref,
   parseBulkForm,
   parseListQuery,
@@ -14,7 +16,7 @@ const fd = (entries: [string, string][]) => {
 
 describe("parseListQuery", () => {
   it("defaults", () => {
-    expect(parseListQuery({})).toEqual({ filtro: "todos", filter: "all", categoria: undefined, q: "", page: 1 });
+    expect(parseListQuery({})).toEqual({ filtro: "todos", filter: "all", categoria: undefined, q: "", page: 1, pageSize: "25" });
   });
   it("maps every tab slug", () => {
     expect(parseListQuery({ filtro: "visibles" }).filter).toBe("visible");
@@ -24,12 +26,34 @@ describe("parseListQuery", () => {
   });
   it("falls back on junk and takes first of arrays", () => {
     const r = parseListQuery({ filtro: "zzz", page: "-3", q: ["  tornillo ", "x"], categoria: "" });
-    expect(r).toEqual({ filtro: "todos", filter: "all", categoria: undefined, q: "tornillo", page: 1 });
+    expect(r).toEqual({ filtro: "todos", filter: "all", categoria: undefined, q: "tornillo", page: 1, pageSize: "25" });
     expect(parseListQuery({ page: "abc" }).page).toBe(1);
     expect(parseListQuery({ page: "4" }).page).toBe(4);
   });
   it("caps the search length", () => {
     expect(parseListQuery({ q: "a".repeat(500) }).q.length).toBe(100);
+  });
+  it("parses the page-size option and falls back on junk", () => {
+    expect(parseListQuery({ porPagina: "100" }).pageSize).toBe("100");
+    expect(parseListQuery({ porPagina: "todos" }).pageSize).toBe("todos");
+    expect(parseListQuery({ porPagina: "zz" }).pageSize).toBe("25");
+    expect(parseListQuery({ porPagina: "25" }).pageSize).toBe("25");
+  });
+});
+
+describe("page size options (S5)", () => {
+  it("exposes the option slugs and their labels", () => {
+    expect(PAGE_SIZE_OPTIONS).toEqual(["25", "100", "todos"]);
+    expect(PAGE_SIZE_LABELS["25"]).toBe("25");
+    expect(PAGE_SIZE_LABELS["100"]).toBe("100");
+    expect(PAGE_SIZE_LABELS.todos).toBe("Todos");
+  });
+  it("listHref keeps the size and resets the page when the size changes", () => {
+    const s = parseListQuery({ porPagina: "100", page: "3" });
+    expect(listHref(s, {})).toBe("/admin/productos?porPagina=100&page=3");
+    expect(listHref(s, { pageSize: "todos" })).toBe("/admin/productos?porPagina=todos");
+    expect(listHref(s, { page: 2 })).toBe("/admin/productos?porPagina=100&page=2");
+    expect(listHref(parseListQuery({}), { pageSize: "25" })).toBe("/admin/productos");
   });
 });
 
@@ -83,6 +107,7 @@ describe("parseBulkForm", () => {
   it("show/hide/reviewed", () => {
     expect(parseBulkForm(fd([["code", "A"], ["code", "B"], ["intent", "show"]]))).toEqual({
       ok: true,
+      scope: "codes",
       codes: ["A", "B"],
       patch: { visible: true },
     });
@@ -104,5 +129,63 @@ describe("parseBulkForm", () => {
   it("errors", () => {
     expect(parseBulkForm(fd([["intent", "show"]]))).toEqual({ ok: false, error: "Seleccioná al menos un producto" });
     expect(parseBulkForm(fd([["code", "A"], ["intent", "x"]]))).toEqual({ ok: false, error: "Acción inválida" });
+  });
+});
+
+describe("parseBulkForm scope=all (S5)", () => {
+  it("sends the filter state and never trusts client code entries", () => {
+    const r = parseBulkForm(
+      fd([
+        ["scope", "all"],
+        ["filtro", "visibles"],
+        ["categoria", "indumentaria-laboral"],
+        ["q", "  guante "],
+        ["code", "FAKE1"],
+        ["code", "FAKE2"],
+        ["intent", "show"],
+      ]),
+    );
+    expect(r).toEqual({
+      ok: true,
+      scope: "all",
+      filter: { filter: "visible", categorySlug: "indumentaria-laboral", search: "guante" },
+      patch: { visible: true },
+    });
+  });
+  it("defaults filtro to todos and drops empty categoria/q", () => {
+    expect(parseBulkForm(fd([["scope", "all"], ["intent", "reviewed"]]))).toEqual({
+      ok: true,
+      scope: "all",
+      filter: { filter: "all" },
+      patch: { reviewed: true },
+    });
+  });
+  it("category works the same as the per-code path", () => {
+    expect(parseBulkForm(fd([["scope", "all"], ["intent", "category"], ["bulkCategory", "3"]]))).toMatchObject({
+      scope: "all",
+      patch: { categoryId: 3 },
+    });
+    expect(parseBulkForm(fd([["scope", "all"], ["intent", "category"], ["bulkCategory", "none"]]))).toMatchObject({
+      patch: { categoryId: null },
+    });
+  });
+  it("rejects eliminados, unknown intents and missing category", () => {
+    expect(parseBulkForm(fd([["scope", "all"], ["filtro", "eliminados"], ["intent", "show"]]))).toEqual({
+      ok: false,
+      error: "Acción inválida",
+    });
+    expect(parseBulkForm(fd([["scope", "all"], ["intent", "zzz"]]))).toEqual({ ok: false, error: "Acción inválida" });
+    expect(parseBulkForm(fd([["scope", "all"], ["intent", "category"], ["bulkCategory", ""]]))).toEqual({
+      ok: false,
+      error: "Elegí una categoría",
+    });
+  });
+  it("codes path is the default scope when scope is absent or unknown", () => {
+    expect(parseBulkForm(fd([["code", "A"], ["intent", "hide"]]))).toMatchObject({ ok: true, scope: "codes", codes: ["A"] });
+    expect(parseBulkForm(fd([["scope", "zz"], ["code", "A"], ["intent", "hide"]]))).toMatchObject({
+      ok: true,
+      scope: "codes",
+      codes: ["A"],
+    });
   });
 });

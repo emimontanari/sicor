@@ -4,6 +4,7 @@ import {
   AdminNotFoundError,
   AdminValidationError,
   bulkUpdate,
+  bulkUpdateFiltered,
   getAdminProduct,
   listAdminCategories,
   listAdminProducts,
@@ -185,6 +186,58 @@ describe("bulkUpdate (S2/S4)", () => {
     await add(db, { code: "A" });
     await expect(bulkUpdate(db, ["A", "NOPE"], { visible: true })).rejects.toBeInstanceOf(AdminNotFoundError);
     await expect(bulkUpdate(db, ["A"], { categoryId: 99999 })).rejects.toBeInstanceOf(AdminValidationError);
+    expect(await db.select().from(schema.productOverrides)).toHaveLength(0);
+  });
+});
+
+describe("bulkUpdateFiltered (S5)", () => {
+  it("resolves the codes from the same filter server-side and composes estado + categoria", async () => {
+    const cats = await listAdminCategories(db);
+    await add(db, { code: "HIDA", name: "Guante A" }, { visible: false, reviewed: true, categoryId: cats[0].id });
+    await add(db, { code: "HIDB", name: "Guante B" }, { visible: false, reviewed: true });
+    await add(db, { code: "VISC", name: "Casco C" }, { visible: true, reviewed: true, categoryId: cats[0].id });
+    const r = await bulkUpdateFiltered(db, { filter: "hidden", categorySlug: cats[0].slug }, { visible: true });
+    expect(r).toEqual({ updated: 1 }); // only HIDA is hidden AND in that category
+    const rows = Object.fromEntries((await db.select().from(schema.productOverrides)).map((o) => [o.productCode, o]));
+    expect(rows.HIDA).toMatchObject({ visible: true, reviewed: true });
+    expect(rows.HIDB).toMatchObject({ visible: false }); // other category: untouched
+    expect(rows.VISC.visible).toBe(true); // already visible: untouched
+  });
+  it("composes with search too", async () => {
+    await add(db, { code: "G1", name: "Guante nitrilo" }, { visible: false, reviewed: true });
+    await add(db, { code: "G2", name: "Guante cuero" }, { visible: false, reviewed: true });
+    await add(db, { code: "C1", name: "Casco" }, { visible: false, reviewed: true });
+    const r = await bulkUpdateFiltered(db, { filter: "hidden", search: "guante" }, { visible: true });
+    expect(r).toEqual({ updated: 2 });
+    const rows = await db.select().from(schema.productOverrides);
+    expect(rows.find((o) => o.productCode === "C1")?.visible).toBe(false);
+    expect(rows.filter((o) => o.visible === true)).toHaveLength(2);
+  });
+  it("updates more than MAX_BULK rows (chunked) in one transaction, exact count", async () => {
+    for (let i = 0; i < 205; i++) await db.insert(schema.sourceProducts).values({ code: `B${i}`, name: `Bulk ${i}` });
+    const r = await bulkUpdateFiltered(db, { filter: "all" }, { reviewed: true });
+    expect(r).toEqual({ updated: 205 });
+    const rows = await db.select().from(schema.productOverrides);
+    expect(rows).toHaveLength(205);
+    expect(rows.every((o) => o.reviewed === true)).toBe(true);
+  });
+  it("rejects an empty filtered set without touching data", async () => {
+    await add(db, { code: "A" }, { visible: true, reviewed: true });
+    await expect(bulkUpdateFiltered(db, { filter: "nuevos" }, { visible: true })).rejects.toBeInstanceOf(AdminValidationError);
+    expect(await db.select().from(schema.productOverrides)).toHaveLength(1);
+  });
+  it("rejects eliminados, unknown filters and bad patches without touching data", async () => {
+    await add(db, { code: "A" });
+    await expect(bulkUpdateFiltered(db, { filter: "eliminados" }, { visible: true })).rejects.toBeInstanceOf(AdminValidationError);
+    await expect(bulkUpdateFiltered(db, { filter: "zz" as never }, { visible: true })).rejects.toBeInstanceOf(AdminValidationError);
+    await expect(bulkUpdateFiltered(db, { filter: "all" }, { categoryId: 99999 })).rejects.toBeInstanceOf(AdminValidationError);
+    await expect(bulkUpdateFiltered(db, { filter: "all" }, {})).rejects.toBeInstanceOf(AdminValidationError);
+    expect(await db.select().from(schema.productOverrides)).toHaveLength(0);
+  });
+  it("per-code bulkUpdate keeps its 200 cap", async () => {
+    const many = Array.from({ length: 201 }, (_, i) => `C${i}`);
+    for (const c of many) await db.insert(schema.sourceProducts).values({ code: c, name: c });
+    await expect(bulkUpdate(db, many, { visible: true })).rejects.toBeInstanceOf(AdminValidationError);
     expect(await db.select().from(schema.productOverrides)).toHaveLength(0);
   });
 });

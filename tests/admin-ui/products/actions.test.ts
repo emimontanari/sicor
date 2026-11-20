@@ -14,14 +14,20 @@ vi.mock("../../../src/server/admin", async (orig) => ({
   ...(await orig<object>()),
   archiveProducts: async (_db: unknown, codes: string[]) => (calls.push(`archive:${codes.join(",")}`), { updated: codes.length }),
   restoreProducts: async (_db: unknown, codes: string[]) => (calls.push(`restore:${codes.join(",")}`), { updated: codes.length }),
+  bulkUpdate: async (_db: unknown, codes: string[], patch: unknown) =>
+    (calls.push(`bulk:${codes.join(",")}:${JSON.stringify(patch)}`), { updated: codes.length }),
+  bulkUpdateFiltered: async (_db: unknown, input: unknown, patch: unknown) =>
+    (calls.push(`bulkFiltered:${JSON.stringify(input)}:${JSON.stringify(patch)}`), { updated: bulkCount.value }),
 }));
 const denied = vi.hoisted(() => ({ value: false }));
+const bulkCount = vi.hoisted(() => ({ value: 0 }));
 
-import { archiveAction, restoreAction } from "../../../src/app/admin/productos/actions";
+import { archiveAction, bulkAction, restoreAction } from "../../../src/app/admin/productos/actions";
 
 beforeEach(() => {
   calls.length = 0;
   denied.value = false;
+  bulkCount.value = 0;
 });
 
 describe("archiveAction / restoreAction", () => {
@@ -48,5 +54,58 @@ describe("archiveAction / restoreAction", () => {
     const r = await archiveAction("");
     expect(r.ok).toBe(false);
     expect(calls).toEqual(["requireAdmin"]);
+  });
+});
+
+describe("bulkAction (S5)", () => {
+  it("scope=all: requireAdmin first, resolves codes server-side, never trusts client codes, exact count feedback", async () => {
+    bulkCount.value = 552;
+    const fd = new FormData();
+    fd.set("scope", "all");
+    fd.set("filtro", "visibles");
+    fd.set("categoria", "indumentaria-laboral");
+    fd.set("intent", "hide");
+    fd.append("code", "FAKE1");
+    const r = await bulkAction({}, fd);
+    expect(r).toEqual({ ok: true, message: "552 productos actualizados" });
+    expect(calls[0]).toBe("requireAdmin");
+    expect(calls[1]).toContain("bulkFiltered");
+    expect(calls[1]).toContain('"filter":"visible"');
+    expect(calls[1]).toContain('"categorySlug":"indumentaria-laboral"');
+    expect(calls[1]).toContain('"visible":false');
+    // the forged codes never reach the data layer nor a per-code revalidation
+    expect(calls.some((c) => c.includes("FAKE1"))).toBe(false);
+    expect(calls).toEqual(
+      expect.arrayContaining(["revalidate:/admin/productos", "revalidate:/", "revalidate:/producto/[code]", "revalidate:/categoria/[slug]"]),
+    );
+  });
+  it("scope=codes: unchanged per-row path through bulkUpdate", async () => {
+    const fd = new FormData();
+    fd.set("scope", "codes");
+    fd.set("intent", "show");
+    fd.append("code", "A1");
+    fd.append("code", "B2");
+    const r = await bulkAction({}, fd);
+    expect(r).toEqual({ ok: true, message: "2 productos actualizados" });
+    expect(calls.slice(0, 2)).toEqual(["requireAdmin", 'bulk:A1,B2:{"visible":true}']);
+    expect(calls).toContain("revalidate:/admin/productos/A1");
+    expect(calls).toContain("revalidate:/admin/productos/B2");
+  });
+  it("invalid scope=all form: no data call at all", async () => {
+    const fd = new FormData();
+    fd.set("scope", "all");
+    fd.set("filtro", "eliminados");
+    fd.set("intent", "hide");
+    const r = await bulkAction({}, fd);
+    expect(r.ok).toBe(false);
+    expect(calls.filter((c) => c !== "requireAdmin")).toEqual([]);
+  });
+  it("unauthenticated: no bulk call, nothing revalidated", async () => {
+    denied.value = true;
+    const fd = new FormData();
+    fd.set("scope", "all");
+    fd.set("intent", "show");
+    await expect(bulkAction({}, fd)).rejects.toThrow(/NEXT_REDIRECT/);
+    expect(calls.filter((c) => c !== "requireAdmin")).toEqual([]);
   });
 });
