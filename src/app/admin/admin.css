@@ -279,3 +279,34 @@ body:has(dialog.drawer[open]) { overflow: hidden; }
 .pr-opt[aria-current="true"] { font-weight: 800; background: var(--light); box-shadow: inset 4px 0 0 var(--red); }
 .pr-opt__n { color: var(--muted); font-size: .8rem; }
 /* ===== end T2 ===== */
+
+/* ===== T3: per-row "…" menu, action sheet, delete confirm, toast ===== */
+.pr-ctl--icon { width: 34px; padding: 0; font-size: 1rem; letter-spacing: 0; }
+.pr-ctl--danger { background: var(--red-dark); border-color: var(--red-dark); color: var(--white); }
+.pr-ctl--danger:hover { background: #000; }
+.pr-ctl:disabled { opacity: .55; cursor: default; }
+.pr-row { grid-template-columns: auto 64px 1fr auto; }
+.pr-row__actions { grid-column: auto; justify-content: flex-end; align-items: flex-start; flex-direction: column; }
+.pr-back { display: inline-flex; width: auto; }
+.pr-archived { display: flex; align-items: center; justify-content: space-between; gap: .75rem; border-color: var(--red-dark); }
+/* action sheet: reuses the shared Drawer; the .sheet marker turns the side panel into a bottom sheet */
+.drawer:has(.sheet) .drawer__panel { top: auto; left: 0; right: 0; width: 100%; max-height: 80dvh; border-radius: 12px 12px 0 0; }
+.drawer:has(.sheet) .drawer__head strong { overflow-wrap: anywhere; text-transform: none; font-size: .95rem; }
+.drawer:has(.sheet)[open] .drawer__panel { animation-name: sheet-in; }
+@keyframes sheet-in { from { transform: translateY(100%); } }
+.sheet { display: none; }
+.sheet__name, .sheet__text { margin: .25rem 0 .5rem; color: var(--muted); font-size: .85rem; overflow-wrap: anywhere; }
+.sheet__text { color: var(--charcoal); font-size: .9rem; }
+.sheet__list { list-style: none; margin: 0; padding: 0; }
+.sheet__item { display: flex; align-items: center; width: 100%; min-height: 48px; padding: 0 .6rem; border: 0; border-bottom: 1px solid var(--line); background: transparent; color: var(--charcoal); font: inherit; font-size: .95rem; text-decoration: none; text-align: left; cursor: pointer; }
+.sheet__item:hover { background: var(--light); }
+.sheet__item--danger { color: var(--red-dark); font-weight: 800; }
+.pr-toast { position: fixed; left: .75rem; right: .75rem; bottom: calc(.75rem + env(safe-area-inset-bottom)); z-index: 40; display: flex; align-items: center; gap: .5rem; padding: .6rem .75rem; background: var(--charcoal); color: var(--white); border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,.3); font-size: .85rem; }
+.pr-toast > span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.pr-toast .pr-ctl--solid { background: var(--white); color: var(--charcoal); border-color: var(--white); }
+@media (min-width: 900px) {
+  .drawer:has(.sheet) .drawer__panel { left: 50%; right: auto; top: 50%; bottom: auto; width: 24rem; border-radius: 8px; translate: -50% -50%; }
+  .drawer:has(.sheet)[open] .drawer__panel { animation: none; }
+  .pr-toast { left: auto; right: 1.5rem; width: 26rem; }
+}
+/* ===== end T3 row menu ===== */

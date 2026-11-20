@@ -4,7 +4,9 @@ import { revalidatePath } from "next/cache";
 import {
   AdminNotFoundError,
   AdminValidationError,
+  archiveProducts,
   bulkUpdate,
+  restoreProducts,
   resetCustomImage,
   updateOverride,
   type OverridePatch,
@@ -92,4 +94,30 @@ export async function resetImageAction(code: string): Promise<void> {
     toState(e);
   }
   revalidateProducts([code]);
+}
+
+/** Eliminar: archives (soft delete) so the public catalog and supplier sync never see it again. */
+export async function archiveAction(code: string): Promise<ActionState> {
+  await requireAdmin();
+  if (!code) return { ok: false, message: "Producto inválido" };
+  try {
+    await archiveProducts(getAdminDb(), [code]);
+  } catch (e) {
+    return toState(e);
+  }
+  revalidateProducts([code]);
+  return { ok: true, message: "Producto eliminado" };
+}
+
+/** Restaurar / Deshacer: clears the archive flag. */
+export async function restoreAction(code: string): Promise<ActionState> {
+  await requireAdmin();
+  if (!code) return { ok: false, message: "Producto inválido" };
+  try {
+    await restoreProducts(getAdminDb(), [code]);
+  } catch (e) {
+    return toState(e);
+  }
+  revalidateProducts([code]);
+  return { ok: true, message: "Producto restaurado" };
 }

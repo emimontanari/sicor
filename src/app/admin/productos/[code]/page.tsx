@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ImageEditor } from "../../../../components/admin/products/ImageEditor";
+import { RestoreButton } from "../../../../components/admin/products/RowActions";
+import { backHref } from "../../../../lib/admin/products/menu";
 import { ProductForm } from "../../../../components/admin/products/ProductForm";
 import { getAdminDb } from "../../../../lib/admin/products/db";
 import { getAdminProduct, listAdminCategories } from "../../../../server/admin";
@@ -10,10 +12,11 @@ import { requireAdmin } from "../../../../server/auth/session";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Editar producto", robots: { index: false, follow: false } };
 
-type Props = { params: Promise<{ code: string }> };
+type Props = { params: Promise<{ code: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> };
 
-export default async function ProductEditPage({ params }: Props) {
+export default async function ProductEditPage({ params, searchParams }: Props) {
   await requireAdmin();
+  const from = (await searchParams).from;
   const code = decodeURIComponent((await params).code);
   const db = getAdminDb();
   const [product, categories] = await Promise.all([getAdminProduct(db, code), listAdminCategories(db)]);
@@ -25,10 +28,16 @@ export default async function ProductEditPage({ params }: Props) {
   return (
     <main className="pr-page">
       <p>
-        <Link href="/admin/productos" className="pr-link">
+        <Link href={backHref(typeof from === "string" ? from : undefined)} className="pr-ctl pr-back">
           ← Volver a productos
         </Link>
       </p>
+      {product.archivedAt ? (
+        <div className="admin-card pr-archived" role="status">
+          <strong>Producto eliminado</strong>
+          <RestoreButton code={product.code} />
+        </div>
+      ) : null}
       <h1>{product.effective.name}</h1>
       <p className="pr-muted">
         {product.code} · {product.effective.visible ? "Visible" : "Oculto"}

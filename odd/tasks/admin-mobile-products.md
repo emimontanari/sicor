@@ -1,7 +1,7 @@
 # Feature: admin-mobile-products
 
 Mobile-first admin dashboard for products: hamburger navigation, filter side drawer, per-item "…" menu (edit, hide, delete). Deleting archives a product in our database so supplier sync never re-proposes it.
-Documentation-only tracking unit (test-first exception: no behavior).
+Tracking unit; behavior is delivered and tested in T1–T3.
 
 ## Specs
 
@@ -14,9 +14,9 @@ Documentation-only tracking unit (test-first exception: no behavior).
 
 | ID | Specs | Task | Route | Status | Commit |
 |----|-------|------|-------|--------|--------|
-| T1 | S3, S4 | Data: archive flag (soft delete) on our product data + migration; read model excludes archived from public catalog and default admin lists; «Eliminados» filter; archive/restore functions; sync never re-proposes archived codes; tests | gentle-ai-worker | pending | — |
-| T2 | S1 | UI: admin hamburger navigation, filter side drawer with visible close, apply/clear, active-filter chips; mobile-first | gentle-ai-worker | pending | — |
-| T3 | S2, S3 | UI: per-row "…" menu (Editar, Ocultar/Mostrar, Eliminar) with confirm dialog, «Eliminados» view with Restaurar | gentle-ai-worker | pending (after T1, T2) | — |
+| T1 | S3, S4 | Data: archive flag (soft delete) on our product data + migration; read model excludes archived from public catalog and default admin lists; «Eliminados» filter; archive/restore functions; sync never re-proposes archived codes; tests | gentle-ai-worker | done | 86ce1ce |
+| T2 | S1 | UI: admin hamburger navigation, filter side drawer with visible close, apply/clear, active-filter chips; mobile-first | gentle-ai-worker | done (persistent ≥900px sidebar skipped as optional) | b29afc5 |
+| T3 | S2, S3 | UI: per-row "…" menu (Editar, Ocultar/Mostrar, Eliminar) with confirm dialog, «Eliminados» view with Restaurar | gentle-ai-worker | done, uncommitted (parent owns git) | — |
 
 ## Log
 
@@ -24,3 +24,5 @@ Documentation-only tracking unit (test-first exception: no behavior).
 - **L2** (human request, verbatim): see S2.
 - **L3** (human choice, verbatim): see S3.
 - **L4** (context): append-only sync (commits 3ddc542, 9b06309) inserts only codes absent from our database, so a soft-deleted row that stays in the database is naturally never re-proposed; T1 must still verify it. Risk item 1 (schema migration / stored data).
+- **L5** (T3 result): per-row "…" button (aria-label "Más acciones: <nombre>") opens an action sheet on the shared `Drawer` (bottom sheet on phones, centered compact panel ≥900px; visible ✕, Escape/backdrop close, focus returns to "…"). Items from pure `rowMenuItems` (`src/lib/admin/products/menu.ts`): Editar/Ocultar|Mostrar/Eliminar; archived rows: Restaurar/Editar. Eliminar opens the confirm dialog ("¿Eliminar <nombre>?", Cancelar/Eliminar red) → `archiveAction` (`requireAdmin()` first, then `archiveProducts`, revalidates admin list/product, `/`, `/producto/[code]`); toast with Deshacer → `restoreAction`. «Eliminados» added to `FILTER_SLUGS`/labels/map (Estado option + chip); Eliminados view hides bulk bar and checkboxes. Edit page: "← Volver a productos" control (honors same-site `?from=` list URL via `backHref`) and "Producto eliminado" notice with Restaurar. Covers S1 (dialogs), S2, S3.
+  Evidence: tests `tests/admin-ui/products/{menu,actions}.test.ts` (RED: import/`archiveAction is not a function`; GREEN: admin-ui 42 passed); full `pnpm test` 384 passed/3 skipped; `pnpm typecheck`, `pnpm lint`, `pnpm build` clean. Live check on the dev server at 390px and 1280px (screenshots `/tmp/t3-{m,d}-*.png`): archived GUANTE TEJ S/COSTANTICORTE LISO T-9 (DPS80914) via the confirm dialog, saw it in Eliminados, restored it from the edit-page notice; its visibility was never changed (still Oculto/Nuevo). Preview data ends as it started except `updated_at` of that override row.

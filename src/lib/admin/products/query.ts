@@ -2,7 +2,7 @@ import type { AdminFilter, BulkPatch, OverridePatch } from "../../../server/admi
 
 /** Pure helpers for the products admin UI: query-string state and form parsing. */
 
-export const FILTER_SLUGS = ["todos", "visibles", "ocultos", "nuevos", "discontinuados"] as const;
+export const FILTER_SLUGS = ["todos", "visibles", "ocultos", "nuevos", "discontinuados", "eliminados"] as const;
 export type FilterSlug = (typeof FILTER_SLUGS)[number];
 
 export const FILTER_BY_SLUG: Record<FilterSlug, AdminFilter> = {
@@ -11,6 +11,7 @@ export const FILTER_BY_SLUG: Record<FilterSlug, AdminFilter> = {
   ocultos: "hidden",
   nuevos: "nuevos",
   discontinuados: "discontinued",
+  eliminados: "eliminados",
 };
 export const FILTER_LABELS: Record<FilterSlug, string> = {
   todos: "Todos",
@@ -18,6 +19,7 @@ export const FILTER_LABELS: Record<FilterSlug, string> = {
   ocultos: "Ocultos",
   nuevos: "Nuevos para revisar",
   discontinuados: "Discontinuados",
+  eliminados: "Eliminados",
 };
 
 export const LIST_PATH = "/admin/productos";
