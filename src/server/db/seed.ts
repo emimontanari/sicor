@@ -1,4 +1,3 @@
-import { sql } from "drizzle-orm";
 import type { PgDb, TestDb } from "./index";
 import { categories } from "./schema";
 
@@ -14,13 +13,15 @@ export const CATEGORIES = [
 
 export const CATEGORY_NAMES = CATEGORIES.map((c) => c.name);
 
-/** Idempotent: safe to run on every boot / migration. */
+/**
+ * Idempotent and safe on every boot / deploy: seeds the defaults only while the
+ * table is empty, so categories the admin renamed or deleted never come back.
+ */
 export async function seedCategories(db: PgDb | TestDb): Promise<void> {
+  const [existing] = await db.select({ id: categories.id }).from(categories).limit(1);
+  if (existing) return;
   await db
     .insert(categories)
     .values(CATEGORIES.map((c, i) => ({ ...c, sortOrder: i + 1 })))
-    .onConflictDoUpdate({
-      target: categories.slug,
-      set: { name: sql`excluded.name`, sortOrder: sql`excluded.sort_order` },
-    });
+    .onConflictDoNothing({ target: categories.slug });
 }

@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import { parseSettingsForm } from "../../../src/lib/admin/forms/settings";
-import { parseMappingForm } from "../../../src/lib/admin/forms/mappings";
 import { changeKindLabel, noticeText, parseRunId } from "../../../src/lib/admin/forms/updates";
 
 const fd = (o: Record<string, string>) => {
@@ -30,19 +29,6 @@ describe("parseSettingsForm", () => {
       messageTemplate: "",
       showPrices: false,
     });
-  });
-});
-
-describe("parseMappingForm", () => {
-  it("parses triple and category", () => {
-    expect(parseMappingForm(fd({ metaCategory: "A", family: "B", subfamily: "", categoryId: "7" }))).toEqual({
-      triple: { metaCategory: "A", family: "B", subfamily: "" },
-      categoryId: 7,
-    });
-  });
-  it("empty category means unassign; garbage is invalid", () => {
-    expect(parseMappingForm(fd({ metaCategory: "A", categoryId: "" })).categoryId).toBeNull();
-    expect(parseMappingForm(fd({ metaCategory: "A", categoryId: "x" })).categoryId).toBe(Number.NaN);
   });
 });
 

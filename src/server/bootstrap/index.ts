@@ -41,18 +41,17 @@ export async function bootstrapCatalog(deps: BootstrapDeps): Promise<BootstrapRe
   const cats = await db.select().from(categories);
   const idBySlug = new Map(cats.map((c) => [c.slug, c.id]));
 
-  await db
-    .insert(categoryMappings)
-    .values(
-      DEFAULT_CATEGORY_MAPPINGS.map((m) => ({
-        metaCategory: m.metaCategory,
-        family: m.family,
-        subfamily: m.subfamily,
-        categoryId: idBySlug.get(m.categorySlug)!,
-      })),
-    )
+  // The admin may have deleted a default category: never recreate it nor map to it.
+  const defaultMappings = DEFAULT_CATEGORY_MAPPINGS.flatMap((m) => {
+    const categoryId = idBySlug.get(m.categorySlug);
+    return categoryId === undefined
+      ? []
+      : [{ metaCategory: m.metaCategory, family: m.family, subfamily: m.subfamily, categoryId }];
+  });
+  if (defaultMappings.length > 0) {
     // An admin may have remapped a source key: keep their choice.
-    .onConflictDoNothing();
+    await db.insert(categoryMappings).values(defaultMappings).onConflictDoNothing();
+  }
 
   let appliedRunId: number | null = null;
   // Bootstrap is the explicit first-import command, not a way to auto-confirm later syncs.
@@ -78,7 +77,8 @@ export async function bootstrapCatalog(deps: BootstrapDeps): Promise<BootstrapRe
 
   for (const p of PDF_PRODUCTS) {
     if (!present.has(p.code)) continue;
-    const categoryId = idBySlug.get(p.categorySlug) ?? null;
+    const categoryId = idBySlug.get(p.categorySlug);
+    if (categoryId === undefined) continue; // category deleted by the admin: leave the product alone
     const [existing] = await db.select().from(productOverrides).where(eq(productOverrides.productCode, p.code));
     if (!existing) {
       // publish-on-sync S1: only the curated category and note need an override row;
@@ -89,7 +89,7 @@ export async function bootstrapCatalog(deps: BootstrapDeps): Promise<BootstrapRe
         .onConflictDoNothing();
     } else {
       const patch: Partial<typeof productOverrides.$inferInsert> = {};
-      if (existing.categoryId === null && categoryId !== null) patch.categoryId = categoryId;
+      if (existing.categoryId === null) patch.categoryId = categoryId;
       if (existing.customDescription === null && p.note !== null) patch.customDescription = p.note;
       if (Object.keys(patch).length > 0) {
         await db.update(productOverrides).set({ ...patch, updatedAt: now() }).where(eq(productOverrides.productCode, p.code));

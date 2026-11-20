@@ -5,7 +5,7 @@ import { bootstrapCatalog } from "../../src/server/bootstrap";
 import { listProducts } from "../../src/server/catalog/read";
 import { DEFAULT_CATEGORY_MAPPINGS } from "../../src/server/bootstrap/category-mappings";
 import { PDF_PRODUCTS } from "../../src/server/bootstrap/pdf-products";
-import { CATEGORIES } from "../../src/server/db/seed";
+import { CATEGORIES, seedCategories } from "../../src/server/db/seed";
 import { createPgliteDb, schema } from "../../src/server/db";
 import type { SupplierCatalog, SupplierProduct } from "../../src/server/masefer";
 import type { ImageStore } from "../../src/server/sync";
@@ -74,6 +74,25 @@ describe("bootstrapCatalog (S8)", () => {
     expect(r.alreadyHidden).toBe(0);
     expect((await listProducts({}, ctx.db)).map((p) => p.code).sort()).toEqual([noNote.code, withNote.code, "OTHER"].sort());
     expect(r.unmatched).toContain(PDF_PRODUCTS.find((p) => ![withNote.code, noNote.code].includes(p.code))!.code);
+  });
+
+  it("skips default mappings and PDF products whose category the admin deleted (no crash, nothing resurrected)", async () => {
+    await seedCategories(ctx.db);
+    const gone = "indumentaria-laboral";
+    await ctx.db.delete(schema.categories).where(eq(schema.categories.slug, gone));
+    const r = await bootstrapCatalog(deps());
+    const cats = await ctx.db.select().from(schema.categories);
+    expect(cats.map((c) => c.slug).sort()).toEqual(CATEGORIES.map((c) => c.slug).filter((s) => s !== gone).sort());
+    const maps = await ctx.db.select().from(schema.categoryMappings);
+    const expected = DEFAULT_CATEGORY_MAPPINGS.filter((m) => m.categorySlug !== gone);
+    expect(expected.length).toBeLessThan(DEFAULT_CATEGORY_MAPPINGS.length);
+    expect(maps).toHaveLength(expected.length);
+    const idBySlug = new Map(cats.map((c) => [c.slug, c.id]));
+    expect(maps.map((m) => m.categoryId).sort()).toEqual(expected.map((m) => idBySlug.get(m.categorySlug)!).sort());
+    // PDF products pointing at the deleted category get no override row.
+    const pdfOfGone = PDF_PRODUCTS.filter((p) => p.categorySlug === gone).map((p) => p.code);
+    expect((await overrides()).filter((o) => pdfOfGone.includes(o.productCode))).toEqual([]);
+    expect(r.published).toBe(3);
   });
 
   it("never maps anything to productos-destacados", () => {
