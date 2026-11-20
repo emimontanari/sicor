@@ -440,33 +440,9 @@ describe("sync engine", () => {
     expect((await engine.getPendingRun())?.id).toBe(newer.id);
   });
 
-  it("9c: supersede never touches applied, failed, or discarded runs", async () => {
-    // R3-003: a newer check pauses inside its supersede update; while it is
-    // paused, the older pending run is applied underneath. Releasing the update
-    // must not overwrite that (or any other non-pending) run.
-    source.next = new MaseferSyncError("timeout", "no response");
-    await engine.check("scheduled"); // failed run
-    source.next = catalog(product("A"));
-    const d = await engine.check("manual");
-    await engine.discard(d.id); // discarded run
-    const p = await engine.check("manual"); // pending run P
-    const { db: gatedDb, release, paused } = pauseDiscardedRunUpdates(ctx.db);
-    const gated = createSyncEngine({ db: gatedDb, source, imageStore: images, clock: () => new Date() });
-    const newer = gated.check("manual"); // reaches its supersede step and pauses there
-    while (paused() < 1) {
-      await ctx.db.select().from(schema.sourceProducts).limit(1);
-    }
-    const applied = await engine.apply(p.id); // commits while the supersede update is paused
-    expect(applied.status).toBe("applied");
-    release();
-    const done = await newer;
-    expect(done.status).toBe("pending");
-    const all = await runs();
-    expect(all.find((r) => r.id === p.id)?.status).toBe("applied");
-    expect(all.find((r) => r.id === d.id)?.status).toBe("discarded");
-    expect(all.filter((r) => r.status === "failed")).toHaveLength(1);
-    expect((await engine.getPendingRun())?.id).toBe(done.id);
-  });
+  // 9c (R3-003 via the old supersede step) was removed with the append-only
+  // redesign: check() no longer supersedes pending runs, so that step no longer
+  // exists. The equivalent guard on discard() is covered by 6b below.
 
   it("10: check with no changes leaves no pending run", async () => {
     await seedBase();
