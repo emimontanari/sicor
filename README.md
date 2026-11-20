@@ -28,8 +28,9 @@ Los tests corren sobre PGlite en memoria: no requieren Postgres ni Docker (`pnpm
 | `pnpm db:generate` | Genera migraciones desde `schema.ts` |
 | `pnpm db:migrate:run` | Aplica migraciones + seed de categorías (usa `DATABASE_URL`) |
 | `pnpm build:migrate` | Empaqueta el migrador a `out/migrate.cjs` (lo usa el Dockerfile) |
-| `pnpm sync:check` | Chequeo manual de cambios del proveedor; imprime el resumen JSON, sale con 1 si falla |
-| `pnpm catalog:bootstrap` | Bootstrap inicial idempotente: aplica la sincronización y publica todos los productos activos (los de PDF conservan su categoría y nota; los ocultados por el admin siguen ocultos; los discontinuados no se publican). Imprime `{appliedRunId, published, alreadyHidden, unmatched}` |
+| `pnpm sync:check` | Busca códigos nuevos sin cambiar el catálogo; imprime el resumen JSON, sale con 1 si falla |
+| `pnpm catalog:bootstrap` | Importa solo si el catálogo está vacío. Publica los productos activos, conserva la curación existente y no consulta al proveedor en las reejecuciones. Imprime `{appliedRunId, published, alreadyHidden, unmatched}` |
+| `pnpm catalog:repair-assets` | Reparación explícita de copias locales de imágenes y fichas PDF; no se ejecuta durante la búsqueda ni la confirmación |
 | `pnpm admin:hash-password` | Genera el hash de `ADMIN_PASSWORD_HASH` (contraseña por stdin) |
 | `pnpm masefer:smoke` | Prueba en vivo del cliente Masefer |
 
@@ -56,4 +57,4 @@ No hay `.env.example`; estas son todas:
 
 ## Sincronización
 
-El chequeo (programado cada 15 días o manual) solo guarda un aviso pendiente; el admin lo confirma en el dashboard (Fase 3). Ver el deploy para configurar el schedule.
+Después de la importación inicial, el catálogo se lee desde la base local, incluso si Masefer no responde. La búsqueda manual o programada solo propone códigos nuevos. El admin confirma en **Actualizaciones**: se agregan únicamente los códigos que aún no existen, sin modificar ni dar de baja productos existentes. Una búsqueda sin altas no borra las propuestas anteriores. Ver el deploy para configurar el schedule.

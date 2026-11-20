@@ -11,7 +11,11 @@ export const metadata: Metadata = { title: "Actualizaciones", robots: { index: f
 
 function Counts({ run }: { run: AdminRun }) {
   const s = run.summary;
-  return s ? <>{s.new} nuevos · {s.changed} cambiaron · {s.removed} de baja</> : <>—</>;
+  if (!s) return <>—</>;
+  if (run.status === "applied" && (s.changed || s.removed)) {
+    return <>{s.new} nuevos · {s.changed} cambiaron · {s.removed} de baja</>; // Historical, before append-only sync.
+  }
+  return run.status === "applied" ? <>{s.new} agregados</> : <>{s.new} nuevos propuestos</>;
 }
 
 export default async function UpdatesPage() {
@@ -30,7 +34,10 @@ export default async function UpdatesPage() {
         </p>
       ) : null}
       {pending ? (
-        <PendingRun key={pending.id} run={pending} />
+        <>
+          <p>Las búsquedas pendientes se revisan de a una. Confirmar o descartar esta muestra la siguiente, si la hay.</p>
+          <PendingRun key={pending.id} run={pending} />
+        </>
       ) : (
         <p className="admin-card">No hay actualizaciones pendientes.</p>
       )}

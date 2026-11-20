@@ -20,8 +20,8 @@ export async function checkAction(): Promise<UpdatesActionState> {
   if (!r.ok) return { error: r.error ?? "La búsqueda falló", at: Date.now() };
   const msg =
     r.status === "pending"
-      ? "Hay novedades para confirmar."
-      : "No hay cambios: el catálogo está al día.";
+      ? "Hay productos nuevos para confirmar."
+      : "Esta búsqueda no encontró códigos nuevos.";
   return { ok: true, message: msg, at: Date.now() };
 }
 
@@ -30,8 +30,13 @@ export async function applyAction(_p: UpdatesActionState, f: FormData): Promise<
   const id = parseRunId(f);
   if (id === null) return { error: "Actualización inválida" };
   const r = await applyRun(id);
-  refresh(true);
-  return r.ok ? { ok: true, message: "Catálogo actualizado.", at: Date.now() } : { error: r.error ?? "No se pudo aplicar" };
+  const inserted = r.ok ? (r.run?.summary?.new ?? 0) : 0;
+  refresh(inserted > 0);
+  if (!r.ok) return { error: r.error ?? "No se pudo aplicar" };
+  const message = inserted === 0
+    ? "No se agregó ningún producto."
+    : inserted === 1 ? "Se agregó 1 producto." : `Se agregaron ${inserted} productos.`;
+  return { ok: true, message, at: Date.now() };
 }
 
 export async function discardAction(_p: UpdatesActionState, f: FormData): Promise<UpdatesActionState> {

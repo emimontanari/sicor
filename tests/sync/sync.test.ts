@@ -187,32 +187,26 @@ describe("sync engine", () => {
     expect(await engine.getPendingRun()).toBeNull();
   });
 
-  it("3: second check reports exact new/changed/removed", async () => {
+  it("3: manual check reports only newly seen codes, once each", async () => {
     await seedBase();
-    source.next = catalog(product("A"), product("B", { name: "Renamed B" }), product("D"));
+    source.next = catalog(product("A"), product("B", { name: "Renamed B" }), product("D"), product("D"));
     const run = await engine.check("manual");
     expect(run.status).toBe("pending");
-    expect(run.summary).toEqual({ new: 1, changed: 1, removed: 1 });
-    expect(run.changes).toEqual([
-      { type: "new", code: "D", name: "Product D" },
-      { type: "changed", code: "B", name: "Renamed B", fields: ["name"] },
-      { type: "removed", code: "C", name: "Product C" },
-    ]);
+    expect(run.summary).toEqual({ new: 1, changed: 0, removed: 0 });
+    expect(run.changes).toEqual([{ type: "new", code: "D", name: "Product D" }]);
   });
 
-  it("3b: variant and image changes are detected", async () => {
+  it("3b: scheduled check ignores changes to variants and images", async () => {
     await seedBase();
     const a = product("A");
     a.variants[0].stockTotal = 99;
     a.images.large = ["https://dl/new.jpg"];
     source.next = catalog(a, product("B"), product("C"));
-    const run = await engine.check("manual");
-    expect(run.changes).toEqual([
-      { type: "changed", code: "A", name: "Product A", fields: ["images", "variants"] },
-    ]);
+    const run = await engine.check("scheduled");
+    expect(run).toMatchObject({ status: "discarded", changes: [], summary: { new: 0, changed: 0, removed: 0 } });
   });
 
-  it("4: apply preserves product_overrides byte-for-byte (S2)", async () => {
+  it("confirmation of a legacy payload only inserts still-absent additions and leaves existing data byte-for-byte", async () => {
     await seedBase();
     await ctx.db.insert(schema.productOverrides).values({
       productCode: "B",
@@ -223,35 +217,36 @@ describe("sync engine", () => {
       customImagePath: "custom/b.png",
       reviewed: true,
     });
-    const [before] = await ctx.db.select().from(schema.productOverrides);
-    source.next = catalog(product("A"), product("B", { name: "Renamed B", supplierPrice: 55 }), product("C"));
-    const run = await engine.check("manual");
-    await engine.apply(run.id);
-    const after = await ctx.db.select().from(schema.productOverrides);
-    expect(after).toEqual([before]);
-    const [b] = await ctx.db.select().from(schema.sourceProducts).where(eq(schema.sourceProducts.code, "B"));
-    expect(b.name).toBe("Renamed B");
-    expect(b.supplierPrice).toBe("55.00");
+    const beforeOverrides = await ctx.db.select().from(schema.productOverrides);
+    const beforeProducts = await products();
+    const beforeVariants = await variants();
+    const [run] = await ctx.db.insert(schema.syncRuns).values({
+      trigger: "manual", status: "pending", startedAt: new Date(),
+      summary: { new: 2, changed: 1, removed: 1 },
+      changes: [
+        { type: "new", code: "D" }, { type: "new", code: "B" },
+        { type: "changed", code: "GONE" }, { type: "removed", code: "C" },
+      ],
+      payload: { products: [product("D"), product("B", { supplierPrice: 55 }), product("GONE")], removed: ["C"], unchanged: ["A"] },
+    }).returning();
+    images.calls.length = 0;
+    const applied = await engine.apply(run.id);
+    expect(applied).toMatchObject({ status: "applied", summary: { new: 1, changed: 0, removed: 0 }, changes: [{ type: "new", code: "D" }] });
+    expect(await products()).toEqual([...beforeProducts, expect.objectContaining({ code: "D" })]);
+    expect((await variants()).filter((v) => v.productCode !== "D")).toEqual(beforeVariants);
+    expect(await ctx.db.select().from(schema.productOverrides)).toEqual(beforeOverrides);
+    expect(images.calls).toEqual(["https://dl/D-a.jpg", "https://dl/D-b.jpg"]);
   });
 
-  it("5: removed products become discontinued, never deleted, override kept (S5)", async () => {
+  it("5: missing and previously discontinued codes are left untouched even when another code is confirmed", async () => {
     await seedBase();
-    await ctx.db.insert(schema.productOverrides).values({ productCode: "C", visible: true, customName: "Keep" });
-    source.next = catalog(product("A"), product("B"));
+    await ctx.db.update(schema.sourceProducts).set({ status: "discontinued" }).where(eq(schema.sourceProducts.code, "B"));
+    const before = await products();
+    source.next = catalog(product("A"), product("B"), product("D"));
     const run = await engine.check("manual");
+    expect(await products()).toEqual(before);
     await engine.apply(run.id);
-    const all = await products();
-    expect(all.map((p) => [p.code, p.status])).toEqual([
-      ["A", "active"],
-      ["B", "active"],
-      ["C", "discontinued"],
-    ]);
-    const [ov] = await ctx.db.select().from(schema.productOverrides);
-    expect(ov.customName).toBe("Keep");
-    expect(effectiveVisibility(all[2], ov, { autoPublishNew: true })).toBe(false);
-    // already-discontinued product is not reported as removed again
-    const again = await engine.check("manual");
-    expect(again.summary).toEqual({ new: 0, changed: 0, removed: 0 });
+    expect(await products()).toEqual([...before, expect.objectContaining({ code: "D" })]);
   });
 
   it("6: discard changes no data; discarded/applied runs cannot be applied", async () => {
@@ -369,9 +364,9 @@ describe("sync engine", () => {
     await seedBase();
     const before = await products();
     const beforeVariants = await variants();
-    // A is updated first; D then fails at the DB (price overflows numeric(14,2)).
+    // AA is inserted first; D then fails at the DB (price overflows numeric(14,2)).
     source.next = catalog(
-      product("A", { name: "Renamed A" }),
+      product("AA"),
       product("B"),
       product("C"),
       product("D", { supplierPrice: 1e20 }),
@@ -383,15 +378,39 @@ describe("sync engine", () => {
     expect(await variants()).toEqual(beforeVariants);
   });
 
-  it("9: a new check supersedes an older pending run", async () => {
-    source.next = catalog(product("A"));
+  it("9: overlapping proposals and no-change checks preserve each pending run, with truthful confirmation counts", async () => {
+    await seedBase();
+    source.next = catalog(product("D"), product("E"));
     const r1 = await engine.check("manual");
+    source.next = catalog(product("F"), product("D"));
+    const r2 = await engine.check("scheduled");
+    source.next = catalog(product("A"));
+    expect((await engine.check("manual")).status).toBe("discarded");
+    expect((await runs()).filter((r) => r.status === "pending").map((r) => r.id)).toEqual([r1.id, r2.id]);
+    expect((await engine.apply(r2.id)).summary).toMatchObject({ new: 2 });
+    expect((await engine.getPendingRun())?.id).toBe(r1.id);
+    expect((await engine.apply(r1.id))).toMatchObject({ status: "applied", summary: { new: 1 }, changes: [{ code: "E" }] });
+    expect((await products()).map((p) => p.code)).toEqual(["A", "B", "C", "D", "E", "F"]);
+  });
+
+  it("records zero inserted when all confirmed codes were inserted by another run", async () => {
+    source.next = catalog(product("A"));
+    const first = await engine.check("manual");
+    const second = await engine.check("scheduled");
+    await engine.apply(first.id);
+    expect(await engine.apply(second.id)).toMatchObject({ status: "applied", summary: { new: 0 }, changes: [] });
+  });
+
+  it("does not repair other products automatically when applying; explicit repair still works", async () => {
+    source.next = catalog(product("A"));
+    images.fail = true;
+    await engine.apply((await engine.check("manual")).id);
+    images.fail = false;
     source.next = catalog(product("A"), product("B"));
-    const r2 = await engine.check("manual");
-    const all = await runs();
-    expect(all.find((r) => r.id === r1.id)?.status).toBe("discarded");
-    expect(all.filter((r) => r.status === "pending").map((r) => r.id)).toEqual([r2.id]);
-    await expect(engine.apply(r1.id)).rejects.toThrow(/pending/);
+    await engine.apply((await engine.check("manual")).id);
+    expect((await products())[0].localImages).toEqual([]);
+    expect(await engine.repairAssets()).toMatchObject({ repaired: 2 });
+    expect((await products())[0].localImages).toEqual(["A/0.jpg", "A/1.jpg"]);
   });
 
   it("9b: a late-finishing older check cannot discard a newer pending run (newest wins)", async () => {

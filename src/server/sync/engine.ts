@@ -1,4 +1,4 @@
-import { and, eq, inArray, lt } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import type { PgDb, TestDb } from "../db";
 import {
   sourceProducts,
@@ -8,12 +8,10 @@ import {
   type SyncPayload,
   type SyncSummary,
 } from "../db/schema";
-import type { MaseferSource, SupplierProduct } from "../masefer";
+import { MaseferSyncError, type MaseferSource, type SupplierProduct } from "../masefer";
 import {
   canonDocuments,
-  canonicalFromRow,
   canonicalFromSupplier,
-  changedFields,
   contentHash,
   dedupeVariants,
   imageUrls,
@@ -88,18 +86,22 @@ export function createSyncEngine(deps: SyncDeps) {
     return r;
   }
 
-  async function supersedePending(exceptId: number) {
-    // Newest wins (R3-002): only OLDER pending runs are superseded, so a slow older
-    // check finishing after a newer one can never drop the newer pending run. The
-    // status predicate (R3-003) means a run that was applied or discarded in the
-    // meantime is never overwritten by this update.
-    await db
-      .update(syncRuns)
-      .set({ status: "discarded", finishedAt: now() })
-      .where(and(eq(syncRuns.status, "pending"), lt(syncRuns.id, exceptId)));
+  // R3-002 is resolved structurally in the append-only design: checks no longer
+  // supersede pending runs, so a late older check cannot drop a newer pending run.
+
+  /** Select only candidates absent now; apply separately enforces uniqueness at insert time. */
+  async function absentProducts(candidates: SupplierProduct[]): Promise<SupplierProduct[]> {
+    if (!candidates.length) return [];
+    const rows = await db.select({ code: sourceProducts.code }).from(sourceProducts);
+    const seen = new Set(rows.map((r) => r.code));
+    return candidates.filter((p) => {
+      if (seen.has(p.code)) return false;
+      seen.add(p.code);
+      return true;
+    });
   }
 
-  /** Computes and stores pending changes. Never writes source_* or product_overrides (S4). */
+  /** Records just new codes for explicit confirmation. Never writes catalog tables. */
   async function check(trigger: SyncTrigger): Promise<SyncRun> {
     const [run] = await db
       .insert(syncRuns)
@@ -107,69 +109,17 @@ export function createSyncEngine(deps: SyncDeps) {
       .returning();
     try {
       const catalog = await source.fetchCatalog();
-      const rows = await db.select().from(sourceProducts);
-      const varRows = await db.select().from(sourceVariants);
-      const byCode = new Map(rows.map((r) => [r.code, r]));
-      const varsByCode = new Map<string, typeof varRows>();
-      for (const v of varRows) {
-        const list = varsByCode.get(v.productCode) ?? [];
-        list.push(v);
-        varsByCode.set(v.productCode, list);
+      if (catalog.products.length === 0) {
+        throw new MaseferSyncError("empty", "Masefer no devolvió productos válidos. No se modificó el catálogo.");
       }
-
-      const news: SyncChange[] = [];
-      const changed: SyncChange[] = [];
-      const removed: SyncChange[] = [];
-      const payloadProducts: SupplierProduct[] = [];
-      const unchanged: string[] = [];
-      const seen = new Set<string>();
-
-      for (const p of catalog.products) {
-        seen.add(p.code);
-        const row = byCode.get(p.code);
-        if (!row) {
-          news.push({ type: "new", code: p.code, name: p.name });
-          payloadProducts.push(p);
-          continue;
-        }
-        const next = canonicalFromSupplier(p);
-        const hash = contentHash(next);
-        const reactivated = row.status === "discontinued";
-        if (hash === row.contentHash && !reactivated) {
-          unchanged.push(p.code);
-          continue;
-        }
-        const prev = canonicalFromRow(row, varsByCode.get(p.code) ?? []);
-        const fields: string[] = changedFields(prev, next);
-        if (reactivated) fields.push("status");
-        changed.push({ type: "changed", code: p.code, name: p.name, fields });
-        payloadProducts.push(p);
-      }
-      const removedCodes: string[] = [];
-      for (const r of rows) {
-        if (!seen.has(r.code) && r.status === "active") {
-          removed.push({ type: "removed", code: r.code, name: r.name });
-          removedCodes.push(r.code);
-        }
-      }
-
-      const changes = [...news, ...changed, ...removed];
-      const summary: SyncSummary = { new: news.length, changed: changed.length, removed: removed.length };
-      await supersedePending(run.id);
-      // Zero changes: nothing for the admin to confirm, so the run is finished as
-      // "discarded" with a zero summary instead of leaving a noisy pending run.
-      if (changes.length === 0) {
-        const [r] = await db
-          .update(syncRuns)
-          .set({ status: "discarded", summary, changes: [], finishedAt: now() })
-          .where(eq(syncRuns.id, run.id))
-          .returning();
-        return r;
-      }
-      const payload: SyncPayload = { products: payloadProducts, removed: removedCodes, unchanged };
+      const products = await absentProducts(catalog.products);
+      const changes: SyncChange[] = products.map((p) => ({ type: "new", code: p.code, name: p.name }));
+      const summary: SyncSummary = { new: changes.length, changed: 0, removed: 0 };
+      // Keep independent pending runs: later reads need not contain all earlier additions.
+      const payload: SyncPayload | null = changes.length ? { products, removed: [], unchanged: [] } : null;
       const [r] = await db
         .update(syncRuns)
-        .set({ status: "pending", summary, changes, payload, finishedAt: now() })
+        .set({ status: payload ? "pending" : "discarded", summary, changes, payload, finishedAt: now() })
         .where(eq(syncRuns.id, run.id))
         .returning();
       return r;
@@ -187,13 +137,17 @@ export function createSyncEngine(deps: SyncDeps) {
     return run;
   }
 
-  /** Applies a pending run from its stored payload, atomically (S5, S6, S7). Never touches product_overrides (S2). */
+  /** Confirms a pending run atomically, inserting only still-absent additions. */
   async function apply(runId: number): Promise<SyncRun> {
     const run = await loadPending(runId);
     const payload = run.payload;
     if (!payload) return failOrReject(runId, new Error("Pending run has no payload"));
-    const products = payload.products as SupplierProduct[];
     try {
+      // Legacy payloads include changed products too. Only honor proposed additions.
+      const addedCodes = new Set(run.changes?.filter((change) => change.type === "new").map((change) => change.code));
+      const products = await absentProducts((payload.products as SupplierProduct[]).filter((p) => addedCodes.has(p.code)));
+      // Consistent lock order when different runs share multiple product codes.
+      products.sort((a, b) => a.code < b.code ? -1 : a.code > b.code ? 1 : 0);
       // S6: copy images BEFORE touching the DB. A bad image is skipped with a
       // warning (never fatal); only DB/transaction errors fail the run.
       const tasks = products.flatMap((p) =>
@@ -253,33 +207,17 @@ export function createSyncEngine(deps: SyncDeps) {
           return path ? [{ kind: d.kind, label: d.label, path }] : [];
         });
 
-      const summary = {
-        ...(run.summary as SyncSummary),
-        imageWarnings: warnings.length,
-        imageWarningList: warnings.slice(0, MAX_WARNING_LIST),
-        documentWarnings: docWarnings.length,
-        documentWarningList: docWarnings.slice(0, MAX_WARNING_LIST),
-      } as SyncSummary;
-
       const at = now();
-      const done = await db.transaction(async (tx) => {
-        // Claim the run FIRST: only one concurrent apply can flip pending -> applied.
-        // The loser claims 0 rows and throws, rolling back before touching any data.
+      return await db.transaction(async (tx) => {
+        // Claim the run first; confirm and discard compete on the same pending row.
         const [claimed] = await tx
           .update(syncRuns)
-          .set({ status: "applied", appliedAt: at, finishedAt: at, summary })
+          .set({ status: "applied", appliedAt: at, finishedAt: at })
           .where(and(eq(syncRuns.id, runId), eq(syncRuns.status, "pending")))
-          .returning();
+          .returning({ id: syncRuns.id });
         if (!claimed) throw new SyncRunNotPendingError(runId);
-        const codes = products.map((p) => p.code);
-        const existing = codes.length
-          ? await tx.select({ code: sourceProducts.code }).from(sourceProducts).where(inArray(sourceProducts.code, codes))
-          : [];
-        const exists = new Set(existing.map((e) => e.code));
-
-        if (existing.length > 0) {
-          await tx.delete(sourceVariants).where(inArray(sourceVariants.productCode, [...exists]));
-        }
+        const changes: SyncChange[] = [];
+        const inserted = new Set<string>();
         for (const p of products) {
           const c = canonicalFromSupplier(p);
           const fields = {
@@ -299,11 +237,13 @@ export function createSyncEngine(deps: SyncDeps) {
             lastSeenAt: at,
             contentHash: contentHash(c),
           };
-          if (exists.has(p.code)) {
-            await tx.update(sourceProducts).set(fields).where(eq(sourceProducts.code, p.code));
-          } else {
-            await tx.insert(sourceProducts).values({ code: p.code, ...fields, firstSeenAt: at });
-          }
+          const [row] = await tx.insert(sourceProducts)
+            .values({ code: p.code, ...fields, firstSeenAt: at })
+            .onConflictDoNothing({ target: sourceProducts.code })
+            .returning({ code: sourceProducts.code });
+          if (!row) continue;
+          inserted.add(row.code);
+          changes.push({ type: "new", code: row.code, name: p.name });
           const variantsToInsert = dedupeVariants(p.variants);
           if (variantsToInsert.length > 0) {
             await tx.insert(sourceVariants).values(
@@ -319,23 +259,18 @@ export function createSyncEngine(deps: SyncDeps) {
             );
           }
         }
-        if (payload.removed.length > 0) {
-          await tx
-            .update(sourceProducts)
-            .set({ status: "discontinued" })
-            .where(inArray(sourceProducts.code, payload.removed));
-        }
-        if (payload.unchanged.length > 0) {
-          await tx
-            .update(sourceProducts)
-            .set({ lastSeenAt: at })
-            .where(inArray(sourceProducts.code, payload.unchanged));
-        }
-        return claimed;
+        const imageWarnings = warnings.filter((w) => inserted.has(w.code));
+        const documentWarnings = docWarnings.filter((w) => inserted.has(w.code));
+        const summary = {
+          new: changes.length, changed: 0, removed: 0,
+          imageWarnings: imageWarnings.length,
+          imageWarningList: imageWarnings.slice(0, MAX_WARNING_LIST),
+          documentWarnings: documentWarnings.length,
+          documentWarningList: documentWarnings.slice(0, MAX_WARNING_LIST),
+        };
+        const [done] = await tx.update(syncRuns).set({ summary, changes }).where(eq(syncRuns.id, runId)).returning();
+        return done;
       });
-      // Heal gaps of OTHER products left by earlier runs (this run's failures were just retried).
-      await repairAssets({ skip: new Set(products.map((p) => p.code)) }).catch(() => undefined);
-      return done;
     } catch (e) {
       if (e instanceof SyncRunNotPendingError) throw e;
       return failOrReject(runId, e);
@@ -343,9 +278,9 @@ export function createSyncEngine(deps: SyncDeps) {
   }
 
   /**
-   * Self-healing for copied assets. Hashes cover supplier data only, so a failed download is never
-   * "changed" again; this finds active products whose supplier images/documents are not (or no longer,
-   * if the store can tell via `has`) present locally, re-downloads just those (stores skip files that
+   * Explicit repair for copied assets, not invoked by check or apply. Finds active products whose
+   * supplier images/documents are not (or no longer, if the store can tell via `has`) present locally,
+   * re-downloads just those (stores skip files that
    * exist), and rewrites only local_images / local_documents. Per-asset failures are warnings, never
    * thrown. Never touches product_overrides or any supplier field.
    */

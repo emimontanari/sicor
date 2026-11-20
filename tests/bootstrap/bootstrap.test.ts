@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { migrate } from "drizzle-orm/pglite/migrator";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { bootstrapCatalog } from "../../src/server/bootstrap";
+import { listProducts } from "../../src/server/catalog/read";
 import { DEFAULT_CATEGORY_MAPPINGS } from "../../src/server/bootstrap/category-mappings";
 import { PDF_PRODUCTS } from "../../src/server/bootstrap/pdf-products";
 import { CATEGORIES } from "../../src/server/db/seed";
@@ -70,6 +71,7 @@ describe("bootstrapCatalog (S8)", () => {
     expect(b).toMatchObject({ visible: true, reviewed: true, categoryId: ind.id, customDescription: null });
     expect(r.published).toBe(3);
     expect(r.alreadyHidden).toBe(0);
+    expect((await listProducts({}, ctx.db)).map((p) => p.code).sort()).toEqual([noNote.code, withNote.code, "OTHER"].sort());
     expect(r.unmatched).toContain(PDF_PRODUCTS.find((p) => ![withNote.code, noNote.code].includes(p.code))!.code);
   });
 
@@ -91,6 +93,16 @@ describe("bootstrapCatalog (S8)", () => {
       p: (await ctx.db.select().from(schema.sourceProducts)).length,
     });
     expect(after).toBe(before);
+  });
+
+  it("a rerun keeps curation but does not read the supplier or auto-import once initialized", async () => {
+    await bootstrapCatalog(deps());
+    let reads = 0;
+    const next = { async fetchCatalog() { reads++; return source(product("NEW")).fetchCatalog(); } };
+    const r = await bootstrapCatalog({ ...deps(), source: next });
+    expect(r).toMatchObject({ appliedRunId: null, published: 3 });
+    expect(reads).toBe(0);
+    expect(await ctx.db.select().from(schema.sourceProducts)).toHaveLength(3);
   });
 
   it("never overwrites fields the admin already set", async () => {
@@ -142,8 +154,9 @@ describe("bootstrapCatalog (S8)", () => {
   it("does not publish discontinued products", async () => {
     await bootstrapCatalog(deps());
     await ctx.db.delete(schema.productOverrides);
-    // OTHER vanishes from the supplier feed, so sync marks it discontinued.
-    const r = await bootstrapCatalog({ ...deps(), source: source(product(withNote.code), product(noNote.code)) });
+    // A catalog predating append-only sync can already contain discontinued rows.
+    await ctx.db.update(schema.sourceProducts).set({ status: "discontinued" }).where(eq(schema.sourceProducts.code, "OTHER"));
+    const r = await bootstrapCatalog(deps());
     expect((await ctx.db.select().from(schema.sourceProducts)).find((p) => p.code === "OTHER")!.status).toBe("discontinued");
     expect((await overrides()).map((o) => o.productCode)).not.toContain("OTHER");
     expect(r.published).toBe(2);

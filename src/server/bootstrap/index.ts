@@ -54,13 +54,18 @@ export async function bootstrapCatalog(deps: BootstrapDeps): Promise<BootstrapRe
     // An admin may have remapped a source key: keep their choice.
     .onConflictDoNothing();
 
-  const engine = createSyncEngine({ db, source: deps.source, imageStore: deps.imageStore, clock: now });
-  const run = await engine.check("manual");
-  if (run.status === "failed") throw new Error(`Bootstrap sync check failed: ${run.error ?? "unknown error"}`);
   let appliedRunId: number | null = null;
-  if (run.status === "pending") {
-    await engine.apply(run.id);
-    appliedRunId = run.id;
+  // Bootstrap is the explicit first-import command, not a way to auto-confirm later syncs.
+  const [initialized] = await db.select({ code: sourceProducts.code }).from(sourceProducts).limit(1);
+  if (!initialized) {
+    const engine = createSyncEngine({ db, source: deps.source, imageStore: deps.imageStore, clock: now });
+    const run = await engine.check("manual");
+    if (run.status === "failed") throw new Error(`Bootstrap sync check failed: ${run.error ?? "unknown error"}`);
+    if (run.status === "pending") {
+      const applied = await engine.apply(run.id);
+      if (applied.status === "failed") throw new Error(`Bootstrap sync apply failed: ${applied.error ?? "unknown error"}`);
+      appliedRunId = run.id;
+    }
   }
 
   const pdfRows = await db

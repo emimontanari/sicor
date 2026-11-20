@@ -43,13 +43,12 @@ describe("runScheduledCheck", () => {
     expect(runs[0]).toMatchObject({ trigger: "scheduled", status: "failed" });
   });
 
-  it("returns ok (no changes) with the scheduled trigger on success", async () => {
+  it("records a failed scheduled run on an empty supplier response", async () => {
     const empty = { metaCategories: [], categories: [], brands: [], products: [] };
     const { engine } = await engineWith((async () => empty) as never);
     const r = await runScheduledCheck({ engine });
-    expect(r).toMatchObject({ ok: true, error: null, summary: { new: 0, changed: 0, removed: 0 } });
-    expect(r.status).not.toBe("failed");
-    expect((await engine.getLastRuns(1))[0].trigger).toBe("scheduled");
+    expect(r).toMatchObject({ ok: false, status: "failed", summary: null, error: "Masefer no devolvió productos válidos. No se modificó el catálogo." });
+    expect((await engine.getLastRuns(1))[0]).toMatchObject({ trigger: "scheduled", status: "failed" });
   });
 
   it("never throws when the engine itself throws", async () => {
@@ -58,18 +57,12 @@ describe("runScheduledCheck", () => {
   });
 });
 
-describe("runCheck repairs assets", () => {
-  it("calls repairAssets after a successful check and never fails because of it", async () => {
-    const run = { id: 1, status: "discarded", summary: { new: 0, changed: 0, removed: 0 }, error: null } as unknown as SyncRun;
-    let repairs = 0;
-    const ok = await runCheck("scheduled", {
-      engine: { check: async () => run, repairAssets: async () => (repairs++, { repaired: 2, stillMissing: 1, warnings: [] }) },
-    });
-    expect(repairs).toBe(1);
-    expect(ok).toMatchObject({ ok: true, repair: { repaired: 2, stillMissing: 1 } });
-    const boom = await runCheck("scheduled", {
-      engine: { check: async () => run, repairAssets: async () => { throw new Error("x"); } },
-    });
-    expect(boom.ok).toBe(true);
-  });
+it("neither trigger invokes asset repair on successful checks", async () => {
+  const run = { id: 1, status: "discarded", summary: { new: 0, changed: 0, removed: 0 }, error: null } as SyncRun;
+  let repairs = 0;
+  const engine = { check: async () => run, repairAssets: async () => (repairs++, { repaired: 2, stillMissing: 1, warnings: [] }) };
+  for (const trigger of ["manual", "scheduled"] as const) {
+    expect(await runCheck(trigger, { engine })).toEqual(toCheckResult(run));
+  }
+  expect(repairs).toBe(0);
 });

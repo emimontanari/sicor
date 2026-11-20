@@ -70,4 +70,6 @@ Si la base de datos está caída, el chequeo no puede registrarse (la respuesta 
 
 ## 7. Qué hace (y qué no) el chequeo
 
-El chequeo **solo calcula y guarda un aviso pendiente** (productos nuevos / modificados / quitados). No cambia el catálogo. El administrador confirma o descarta el aviso desde el dashboard (Fase 3); recién al confirmar se aplican los cambios y se copian las imágenes. Las ediciones del cliente (overrides) nunca se sobrescriben. Un chequeo fallido se registra y deja intacto el último catálogo bueno.
+La búsqueda manual y la programada **solo proponen códigos nuevos**; no escriben en el catálogo. Una lectura vacía falla y deja intacto el catálogo. Las búsquedas sin altas no descartan propuestas anteriores. En **Actualizaciones**, el administrador confirma o descarta las búsquedas pendientes de a una. La confirmación agrega los códigos que todavía faltan y registra cuántos agregó realmente, incluso si otra confirmación acaba de insertar alguno. No modifica ni da de baja productos existentes, ni sobrescribe sus variantes o ediciones (overrides).
+
+`pnpm catalog:bootstrap` importa desde el proveedor solo cuando el catálogo está vacío; después, el catálogo público usa la base local. Para recuperar imágenes o fichas PDF que faltan en productos existentes, usar explícitamente `pnpm catalog:repair-assets`. La búsqueda y la confirmación no ejecutan esa reparación.

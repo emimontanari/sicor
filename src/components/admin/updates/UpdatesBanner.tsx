@@ -1,6 +1,5 @@
 import Link from "next/link";
 import type { AdminRun } from "../../../server/admin/sync";
-import { noticeText } from "../../../lib/admin/forms/updates";
 
 /** Compact pending/failed notice. Pass the pending run and/or the latest run (server-fetched). */
 export function UpdatesBanner({
@@ -12,10 +11,10 @@ export function UpdatesBanner({
   latest?: AdminRun | null;
   linkToPage?: boolean;
 }) {
-  if (pending?.summary) {
+  if (pending) {
     return (
       <div className="upd-banner upd-banner--pending" role="status">
-        <span>{noticeText(pending.summary)}</span>
+        <span>Hay una búsqueda de productos pendiente de revisión.</span>
         {linkToPage ? <Link href="/admin/actualizaciones">Revisar</Link> : null}
       </div>
     );

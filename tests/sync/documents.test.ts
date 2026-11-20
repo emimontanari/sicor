@@ -135,22 +135,16 @@ describe("sync apply documents (S1, S4)", () => {
     expect((await row("A")).localDocuments).toEqual([]);
   });
 
-  it("an existing product that only gains documents shows up as changed once, field documents", async () => {
-    setCatalog(product("A"));
+  it("documents are copied only for inserts; existing documents are neither added nor removed", async () => {
+    setCatalog(product("A"), product("B", [doc("b", "ficha", "Ficha técnica")]));
     await engine.apply((await engine.check("manual")).id);
-    setCatalog(product("A", [doc("f", "ficha", "Ficha técnica")]));
+    const before = [await row("A"), await row("B")];
+    setCatalog(product("A", [doc("a", "ficha", "Ficha técnica")]), product("B"), product("C", [doc("c", "ficha", "Ficha técnica")]));
     const run = await engine.check("manual");
-    expect(run.changes).toEqual([{ type: "changed", code: "A", name: "Product A", fields: ["documents"] }]);
+    expect(run.changes).toEqual([{ type: "new", code: "C", name: "Product C" }]);
     await engine.apply(run.id);
-    const again = await engine.check("manual");
-    expect(again.status).toBe("discarded");
-    expect(again.summary).toMatchObject({ changed: 0 });
-    // removal is detected too
-    setCatalog(product("A"));
-    const removed = await engine.check("manual");
-    expect(removed.changes).toEqual([{ type: "changed", code: "A", name: "Product A", fields: ["documents"] }]);
-    await engine.apply(removed.id);
-    expect((await row("A")).localDocuments).toEqual([]);
+    expect([await row("A"), await row("B")]).toEqual(before);
+    expect((await row("C")).localDocuments).toHaveLength(1);
   });
 });
 
@@ -369,7 +363,7 @@ describe("repairAssets (self-healing)", () => {
     expect(docs.calls.length).toBe(n);
   });
 
-  it("apply heals gaps of products that are not part of the run", async () => {
+  it("apply leaves existing PDF gaps alone until explicit repair", async () => {
     docs.failUrls.add("https://dl.example/x.pdf");
     setCatalog(product("A", [doc("x")]));
     await engine.apply((await engine.check("manual")).id);
@@ -377,6 +371,8 @@ describe("repairAssets (self-healing)", () => {
     docs.failUrls.clear();
     setCatalog(product("A", [doc("x")]), product("B"));
     await engine.apply((await engine.check("manual")).id);
+    expect((await row("A")).localDocuments).toEqual([]);
+    expect(await engine.repairAssets()).toMatchObject({ repaired: 1, stillMissing: 0 });
     expect((await row("A")).localDocuments).toHaveLength(1);
   });
 

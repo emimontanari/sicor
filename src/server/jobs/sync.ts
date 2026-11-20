@@ -1,6 +1,6 @@
 import { createPgDb } from "../db";
 import { MaseferClient } from "../masefer";
-import { createSyncEngine, FsImageStore, type RepairResult, type SyncEngine, type SyncRun, type SyncTrigger } from "../sync";
+import { createSyncEngine, FsImageStore, type SyncEngine, type SyncRun, type SyncTrigger } from "../sync";
 import type { SyncSummary } from "../db/schema";
 
 export type JobEnv = Record<string, string | undefined>;
@@ -23,8 +23,6 @@ export interface CheckResult {
   status: SyncRun["status"];
   summary: SyncSummary | null;
   error: string | null;
-  /** Result of the asset self-healing pass that follows a check (absent when it did not run). */
-  repair?: RepairResult;
 }
 
 export function toCheckResult(run: SyncRun): CheckResult {
@@ -40,7 +38,7 @@ export function toCheckResult(run: SyncRun): CheckResult {
 export interface RunCheckOptions {
   env?: JobEnv;
   /** Inject an engine (tests); otherwise one is built from env and closed afterwards. */
-  engine?: Pick<SyncEngine, "check"> & Partial<Pick<SyncEngine, "repairAssets">>;
+  engine?: Pick<SyncEngine, "check">;
 }
 
 /** Runs a check; engine failures are recorded as failed runs (S7). Never throws. */
@@ -53,13 +51,7 @@ export async function runCheck(trigger: SyncTrigger, opts: RunCheckOptions = {})
       engine = built.engine;
       close = built.close;
     }
-    const result = toCheckResult(await engine.check(trigger));
-    // Self-healing: copy images/PDFs that earlier runs failed to download. Never fails the check.
-    if (result.ok && engine.repairAssets) {
-      const repair = await engine.repairAssets().catch(() => undefined);
-      if (repair) result.repair = repair;
-    }
-    return result;
+    return toCheckResult(await engine.check(trigger));
   } catch (e) {
     return { ok: false, runId: null, status: "failed", summary: null, error: e instanceof Error ? e.message : String(e) };
   } finally {
