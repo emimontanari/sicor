@@ -24,3 +24,16 @@ describe("effectiveVisibility (S5)", () => {
     expect(effectiveVisibility({ status: "active" }, ov(null, true), settings(false))).toBe(true);
   });
 });
+
+describe("effectiveVisibility archived", () => {
+  it("archived is never visible regardless of other flags", () => {
+    const archivedAt = new Date();
+    const o = { visible: true, reviewed: true, archivedAt };
+    expect(effectiveVisibility({ status: "active" }, o, settings(true))).toBe(false);
+    expect(effectiveVisibility({ status: "active" }, { visible: null, reviewed: false, archivedAt }, settings(true))).toBe(false);
+  });
+  it("null archivedAt keeps existing rules", () => {
+    const o = { visible: true, reviewed: false, archivedAt: null };
+    expect(effectiveVisibility({ status: "active" }, o, settings(false))).toBe(true);
+  });
+});

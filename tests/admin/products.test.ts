@@ -34,7 +34,7 @@ describe("listAdminProducts (S3/S4)", () => {
     await seed();
     const all = await listAdminProducts(db);
     expect(all.total).toBe(5);
-    expect(all.counts).toEqual({ all: 5, visible: 2, hidden: 2, nuevos: 1, discontinued: 1 });
+    expect(all.counts).toEqual({ all: 5, visible: 2, hidden: 2, nuevos: 1, discontinued: 1, eliminados: 0 });
     expect(codes(await listAdminProducts(db, { filter: "visible" }))).toEqual(["REV", "VIS"]);
     expect(codes(await listAdminProducts(db, { filter: "hidden" }))).toEqual(["HID", "NEW1"]);
     expect(codes(await listAdminProducts(db, { filter: "nuevos" }))).toEqual(["NEW1"]);

@@ -96,6 +96,8 @@ export const productOverrides = pgTable("product_overrides", {
   customImagePath: text("custom_image_path"),
   categoryId: integer("category_id").references(() => categories.id, { onDelete: "set null" }),
   reviewed: boolean("reviewed").notNull().default(false),
+  /** Soft delete ("Eliminados"): archived products are never public and never re-proposed by sync. */
+  archivedAt: tz("archived_at"),
   updatedAt: tz("updated_at").notNull().defaultNow(),
 });
 

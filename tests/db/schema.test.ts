@@ -78,3 +78,20 @@ describe("schema migrations", () => {
     ).rejects.toThrow();
   });
 });
+
+describe("product_overrides.archived_at", () => {
+  it("is a nullable timestamptz, null by default, and can be set", async () => {
+    await ctx.db.insert(schema.sourceProducts).values(product("Z1"));
+    await ctx.db.insert(schema.productOverrides).values({ productCode: "Z1" });
+    const [o] = await ctx.db.select().from(schema.productOverrides);
+    expect(o.archivedAt).toBeNull();
+    const at = new Date("2026-01-02T03:04:05Z");
+    await ctx.db.update(schema.productOverrides).set({ archivedAt: at });
+    const [o2] = await ctx.db.select().from(schema.productOverrides);
+    expect(o2.archivedAt).toEqual(at);
+    const col = await ctx.db.execute(
+      sql`select data_type, is_nullable from information_schema.columns where table_name='product_overrides' and column_name='archived_at'`,
+    );
+    expect(col.rows[0]).toEqual({ data_type: "timestamp with time zone", is_nullable: "YES" });
+  });
+});

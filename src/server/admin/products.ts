@@ -12,8 +12,8 @@ import {
 import { imageUrl, normalizeText, OTHERS_SLUG } from "../catalog";
 import { AdminNotFoundError, AdminValidationError, type Db } from "./errors";
 
-export type AdminFilter = "all" | "visible" | "hidden" | "nuevos" | "discontinued";
-export const ADMIN_FILTERS: readonly AdminFilter[] = ["all", "visible", "hidden", "nuevos", "discontinued"];
+export type AdminFilter = "all" | "visible" | "hidden" | "nuevos" | "discontinued" | "eliminados";
+export const ADMIN_FILTERS: readonly AdminFilter[] = ["all", "visible", "hidden", "nuevos", "discontinued", "eliminados"];
 export const MAX_BULK = 200;
 export const MAX_NAME = 200;
 export const MAX_DESCRIPTION = 2000;
@@ -30,6 +30,7 @@ export type OverrideView = {
   customImagePath: string | null;
   categoryId: number | null;
   reviewed: boolean;
+  archivedAt: string | null;
   updatedAt: string;
 };
 export type AdminProductRow = {
@@ -42,6 +43,7 @@ export type AdminProductRow = {
   visible: boolean;
   reviewed: boolean;
   isNew: boolean;
+  archived: boolean;
   category: AdminCategory | null;
   override: OverrideView | null;
 };
@@ -91,10 +93,13 @@ const toOverrideView = (o: OverrideRow): OverrideView => ({
   customImagePath: o.customImagePath,
   categoryId: o.categoryId,
   reviewed: o.reviewed,
+  archivedAt: o.archivedAt?.toISOString() ?? null,
   updatedAt: o.updatedAt.toISOString(),
 });
 
 const matches = (row: AdminProductRow, filter: AdminFilter): boolean => {
+  if (filter === "eliminados") return row.archived;
+  if (row.archived) return false;
   switch (filter) {
     case "all":
       return true;
@@ -107,6 +112,7 @@ const matches = (row: AdminProductRow, filter: AdminFilter): boolean => {
     case "discontinued":
       return row.status === "discontinued";
   }
+  return false;
 };
 
 /** S3/S4: every supplier product with its override, filterable, searchable, paginated. */
@@ -146,6 +152,7 @@ export async function listAdminProducts(
       status: p.status,
       visible: effectiveVisibility(p, o, { autoPublishNew }),
       reviewed: o?.reviewed ?? false,
+      archived: !!o?.archivedAt,
       isNew: p.status === "active" && !(o?.reviewed ?? false) && (o?.visible ?? null) === null,
       category: c ? { id: c.id, slug: c.slug, name: c.name } : null,
       override: o ? toOverrideView(o) : null,
@@ -187,6 +194,7 @@ export type AdminProductDetail = {
     lastSeenAt: string;
   };
   override: OverrideView | null;
+  archivedAt: string | null;
   effective: { name: string; visible: boolean; category: AdminCategory | null };
   variants: { sku: string; color: string | null; size: string | null; text: string | null; stockTotal: number | null; published: boolean }[];
   images: { supplier: string[]; custom: string | null };
@@ -222,6 +230,7 @@ export async function getAdminProduct(db: Db, code: string): Promise<AdminProduc
       lastSeenAt: p.lastSeenAt.toISOString(),
     },
     override: o ? toOverrideView(o) : null,
+    archivedAt: o?.archivedAt?.toISOString() ?? null,
     effective: {
       name: o?.customName ?? p.name,
       visible: effectiveVisibility(p, o, { autoPublishNew: settingsRow?.autoPublishNew ?? false }),
@@ -389,6 +398,41 @@ export async function bulkUpdate(db: Db, codes: string[], patch: BulkPatch): Pro
     return { updated: unique.length };
   });
 }
+
+function cleanCodes(codes: string[]): string[] {
+  const errors: Record<string, string> = {};
+  if (!Array.isArray(codes) || codes.some((c) => typeof c !== "string" || c === "")) errors.codes = "Códigos inválidos";
+  const unique = Array.isArray(codes) ? [...new Set(codes)] : [];
+  if (unique.length === 0) errors.codes = errors.codes ?? "Seleccioná al menos un producto";
+  if (unique.length > MAX_BULK) errors.codes = `Máximo ${MAX_BULK} productos por operación`;
+  if (Object.keys(errors).length) throw new AdminValidationError(errors);
+  return unique;
+}
+
+/** S3: sets or clears product_overrides.archived_at for known codes only; nothing else in the override changes. */
+async function setArchived(db: Db, codes: string[], archived: boolean): Promise<{ updated: number }> {
+  const d = db as TestDb;
+  const unique = cleanCodes(codes);
+  return d.transaction(async (tx) => {
+    const found = await tx.select({ code: sourceProducts.code }).from(sourceProducts).where(inArray(sourceProducts.code, unique));
+    if (found.length !== unique.length) {
+      const have = new Set(found.map((f) => f.code));
+      throw new AdminNotFoundError(`Productos no encontrados: ${unique.filter((c) => !have.has(c)).join(", ")}`);
+    }
+    const now = new Date();
+    const set = { archivedAt: archived ? now : null, updatedAt: now };
+    await tx
+      .insert(productOverrides)
+      .values(unique.map((productCode) => ({ productCode, ...set })))
+      .onConflictDoUpdate({ target: productOverrides.productCode, set });
+    return { updated: unique.length };
+  });
+}
+
+/** S3: soft delete ("Eliminar"). Max 200 codes, one transaction; supplier rows are never deleted. */
+export const archiveProducts = (db: Db, codes: string[]) => setArchived(db, codes, true);
+/** S3: undo an archive ("Restaurar"); previous override fields are untouched. */
+export const restoreProducts = (db: Db, codes: string[]) => setArchived(db, codes, false);
 
 export async function listAdminCategories(db: Db): Promise<AdminCategory[]> {
   const rows = await (db as TestDb).select().from(categories).orderBy(asc(categories.sortOrder), asc(categories.id));
