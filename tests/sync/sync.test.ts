@@ -54,6 +54,73 @@ class FakeImages implements ImageStore {
   }
 }
 
+type EngineDb = Parameters<typeof createSyncEngine>[0]["db"];
+
+/**
+ * Wraps the db so every syncRuns UPDATE that sets status='discarded' is paused
+ * BEFORE executing; release() lets it run. This deterministically widens the
+ * read/update race window inside the engine (loadPending or supersedePending's
+ * select run, then another caller finalizes the run, then the paused update
+ * executes). `paused()` counts updates currently waiting on the gate.
+ */
+function pauseDiscardedRunUpdates(db: EngineDb) {
+  let releaseGate!: () => void;
+  const gate = new Promise<void>((r) => (releaseGate = r));
+  let pausedUpdates = 0;
+  const pauseChain = (node: object): object =>
+    new Proxy(node, {
+      get(target: never, prop: string | symbol) {
+        const t = target as Record<string | symbol, unknown>;
+        if (prop === "returning") {
+          return (...args: unknown[]) => {
+            pausedUpdates++;
+            return {
+              then: (res: unknown, rej: unknown) =>
+                gate.then(() =>
+                  (t.returning as (...a: unknown[]) => Promise<unknown>)(...args).then(res as never, rej as never),
+                ),
+            };
+          };
+        }
+        if (prop === "then") {
+          return (res: unknown, rej: unknown) => {
+            pausedUpdates++;
+            gate.then(() => (t.then as (a: unknown, b: unknown) => unknown)(res, rej));
+          };
+        }
+        const value = Reflect.get(t, prop, t);
+        return typeof value === "function"
+          ? (...args: unknown[]) => pauseChain((value as (...a: unknown[]) => object).apply(t, args))
+          : value;
+      },
+    });
+  const proxy = new Proxy(db as object, {
+    get(target, prop) {
+      const t = target as Record<string | symbol, unknown>;
+      const value = Reflect.get(t, prop, t);
+      if (prop === "update") {
+        return (table: unknown) => {
+          const builder = (value as (tbl: unknown) => object).call(t, table);
+          if (table !== schema.syncRuns) return builder;
+          return new Proxy(builder, {
+            get(b, prop2) {
+              const bt = b as Record<string | symbol, unknown>;
+              const v2 = Reflect.get(bt, prop2, bt);
+              if (prop2 !== "set") return typeof v2 === "function" ? (v2 as (...a: unknown[]) => unknown).bind(bt) : v2;
+              return (values: { status?: string }) => {
+                const next = (v2 as (v: unknown) => object).call(bt, values);
+                return values.status === "discarded" ? pauseChain(next) : next;
+              };
+            },
+          });
+        };
+      }
+      return typeof value === "function" ? (value as (...a: unknown[]) => unknown).bind(t) : value;
+    },
+  });
+  return { db: proxy as EngineDb, release: () => releaseGate(), paused: () => pausedUpdates };
+}
+
 let source: FakeSource;
 let images: FakeImages;
 let engine: ReturnType<typeof createSyncEngine>;
@@ -202,6 +269,23 @@ describe("sync engine", () => {
     expect(await products()).toHaveLength(1);
   });
 
+  it("6b: apply committing between discard's pending read and its update cannot overwrite the applied run", async () => {
+    // R3-003: discard reads the run as pending, then apply commits before
+    // discard's update executes. The update must not overwrite the applied run.
+    const { db: gatedDb, release } = pauseDiscardedRunUpdates(ctx.db);
+    const gated = createSyncEngine({ db: gatedDb, source, imageStore: images, clock: () => new Date() });
+    source.next = catalog(product("A"));
+    const run = await engine.check("manual"); // pending, created before the gate is used
+    const discarding = gated.discard(run.id); // passes its pending read; its update is paused
+    const applied = await gated.apply(run.id); // commits inside the window
+    expect(applied.status).toBe("applied");
+    release();
+    await expect(discarding).rejects.toThrow(/pending/);
+    const [r] = await runs();
+    expect(r.status).toBe("applied");
+    expect(r.appliedAt).toBeInstanceOf(Date);
+  });
+
   it("7: source failure records a failed run and leaves data unchanged (S7)", async () => {
     await seedBase();
     const before = await products();
@@ -256,6 +340,61 @@ describe("sync engine", () => {
     expect(all.find((r) => r.id === r1.id)?.status).toBe("discarded");
     expect(all.filter((r) => r.status === "pending").map((r) => r.id)).toEqual([r2.id]);
     await expect(engine.apply(r1.id)).rejects.toThrow(/pending/);
+  });
+
+  it("9b: a late-finishing older check cannot discard a newer pending run (newest wins)", async () => {
+    // R3-002: the older check starts first but is slow; the newer check completes
+    // while the older one is still fetching. When the older check finishes late
+    // it runs the same supersede step check() always runs (exceptId = its own id)
+    // and must not drop the newer pending run.
+    const stale = catalog(product("A"));
+    const fresh = catalog(product("A"), product("B"));
+    let release!: () => void;
+    const slowFetch = new Promise<void>((r) => (release = r));
+    let firstCall = true;
+    source.fetchCatalog = async () => {
+      if (!firstCall) return structuredClone(fresh);
+      firstCall = false;
+      await slowFetch;
+      return structuredClone(stale);
+    };
+    const late = engine.check("manual"); // run 1: slow, older
+    const newer = await engine.check("manual"); // run 2: finishes first
+    expect(newer.status).toBe("pending");
+    release();
+    const older = await late; // run 1 finishes late and supersedes
+    expect(older.status).toBe("pending");
+    const all = await runs();
+    expect(all.find((r) => r.id === newer.id)?.status).toBe("pending");
+    expect((await engine.getPendingRun())?.id).toBe(newer.id);
+  });
+
+  it("9c: supersede never touches applied, failed, or discarded runs", async () => {
+    // R3-003: a newer check pauses inside its supersede update; while it is
+    // paused, the older pending run is applied underneath. Releasing the update
+    // must not overwrite that (or any other non-pending) run.
+    source.next = new MaseferSyncError("timeout", "no response");
+    await engine.check("scheduled"); // failed run
+    source.next = catalog(product("A"));
+    const d = await engine.check("manual");
+    await engine.discard(d.id); // discarded run
+    const p = await engine.check("manual"); // pending run P
+    const { db: gatedDb, release, paused } = pauseDiscardedRunUpdates(ctx.db);
+    const gated = createSyncEngine({ db: gatedDb, source, imageStore: images, clock: () => new Date() });
+    const newer = gated.check("manual"); // reaches its supersede step and pauses there
+    while (paused() < 1) {
+      await ctx.db.select().from(schema.sourceProducts).limit(1);
+    }
+    const applied = await engine.apply(p.id); // commits while the supersede update is paused
+    expect(applied.status).toBe("applied");
+    release();
+    const done = await newer;
+    expect(done.status).toBe("pending");
+    const all = await runs();
+    expect(all.find((r) => r.id === p.id)?.status).toBe("applied");
+    expect(all.find((r) => r.id === d.id)?.status).toBe("discarded");
+    expect(all.filter((r) => r.status === "failed")).toHaveLength(1);
+    expect((await engine.getPendingRun())?.id).toBe(done.id);
   });
 
   it("10: check with no changes leaves no pending run", async () => {

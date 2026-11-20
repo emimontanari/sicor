@@ -1,4 +1,4 @@
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, lt } from "drizzle-orm";
 import type { PgDb, TestDb } from "../db";
 import {
   sourceProducts,
@@ -66,14 +66,14 @@ export function createSyncEngine(deps: SyncDeps) {
   }
 
   async function supersedePending(exceptId: number) {
-    const pending = await db.select().from(syncRuns).where(eq(syncRuns.status, "pending"));
-    const ids = pending.map((r) => r.id).filter((id) => id !== exceptId);
-    if (ids.length > 0) {
-      await db
-        .update(syncRuns)
-        .set({ status: "discarded", finishedAt: now() })
-        .where(inArray(syncRuns.id, ids));
-    }
+    // Newest wins (R3-002): only OLDER pending runs are superseded, so a slow older
+    // check finishing after a newer one can never drop the newer pending run. The
+    // status predicate (R3-003) means a run that was applied or discarded in the
+    // meantime is never overwritten by this update.
+    await db
+      .update(syncRuns)
+      .set({ status: "discarded", finishedAt: now() })
+      .where(and(eq(syncRuns.status, "pending"), lt(syncRuns.id, exceptId)));
   }
 
   /** Computes and stores pending changes. Never writes source_* or product_overrides (S4). */
@@ -261,11 +261,14 @@ export function createSyncEngine(deps: SyncDeps) {
 
   async function discard(runId: number): Promise<SyncRun> {
     await loadPending(runId);
+    // Conditional on still being pending: an apply that commits between the
+    // read above and this update must never be overwritten (R3-003).
     const [r] = await db
       .update(syncRuns)
       .set({ status: "discarded", finishedAt: now() })
-      .where(eq(syncRuns.id, runId))
+      .where(and(eq(syncRuns.id, runId), eq(syncRuns.status, "pending")))
       .returning();
+    if (!r) throw new SyncRunNotPendingError(runId);
     return r;
   }
 
