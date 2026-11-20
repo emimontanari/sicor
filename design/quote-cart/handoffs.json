@@ -3,12 +3,14 @@
   "chosen": "02-resumen-en-linea-y-panel-fijo.html",
   "handoffs": {
     "02-resumen-en-linea-y-panel-fijo.html": {
-      "status": "in_progress",
+      "status": "implemented",
       "queued": false,
       "sentAt": "2026-11-15T14:48:46.204Z",
       "startedAt": "2026-11-15T14:48:56.936Z",
-      "implementedAt": null,
-      "feature": "odd/tasks/quote-cart-redesign.md"
+      "implementedAt": "2026-11-20T13:30:25.640Z",
+      "feature": "odd/tasks/quote-cart-redesign.md",
+      "note": "Implemented in b781094; WhatsApp mark white on transparent per user feedback.",
+      "previewUrl": "http://localhost:3000/cotizacion"
     }
   }
 }
