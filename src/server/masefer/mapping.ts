@@ -5,6 +5,14 @@ export type { DdpDoc };
 
 const SUPPLIER_PRICE_LIST = 5;
 
+const nonBlank = (value: unknown): value is string => typeof value === "string" && value.trim().length > 0;
+
+/** A generic article needs a stable code and a name before it can represent a product. */
+export function productCode(doc: DdpDoc): string | undefined {
+  const { GENERICO, DENOMINACION } = doc.fields;
+  if (doc.collection === "web_articulos" && nonBlank(GENERICO) && nonBlank(DENOMINACION)) return GENERICO;
+}
+
 const IMAGE_EXT = /\.(jpe?g|png|webp|gif)$/i;
 
 /** True when the URL path (query ignored) ends in a raster image extension; videos/PDFs are not images. */
@@ -114,11 +122,14 @@ export function mapCatalog(docs: DdpDoc[]): SupplierCatalog {
   }
 
   const products = new Map<string, SupplierProduct>();
-  for (const { fields: f } of of("web_articulos")) {
-    let p = products.get(f.GENERICO);
+  for (const doc of of("web_articulos")) {
+    const code = productCode(doc);
+    if (!code) continue;
+    const f = doc.fields;
+    let p = products.get(code);
     if (!p) {
       p = {
-        code: f.GENERICO,
+        code,
         name: f.DENOMINACION,
         description: null,
         brand: f.MARCA,
@@ -133,7 +144,7 @@ export function mapCatalog(docs: DdpDoc[]): SupplierCatalog {
         documents: documents.get(f.GENERICO) ?? [],
         variants: [],
       };
-      products.set(f.GENERICO, p);
+      products.set(code, p);
     }
     if (f.PRECIOS_ID === SUPPLIER_PRICE_LIST) {
       p.supplierPrice = f.PRECIO;

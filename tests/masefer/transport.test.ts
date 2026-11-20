@@ -74,6 +74,14 @@ describe("DdpConnection", () => {
     expect(err.code).toBe("timeout");
   });
 
+  it("rejects DDP version negotiation as a protocol error and closes the socket", async () => {
+    const { p, sock } = open((msg, reply) => {
+      if (msg.msg === "connect") reply({ msg: "failed", version: "2" });
+    });
+    await expect(p).rejects.toMatchObject({ code: "protocol", message: "Masefer rejected the DDP version" });
+    expect(sock().closed).toBe(true);
+  });
+
   it("rejects with timeout when connected never arrives", async () => {
     const err = await open(() => {}, 30).p.catch((e) => e);
     expect(err).toBeInstanceOf(MaseferSyncError);

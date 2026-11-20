@@ -35,6 +35,8 @@ interface Pending {
 export class DdpConnection {
   private store = new Map<string, DdpDoc>();
   private pending = new Map<string, Pending>();
+  private waiting = new Set<(e: MaseferSyncError) => void>();
+  private revision = 0;
   private n = 0;
   private closedByUs = false;
   private failure: MaseferSyncError | null = null;
@@ -76,31 +78,32 @@ export class DdpConnection {
         if (!conn.closedByUs) fail(new MaseferSyncError("connect", "Masefer WebSocket closed unexpectedly"));
       };
       ws.onmessage = (e) => {
-        const ok = conn.handle(e.data, () => {
-          if (settled) return;
-          settled = true;
-          clearTimeout(timer);
-          resolve(conn);
-        });
-        if (!ok) fail(new MaseferSyncError("protocol", "Invalid DDP message from Masefer"));
+        if (conn.closedByUs || conn.failure) return;
+        try {
+          conn.handle(e.data, () => {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timer);
+            resolve(conn);
+          });
+        } catch (cause) {
+          fail(cause instanceof MaseferSyncError ? cause : new MaseferSyncError("protocol", "Invalid DDP message from Masefer", { cause }));
+        }
       };
     });
   }
 
-  private handle(raw: unknown, onConnected: () => void): boolean {
-    let o: any; // eslint-disable-line @typescript-eslint/no-explicit-any
-    try {
-      o = JSON.parse(String(raw));
-    } catch {
-      return false;
-    }
+  private handle(raw: unknown, onConnected: () => void) {
+    const o = JSON.parse(String(raw));
+    if (typeof o?.msg !== "string") throw new MaseferSyncError("protocol", "Invalid DDP message from Masefer");
     switch (o.msg) {
       case "connected":
         onConnected();
         break;
       case "failed":
-        this.fail(new MaseferSyncError("connect", "Masefer rejected the DDP version"));
-        break;
+        throw new MaseferSyncError("protocol", "Masefer rejected the DDP version");
+      case "error":
+        throw new MaseferSyncError("protocol", `Masefer DDP error: ${o.reason ?? "unknown"}`);
       case "ping":
         this.ws.send(JSON.stringify(o.id ? { msg: "pong", id: o.id } : { msg: "pong" }));
         break;
@@ -109,14 +112,17 @@ export class DdpConnection {
         if (o.msg === "added") this.store.set(o.collection + "\u0000" + o.id, { collection: o.collection, id: o.id, fields: o.fields ?? {} });
         else {
           const d = this.store.get(o.collection + "\u0000" + o.id);
-          if (d) d.fields = { ...d.fields, ...(o.fields ?? {}) };
+          if (!d) break;
+          d.fields = { ...d.fields, ...(o.fields ?? {}) };
         }
+        this.revision++;
         break;
       case "removed":
-        this.store.delete(o.collection + "\u0000" + o.id);
+        if (this.store.delete(o.collection + "\u0000" + o.id)) this.revision++;
         break;
       case "ready":
-        for (const id of o.subs ?? []) this.pending.get(id)?.resolve();
+        if (!Array.isArray(o.subs)) throw new MaseferSyncError("protocol", "Invalid DDP message from Masefer");
+        for (const id of o.subs) this.pending.get(id)?.resolve();
         break;
       case "nosub": {
         const p = this.pending.get(o.id);
@@ -127,17 +133,19 @@ export class DdpConnection {
         break;
       }
     }
-    return true;
   }
 
   private fail(e: MaseferSyncError) {
-    this.failure ??= e;
+    if (this.failure) return;
+    this.failure = e;
     for (const p of this.pending.values()) p.reject(e);
+    for (const reject of this.waiting) reject(e);
   }
 
   /** Subscribe and wait until ready (and quiet). Docs accumulate in {@link docs}. */
   async subscribe(name: string, params: unknown[]): Promise<void> {
     if (this.failure) throw this.failure;
+    if (Date.now() >= this.deadline) throw new MaseferSyncError("timeout", `Timed out waiting for "${name}"`);
     const id = "s" + ++this.n;
     let timer: ReturnType<typeof setTimeout> | undefined;
     try {
@@ -154,12 +162,39 @@ export class DdpConnection {
     }
   }
 
-  /** Waits until no document was added/removed for `quietMs` (bounded by the overall deadline). 0 disables. */
+  /** Collects late documents for a fixed window, capped at the connection deadline. */
+  async collectFor(ms: number): Promise<void> {
+    if (this.failure) throw this.failure;
+    const waitMs = Math.min(ms, this.deadline - Date.now());
+    if (waitMs <= 0) return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let cancel!: (e: MaseferSyncError) => void;
+    try {
+      await new Promise<void>((resolve, reject) => {
+        cancel = reject;
+        this.waiting.add(cancel);
+        timer = setTimeout(resolve, waitMs);
+      });
+      if (this.failure) throw this.failure;
+    } finally {
+      clearTimeout(timer);
+      this.waiting.delete(cancel);
+    }
+  }
+
+  /** Waits for a full quiet window, or rejects on connection failure or deadline. 0 disables the wait. */
   async settle(quietMs: number): Promise<void> {
-    while (quietMs > 0) {
-      const before = this.store.size;
-      await new Promise((r) => setTimeout(r, Math.min(quietMs, Math.max(0, this.deadline - Date.now()))));
-      if (this.store.size === before || Date.now() >= this.deadline) break;
+    while (true) {
+      if (this.failure) throw this.failure;
+      const remaining = this.deadline - Date.now();
+      if (remaining <= 0) throw new MaseferSyncError("timeout", "Timed out waiting for Masefer documents");
+      if (quietMs <= 0) return;
+      const before = this.revision;
+      await this.collectFor(quietMs);
+      if (quietMs > remaining || Date.now() > this.deadline) {
+        throw new MaseferSyncError("timeout", "Timed out waiting for Masefer documents");
+      }
+      if (this.revision === before) return;
     }
   }
 
@@ -168,7 +203,9 @@ export class DdpConnection {
   }
 
   close() {
+    if (this.closedByUs) return;
     this.closedByUs = true;
+    this.fail(new MaseferSyncError("connect", "Masefer WebSocket closed"));
     try {
       this.ws.close();
     } catch {
