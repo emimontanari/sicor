@@ -167,11 +167,9 @@ body:has(.admin-shell) .cart-fab {
 .pr-tab--active { background: var(--charcoal); color: var(--white); border-color: var(--charcoal); }
 .pr-count { font-weight: 700; font-size: 0.85rem; opacity: 0.85; }
 .pr-filters { display: grid; gap: 0.5rem; padding: 0.75rem; }
-.pr-filters input, .pr-filters select, .pr-bulk select, .pr-form input:not([type=checkbox]), .pr-form select, .pr-form textarea, .pr-image input[type=file] { font: inherit; min-height: 44px; padding: 0.5rem 0.7rem; border: 1px solid var(--line); border-radius: 4px; background: var(--white); width: 100%; }
+.pr-filters input, .pr-filters select, .sheet__select, .pr-form input:not([type=checkbox]), .pr-form select, .pr-form textarea, .pr-image input[type=file] { font: inherit; min-height: 44px; padding: 0.5rem 0.7rem; border: 1px solid var(--line); border-radius: 4px; background: var(--white); width: 100%; }
 .pr-form textarea { min-height: 6rem; }
-.pr-bulk { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; padding: 0.6rem 0.75rem; }
-.pr-bulk__actions, .pr-bulk__category { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; }
-.pr-bulk__category select { width: auto; min-width: 12rem; flex: 1; }
+.pr-bulk { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 0.4rem 0.75rem; align-items: center; padding: 0.5rem 0.75rem; }
 .pr-check { display: flex; flex-direction: row !important; align-items: center; gap: 0.6rem; min-height: 44px; font-weight: 600; }
 .pr-check input { width: 22px; height: 22px; }
 .admin-btn--sm { min-height: 44px; padding: 0.4rem 0.8rem; font-size: 0.9rem; }
@@ -298,6 +296,8 @@ body:has(dialog.drawer[open]) { overflow: hidden; }
 .sheet__name, .sheet__text { margin: .25rem 0 .5rem; color: var(--muted); font-size: .85rem; overflow-wrap: anywhere; }
 .sheet__text { color: var(--charcoal); font-size: .9rem; }
 .sheet__list { list-style: none; margin: 0; padding: 0; }
+.sheet__cat { display: grid; gap: .5rem; padding: .6rem .6rem calc(.6rem + env(safe-area-inset-bottom)); }
+.sheet__select { box-sizing: border-box; }
 .sheet__item { display: flex; align-items: center; width: 100%; min-height: 48px; padding: 0 .6rem; border: 0; border-bottom: 1px solid var(--line); background: transparent; color: var(--charcoal); font: inherit; font-size: .95rem; text-decoration: none; text-align: left; cursor: pointer; }
 .sheet__item:hover { background: var(--light); }
 .sheet__item--danger { color: var(--red-dark); font-weight: 800; }

@@ -4,12 +4,12 @@ import { BulkForm } from "../../../components/admin/products/BulkForm";
 import { FilterChips } from "../../../components/admin/products/FilterChips";
 import { FilterDrawer } from "../../../components/admin/products/FilterDrawer";
 import { activeFilterCount, filterChips } from "../../../lib/admin/products/filters";
+import { BULK_FORM_ID } from "../../../lib/admin/products/bulk";
 import { PAGE_SIZE, listHref, parseListQuery } from "../../../lib/admin/products/query";
 import { getAdminDb } from "../../../lib/admin/products/db";
 import { listAdminCategories, listAdminProducts } from "../../../server/admin";
 import { OTHERS_SLUG } from "../../../server/catalog";
 import { requireAdmin } from "../../../server/auth/session";
-import { BULK_FORM_ID } from "../../../components/admin/products/BulkForm";
 import { RowFeedback, RowMenu } from "../../../components/admin/products/RowActions";
 import { editHref } from "../../../lib/admin/products/menu";
 import { reviewAction } from "./actions";
@@ -17,22 +17,31 @@ import { reviewAction } from "./actions";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Productos", robots: { index: false, follow: false } };
 
+/** Drawer category counts (global, like the Estado counts): one light call per category, totals only. */
+async function countByCategory(db: ReturnType<typeof getAdminDb>, slugs: string[]): Promise<Record<string, number>> {
+  const entries = await Promise.all(
+    slugs.map(async (slug) => [slug, (await listAdminProducts(db, { categorySlug: slug, pageSize: 1 })).total] as const),
+  );
+  return Object.fromEntries(entries);
+}
+
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> };
 
 export default async function ProductsPage({ searchParams }: Props) {
   await requireAdmin();
   const state = parseListQuery(await searchParams);
   const db = getAdminDb();
-  const [list, categories] = await Promise.all([
+  const categories = await listAdminCategories(db);
+  const catOptions = categories.some((c) => c.slug === OTHERS_SLUG) ? categories : [...categories, { id: -1, slug: OTHERS_SLUG, name: "Otros" }];
+  const [list, categoryCounts] = await Promise.all([
     listAdminProducts(db, { filter: state.filter, categorySlug: state.categoria, search: state.q, page: state.page, pageSize: PAGE_SIZE }),
-    listAdminCategories(db),
+    countByCategory(db, catOptions.map((c) => c.slug)),
   ]);
   const lastPage = Math.max(Math.ceil(list.total / list.pageSize), 1);
   const current = { ...state, page: list.page };
   const isNuevos = state.filtro === "nuevos";
   const isEliminados = state.filtro === "eliminados";
   const listUrl = listHref(current, {});
-  const catOptions = categories.some((c) => c.slug === OTHERS_SLUG) ? categories : [...categories, { id: -1, slug: OTHERS_SLUG, name: "Otros" }];
 
   return (
     <main className="pr-page">
@@ -41,11 +50,11 @@ export default async function ProductsPage({ searchParams }: Props) {
         {state.filtro !== "todos" ? <input type="hidden" name="filtro" value={state.filtro} /> : null}
         {state.categoria ? <input type="hidden" name="categoria" value={state.categoria} /> : null}
         <input type="search" name="q" defaultValue={state.q} placeholder="Buscar nombre, marca o código" aria-label="Buscar" />
-        <FilterDrawer state={current} categories={catOptions} counts={list.counts} total={list.total} activeCount={activeFilterCount(current)} />
+        <FilterDrawer state={current} categories={catOptions} counts={list.counts} categoryCounts={categoryCounts} total={list.total} activeCount={activeFilterCount(current)} />
       </form>
       <FilterChips chips={filterChips(current, catOptions)} />
 
-      {isEliminados ? null : <BulkForm categories={categories.map((c) => ({ id: c.id, name: c.name }))} />}
+      {isEliminados ? null : <BulkForm categories={categories.map((c) => ({ id: c.id, name: c.name }))} pageRows={list.items.length} />}
 
       <p className="pr-muted" aria-live="polite">
         {list.total} producto{list.total === 1 ? "" : "s"} · página {list.page} de {lastPage}

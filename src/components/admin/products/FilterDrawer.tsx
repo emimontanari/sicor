@@ -10,12 +10,13 @@ type Props = {
   state: ListState;
   categories: { slug: string; name: string }[];
   counts: Record<string, number>;
+  categoryCounts: Record<string, number>;
   total: number;
   activeCount: number;
 };
 
 /** "Filtros" button (with active-count badge) + side drawer. Options are links: the URL stays the source of truth. */
-export function FilterDrawer({ state, categories, counts, total, activeCount }: Props) {
+export function FilterDrawer({ state, categories, counts, categoryCounts, total, activeCount }: Props) {
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
   return (
@@ -59,8 +60,9 @@ export function FilterDrawer({ state, categories, counts, total, activeCount }: 
                   className="pr-opt"
                   aria-current={o.slug === state.filtro ? "true" : undefined}
                 >
-                  <span>{o.label}</span>
-                  <span className="pr-opt__n">{counts[o.countKey]}</span>
+                  <span>
+                    {o.label} <span className="pr-opt__n">({counts[o.countKey]})</span>
+                  </span>
                 </Link>
               </li>
             ))}
@@ -71,7 +73,9 @@ export function FilterDrawer({ state, categories, counts, total, activeCount }: 
           <ul>
             <li>
               <Link href={optionHref(state, { categoria: undefined })} scroll={false} className="pr-opt" aria-current={!state.categoria ? "true" : undefined}>
-                <span>Todas</span>
+                <span>
+                  Todas <span className="pr-opt__n">({counts.all})</span>
+                </span>
               </Link>
             </li>
             {categories.map((c) => (
@@ -82,7 +86,9 @@ export function FilterDrawer({ state, categories, counts, total, activeCount }: 
                   className="pr-opt"
                   aria-current={c.slug === state.categoria ? "true" : undefined}
                 >
-                  <span>{c.name}</span>
+                  <span>
+                    {c.name} <span className="pr-opt__n">({categoryCounts[c.slug] ?? 0})</span>
+                  </span>
                 </Link>
               </li>
             ))}
