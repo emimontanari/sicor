@@ -1,14 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BulkForm } from "../../../components/admin/products/BulkForm";
-import {
-  FILTER_LABELS,
-  FILTER_SLUGS,
-  FILTER_BY_SLUG,
-  PAGE_SIZE,
-  listHref,
-  parseListQuery,
-} from "../../../lib/admin/products/query";
+import { FilterChips } from "../../../components/admin/products/FilterChips";
+import { FilterDrawer } from "../../../components/admin/products/FilterDrawer";
+import { activeFilterCount, filterChips } from "../../../lib/admin/products/filters";
+import { PAGE_SIZE, listHref, parseListQuery } from "../../../lib/admin/products/query";
 import { getAdminDb } from "../../../lib/admin/products/db";
 import { listAdminCategories, listAdminProducts } from "../../../server/admin";
 import { OTHERS_SLUG } from "../../../server/catalog";
@@ -37,39 +33,13 @@ export default async function ProductsPage({ searchParams }: Props) {
   return (
     <main className="pr-page">
       <h1>Productos</h1>
-      <nav aria-label="Filtros" className="pr-tabs">
-        {FILTER_SLUGS.map((f) => (
-          <Link
-            key={f}
-            href={listHref(current, { filtro: f })}
-            aria-current={f === state.filtro ? "page" : undefined}
-            className={f === state.filtro ? "pr-tab pr-tab--active" : "pr-tab"}
-          >
-            {FILTER_LABELS[f]} <span className="pr-count">{list.counts[FILTER_BY_SLUG[f]]}</span>
-          </Link>
-        ))}
-      </nav>
-
-      <form method="get" action="/admin/productos" className="admin-card pr-filters">
+      <form method="get" action="/admin/productos" className="pr-toolbar" role="search">
         {state.filtro !== "todos" ? <input type="hidden" name="filtro" value={state.filtro} /> : null}
-        <input type="search" name="q" defaultValue={state.q} placeholder="Buscar por nombre, marca o código" aria-label="Buscar" />
-        <select name="categoria" defaultValue={state.categoria ?? ""} aria-label="Categoría">
-          <option value="">Todas las categorías</option>
-          {catOptions.map((c) => (
-            <option key={c.slug} value={c.slug}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-        <button type="submit" className="admin-btn">
-          Filtrar
-        </button>
-        {state.q || state.categoria ? (
-          <Link href={listHref(current, { q: "", categoria: undefined })} className="pr-link">
-            Limpiar
-          </Link>
-        ) : null}
+        {state.categoria ? <input type="hidden" name="categoria" value={state.categoria} /> : null}
+        <input type="search" name="q" defaultValue={state.q} placeholder="Buscar nombre, marca o código" aria-label="Buscar" />
+        <FilterDrawer state={current} categories={catOptions} counts={list.counts} total={list.total} activeCount={activeFilterCount(current)} />
       </form>
+      <FilterChips chips={filterChips(current, catOptions)} />
 
       <BulkForm categories={categories.map((c) => ({ id: c.id, name: c.name }))} />
 

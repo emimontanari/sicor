@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { logoutAction } from "../../../server/auth/actions";
+import { NavDrawer } from "./NavDrawer";
 
 const LINKS = [
   { href: "/admin/productos", label: "Productos" },
@@ -14,18 +14,13 @@ export function AdminNav() {
     <header className="admin-header">
       <div className="admin-header__inner">
         <strong className="admin-header__brand">SICOR · Admin</strong>
-        <nav aria-label="Administración" className="admin-nav">
-          {LINKS.map((l) => (
-            <Link key={l.href} href={l.href}>
-              {l.label}
-            </Link>
-          ))}
+        <NavDrawer links={LINKS}>
           <form action={logoutAction}>
             <button type="submit" className="admin-nav__logout">
               Salir
             </button>
           </form>
-        </nav>
+        </NavDrawer>
       </div>
     </header>
   );
