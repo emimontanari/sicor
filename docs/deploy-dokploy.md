@@ -19,6 +19,7 @@ Cargarlas en la pestaña **Environment** del compose:
 | `ADMIN_EMAIL` | Opcional. Email del único usuario del dashboard (`/admin`). Sin él, el admin queda deshabilitado y el catálogo público sigue funcionando. |
 | `ADMIN_PASSWORD_HASH` | Opcional. Hash scrypt de la contraseña; generarlo localmente con `pnpm admin:hash-password` (la contraseña se ingresa por stdin). Usa `:` como separador, así que se puede pegar tal cual en Environment. |
 | `SESSION_SECRET` | Opcional. Secreto largo y aleatorio (≥ 32 caracteres, ej. `openssl rand -hex 32`) que firma la sesión del admin. Si falta o es corto, el admin queda deshabilitado. |
+| `PUBLIC_BASE_URL` | Recomendada. URL pública del sitio, sin barra final: `PUBLIC_BASE_URL=https://sicor.shop`. Se usa para las vistas previas de links (Open Graph / WhatsApp); vacía cae a `http://localhost:3000`. |
 | `WHATSAPP_NUMBER` | Opcional. WhatsApp de SICOR, solo dígitos con código de país (54 + 9 para móvil): `WHATSAPP_NUMBER=5493516682089`. Fallback hasta que exista el ajuste del dashboard (Fase 3 lo guarda en `settings.whatsapp_number`, que tiene prioridad). Vacío deshabilita el botón. |
 
 `docker-compose.yml` ya define para `app`: `DATABASE_URL=postgres://sicor:${POSTGRES_PASSWORD}@postgres:5432/sicor` e `IMAGES_DIR=/app/data/images`. Si se usa un Postgres externo, sobrescribir `DATABASE_URL`.

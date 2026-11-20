@@ -47,6 +47,7 @@ No hay `.env.example`; estas son todas:
 | `ADMIN_EMAIL` | para el dashboard | Email del único usuario admin (no distingue mayúsculas). Sin esto el admin queda deshabilitado; el catálogo público sigue funcionando. |
 | `ADMIN_PASSWORD_HASH` | para el dashboard | Hash scrypt de la contraseña. Generarlo con `pnpm admin:hash-password` (lee la contraseña por stdin, nunca por argumento). |
 | `SESSION_SECRET` | para el dashboard | Secreto aleatorio de al menos 32 caracteres (ej. `openssl rand -hex 32`) que firma la cookie de sesión (7 días). Si falta o es más corto, el admin queda deshabilitado. |
+| `PUBLIC_BASE_URL` | recomendada en producción | URL pública del sitio, sin barra final (ej. `https://sicor.shop`). Se usa para las vistas previas de links (Open Graph / WhatsApp); vacía cae a `http://localhost:3000`. |
 | `WHATSAPP_NUMBER` | no | WhatsApp de SICOR, solo dígitos con código de país (54 + 9 para móvil). Ej. `5493516682089`. Fallback hasta que exista el ajuste del dashboard (Fase 3 lo guarda en `settings.whatsapp_number`, que tiene prioridad). Vacío deshabilita el botón. |
 
 ## Seguridad del admin

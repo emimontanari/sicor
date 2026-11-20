@@ -2,9 +2,9 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { Pool } from "pg";
 import * as schema from "./schema";
-import { seedCategories } from "./seed";
+import { seedDefaults } from "./seed";
 
-/** Deploy step: apply ./drizzle migrations, then idempotently seed categories. */
+/** Deploy step: apply ./drizzle migrations, then idempotently seed first-boot defaults. */
 async function main() {
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error("DATABASE_URL is not set");
@@ -12,8 +12,8 @@ async function main() {
   try {
     const db = drizzle(pool, { schema });
     await migrate(db, { migrationsFolder: "./drizzle" });
-    await seedCategories(db);
-    console.log("migrations applied, categories seeded");
+    await seedDefaults(db);
+    console.log("migrations applied, defaults seeded");
   } finally {
     await pool.end();
   }
