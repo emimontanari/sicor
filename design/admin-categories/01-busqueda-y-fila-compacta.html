@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>01 · Categorías admin — Búsqueda fija y filas compactas</title>
+<style>
+/* Tokens sincronizados de design/system.md (fuente: src/app/globals.css + src/app/admin/admin.css) */
+:root{--red:#e1202f;--red-dark:#b8101e;--charcoal:#2b2a33;--light:#f3f3f5;--line:#d9d9de;--muted:#5d5c66;--white:#fff;--font:"Helvetica Neue",Arial,"Segoe UI",system-ui,sans-serif;--pad:1rem;--max:72rem}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--font);color:var(--charcoal);background:var(--white);line-height:1.45;border-top:8px solid var(--red);min-height:100dvh}
+h1,h2,h3{margin:0;text-transform:uppercase;font-weight:800;letter-spacing:.01em;line-height:1.15}
+:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.muted{color:var(--muted)}
+
+/* === Artboard chrome (no es parte de la app) === */
+.board{background:var(--charcoal);color:var(--white);padding:.5rem var(--pad);display:flex;flex-wrap:wrap;align-items:center;gap:.5rem 1rem;position:sticky;top:0;z-index:40}
+.board h1{font-size:.85rem;letter-spacing:.04em;flex:1;min-width:12ch}
+.board__trade{font-size:.75rem;opacity:.8;font-weight:700}
+.board__vp{display:inline-flex;gap:.4rem}
+.vp-btn{position:relative;height:34px;padding:0 .7rem;border:1px solid var(--white);border-radius:6px;background:transparent;color:var(--white);font:inherit;font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.02em;display:inline-flex;align-items:center;gap:.35rem;cursor:pointer}
+.vp-btn::after{content:"";position:absolute;inset:-6px -4px}
+.vp-btn[aria-pressed="true"]{background:var(--red);border-color:var(--red)}
+.stage{background:var(--light);padding:1.25rem 0 4rem;display:flex;justify-content:center}
+.frame{flex:none;width:390px;background:var(--white);border:1px solid var(--line);border-radius:12px;overflow:clip;min-height:100dvh;display:flex;flex-direction:column}
+body[data-vp="desktop"] .frame{width:1280px}
+.stage__lbl{text-align:center;font-size:.7rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding-bottom:.6rem;width:100%}
+
+/* === App: admin shell === */
+.admin-header{background:var(--charcoal);color:var(--white);position:sticky;top:0;z-index:30}
+.admin-header__inner{display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.4rem var(--pad);min-height:48px;max-width:var(--max);margin:0 auto}
+.admin-header__brand{font-size:.85rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em}
+.admin-nav{display:flex;gap:.4rem}
+.nav-ctl{position:relative;height:34px;padding:0 .7rem;border:1px solid var(--white);border-radius:6px;background:transparent;color:var(--white);font:inherit;font-size:.65rem;font-weight:800;line-height:1;text-transform:uppercase;letter-spacing:.02em;display:inline-flex;align-items:center;cursor:pointer;text-decoration:none}
+.nav-ctl::after{content:"";position:absolute;inset:-6px -4px}
+.nav-ctl[aria-current="page"]{background:var(--red);border-color:var(--red)}
+.nav-ctl--out{border-color:var(--red-dark);color:inherit}
+
+.wrap{max-width:60rem;margin:0 auto;width:100%;padding:.9rem var(--pad) 4rem}
+.page-head h2{font-size:1.4rem}
+.page-head p{margin:.2rem 0 0;font-size:.85rem;color:var(--muted)}
+
+/* === Barra fija: búsqueda + chips === */
+.pinned{position:sticky;top:48px;z-index:20;background:var(--white);border-bottom:1px solid var(--line);padding:.6rem var(--pad) .5rem;margin:0 calc(var(--pad) * -1)}
+.searchfield{position:relative;display:flex;flex:1;min-width:0}
+.searchfield input{width:100%;height:44px;padding:0 .75rem 0 2.6rem;font:inherit;font-size:1rem;color:var(--charcoal);border:1px solid var(--charcoal);border-radius:6px;background:var(--white)}
+.searchfield>svg{position:absolute;left:.8rem;top:50%;translate:0 -50%;width:20px;height:20px;color:var(--muted);pointer-events:none}
+.chipbar{display:flex;gap:.4rem;overflow-x:auto;margin-top:.5rem;scrollbar-width:none;align-items:center}
+body[data-vp="desktop"] .chipbar{flex-wrap:wrap;overflow:visible}
+.chipbar::-webkit-scrollbar{display:none}
+.fchip{position:relative;height:34px;padding:0 .7rem;border:1px solid var(--charcoal);border-radius:6px;background:var(--white);color:var(--charcoal);font:inherit;font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap;display:inline-flex;align-items:center;gap:.35rem;cursor:pointer;flex:none}
+.fchip::after{content:"";position:absolute;inset:-6px -4px}
+.fchip[aria-pressed="true"]{background:var(--charcoal);color:var(--white)}
+.fchip__n{background:var(--light);border-radius:999px;padding:.05rem .3rem;font-size:.65rem;color:inherit}
+.fchip[aria-pressed="true"] .fchip__n{background:var(--white);opacity:.25}
+.fchip--none .fchip__n{background:var(--red);color:var(--white)}
+.resultline{margin:.5rem 0 0;font-size:.8rem;color:var(--muted);font-weight:700}
+.resultline b{color:var(--charcoal)}
+
+/* === Filas compactas === */
+.list{list-style:none;margin:.5rem 0 0;padding:0}
+.row{display:flex;align-items:center;gap:.5rem;width:100%;min-height:44px;padding:.35rem .1rem;background:none;border:0;border-bottom:1px solid var(--line);font:inherit;text-align:left;cursor:pointer;position:relative}
+.row:hover{background:var(--light)}
+.row__label{flex:1;min-width:0;font-weight:700;font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row__count{flex:none;font-size:.8rem;font-weight:700;color:var(--muted);min-width:2.5ch;text-align:right}
+.row__cat{flex:none;max-width:42%;font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:.02em;padding:.3rem .4rem;border:1px solid var(--line);border-radius:4px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row__cat--none{border-color:var(--red-dark);color:var(--red-dark)}
+body[data-vp="desktop"] .row__cat{max-width:22ch}
+.more{list-style:none;padding:.8rem .1rem;font-size:.8rem;color:var(--muted);border-bottom:1px solid var(--line)}
+.empty{padding:2rem 1rem;text-align:center;border:2px dashed var(--line);border-radius:8px;margin-top:.75rem}
+.empty h3{font-size:1rem;margin-bottom:.4rem}
+.empty p{margin:0 0 .8rem;color:var(--muted);font-size:.85rem}
+.link-btn{position:relative;background:none;border:0;color:var(--red-dark);font:inherit;font-weight:800;font-size:.65rem;text-transform:uppercase;letter-spacing:.02em;text-decoration:underline;text-underline-offset:3px;min-height:34px;padding:0 .5rem;cursor:pointer}
+
+/* === Bottom sheet (native dialog) === */
+.sheet{position:fixed;left:0;right:0;top:100dvh;translate:0 -100%;margin:0;padding:0;width:100%;max-width:none;max-height:88dvh;border:0;border-radius:12px 12px 0 0;background:var(--white);color:var(--charcoal);box-shadow:0 4px 14px rgb(43 42 51/.35)}
+.sheet[open]{display:flex;flex-direction:column}
+.sheet::backdrop{background:rgb(43 42 51/.55)}
+@media (prefers-reduced-motion:no-preference){.sheet[open]{animation:sheet-in .22s ease}}
+@keyframes sheet-in{from{translate:0 0}to{translate:0 -100%}}
+body[data-vp="desktop"] .sheet{position:fixed;top:50%;left:50%;right:auto;bottom:auto;translate:-50% -50%;width:26rem;border-radius:8px}
+body[data-vp="desktop"] .sheet[open]{animation:none}
+.sheet__grab{display:block;width:44px;height:5px;border-radius:3px;background:var(--line);margin:.5rem auto 0;flex:none}
+.sheet__head{display:flex;align-items:center;justify-content:space-between;gap:.75rem;padding:.5rem var(--pad);border-bottom:1px solid var(--line);min-height:56px;flex:none}
+.sheet__head h2{font-size:1.05rem}
+.ctl{position:relative;height:34px;padding:0 .7rem;border:1px solid var(--charcoal);border-radius:6px;background:var(--white);color:var(--charcoal);font:inherit;font-size:.65rem;font-weight:800;line-height:1;text-transform:uppercase;letter-spacing:.02em;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.ctl::after{content:"";position:absolute;inset:-6px -4px}
+.ctl:hover{background:var(--light)}
+.ctl--solid{background:var(--charcoal);color:var(--white)}
+.ctl--solid:hover{background:#000}
+.ctl--icon{width:34px;padding:0;font-size:1rem;letter-spacing:0}
+.sheet__body{overflow:auto;padding:.5rem var(--pad) .75rem;flex:1}
+.sheet__name{margin:.25rem 0 .15rem;font-weight:800;font-size:.95rem;overflow-wrap:anywhere}
+.sheet__meta{margin:0 0 .75rem;color:var(--muted);font-size:.85rem}
+.sheet__opts{border:0;padding:0;margin:.25rem 0 0}
+.sheet__opts legend{padding:0;margin-bottom:.4rem;font-weight:800;text-transform:uppercase;font-size:.8rem;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:.5rem}
+.rchip{position:relative;display:inline-flex}
+.rchip input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}
+.rchip span{display:inline-flex;align-items:center;min-width:44px;min-height:44px;padding:0 .9rem;border:2px solid var(--line);border-radius:6px;font-weight:700;font-size:.9rem}
+.rchip input:checked+span{background:var(--charcoal);border-color:var(--charcoal);color:var(--white)}
+.rchip input:focus-visible+span{outline:3px solid var(--red);outline-offset:2px}
+.rchip--none span{border-color:var(--red-dark);color:var(--red-dark)}
+.rchip--none input:checked+span{background:var(--red-dark);color:var(--white)}
+.sheet__foot{display:flex;gap:.5rem;padding:.6rem var(--pad) calc(.6rem + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--white);flex:none}
+.sheet__foot .ctl{flex:1}
+
+/* === Toast === */
+.toast{position:fixed;left:.75rem;right:.75rem;bottom:calc(.75rem + env(safe-area-inset-bottom));z-index:50;background:var(--charcoal);color:var(--white);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.3);padding:.6rem .75rem;font-size:.85rem;font-weight:700;display:flex;align-items:center;gap:.5rem}
+@media (prefers-reduced-motion:no-preference){.toast{transition:opacity .2s}}
+body[data-vp="desktop"] .toast{left:auto;right:1.5rem;width:26rem}
+[hidden]{display:none!important}
+</style></head><body>
+<div class="board">
+  <h1>01 · Búsqueda fija y filas compactas</h1>
+  <span class="board__trade">Menos scroll por pantalla · cambiar una categoría cuesta un toque extra</span>
+  <span class="board__vp">
+    <button class="vp-btn" type="button" data-vp="mobile" aria-pressed="true">Móvil 390</button>
+    <button class="vp-btn" type="button" data-vp="desktop" aria-pressed="false">Escritorio 1280</button>
+  </span>
+</div>
+<div class="stage">
+<div class="frame">
+  <header class="admin-header">
+    <div class="admin-header__inner">
+      <span class="admin-header__brand">SICOR · Admin</span>
+      <nav class="admin-nav" aria-label="Secciones admin">
+        <a class="nav-ctl" href="#">Productos</a>
+        <a class="nav-ctl" href="#" aria-current="page">Categorías</a>
+        <a class="nav-ctl nav-ctl--out" href="#">Salir</a>
+      </nav>
+    </div>
+  </header>
+  <main class="wrap">
+    <div class="page-head">
+      <h2>Categorías de Masefer</h2>
+      <p>51 familias · 552 productos · asignación a categorías SICOR</p>
+    </div>
+    <div class="pinned">
+      <div class="searchfield">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input type="search" id="q" placeholder="Buscar familia…" aria-label="Buscar familia por nombre o metacategoría">
+      </div>
+      <div class="chipbar" role="group" aria-label="Filtrar por metacategoría">
+        <button class="fchip" type="button" data-f="all" aria-pressed="true">Todas <span class="fchip__n">51</span></button>
+        <button class="fchip" type="button" data-f="Seguridad Industrial">Seg. Industrial <span class="fchip__n">301</span></button>
+        <button class="fchip" type="button" data-f="Calzado">Calzado <span class="fchip__n">97</span></button>
+        <button class="fchip" type="button" data-f="Indumentaria">Indumentaria <span class="fchip__n">78</span></button>
+        <button class="fchip" type="button" data-f="Seguridad Vial">Seg. Vial <span class="fchip__n">76</span></button>
+        <button class="fchip fchip--none" type="button" data-f="none">Sin asignar <span class="fchip__n">2</span></button>
+      </div>
+    </div>
+    <p class="resultline" id="resultline" aria-live="polite" tabindex="-1"></p>
+    <ul class="list" id="list"></ul>
+  </main>
+</div>
+<p class="stage__lbl" id="vplbl">Móvil · 390 px</p>
+</div>
+
+<dialog class="sheet" id="sheet" aria-labelledby="sheet-title">
+  <span class="sheet__grab" aria-hidden="true"></span>
+  <div class="sheet__head">
+    <h2 id="sheet-title">Asignar categoría</h2>
+    <button class="ctl ctl--icon" type="button" data-close aria-label="Cerrar">✕</button>
+  </div>
+  <div class="sheet__body">
+    <p class="sheet__name" id="sheet-name"></p>
+    <p class="sheet__meta" id="sheet-meta"></p>
+    <form class="sheet__opts" id="sheet-form">
+      <legend>Categoría SICOR</legend>
+      <div class="chips" id="sheet-chips"></div>
+    </form>
+  </div>
+  <div class="sheet__foot">
+    <button class="ctl" type="button" data-close>Cancelar</button>
+    <button class="ctl ctl--solid" type="button" id="sheet-save">Guardar</button>
+  </div>
+</dialog>
+
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+"use strict";
+const CATS = ["Indumentaria laboral","Calzado de seguridad","Elementos de protección personal","Protección ocular y auditiva","Guantes de protección","Seguridad vial","Productos destacados"];
+const NONE = "Sin asignar (Otros)";
+const METAS = [["Seguridad Industrial",301,10],["Calzado",97,5],["Indumentaria",78,5],["Seguridad Vial",76,5]];
+const MORE = {"Seguridad Industrial":12,"Calzado":3,"Indumentaria":6,"Seguridad Vial":4};
+// f: familia › subfamilia · n: productos · c: categoría SICOR asignada (null = sin asignar)
+const FAMS = [
+  {m:"Seguridad Industrial",f:"Protección ocular › Anteojos",n:42,c:"Protección ocular y auditiva"},
+  {m:"Seguridad Industrial",f:"Protección ocular › Gafas de recambio",n:12,c:"Protección ocular y auditiva"},
+  {m:"Seguridad Industrial",f:"Protección auditiva › Tapones",n:9,c:"Protección ocular y auditiva"},
+  {m:"Seguridad Industrial",f:"Guantes",n:64,c:"Guantes de protección"},
+  {m:"Seguridad Industrial",f:"Cascos",n:28,c:"Elementos de protección personal"},
+  {m:"Seguridad Industrial",f:"Protección respiratoria › Respiradores",n:23,c:"Elementos de protección personal"},
+  {m:"Seguridad Industrial",f:"Arnés y líneas de vida",n:12,c:"Elementos de protección personal"},
+  {m:"Seguridad Industrial",f:"Ropa descartable › Camisolines",n:15,c:"Indumentaria laboral"},
+  {m:"Seguridad Industrial",f:"Botiquines",n:9,c:null},
+  {m:"Seguridad Industrial",f:"Sogas",n:6,c:null},
+  {m:"Calzado",f:"Calzado de seguridad › Botín con puntera",n:28,c:"Calzado de seguridad"},
+  {m:"Calzado",f:"Calzado de seguridad › Zapatilla de seguridad",n:22,c:"Calzado de seguridad"},
+  {m:"Calzado",f:"Calzado de seguridad › Bota de goma con puntera",n:15,c:"Calzado de seguridad"},
+  {m:"Calzado",f:"Calzado de goma › Bota de goma",n:12,c:"Calzado de seguridad"},
+  {m:"Calzado",f:"Accesorios › Plantillas",n:8,c:"Calzado de seguridad"},
+  {m:"Indumentaria",f:"Camisas",n:14,c:"Indumentaria laboral"},
+  {m:"Indumentaria",f:"Pantalones",n:19,c:"Indumentaria laboral"},
+  {m:"Indumentaria",f:"Camperas",n:11,c:"Indumentaria laboral"},
+  {m:"Indumentaria",f:"Chalecos reflectantes",n:9,c:"Seguridad vial"},
+  {m:"Indumentaria",f:"Remeras",n:8,c:"Indumentaria laboral"},
+  {m:"Seguridad Vial",f:"Conos",n:14,c:"Seguridad vial"},
+  {m:"Seguridad Vial",f:"Vallas",n:11,c:"Seguridad vial"},
+  {m:"Seguridad Vial",f:"Balizas portátiles",n:9,c:"Seguridad vial"},
+  {m:"Seguridad Vial",f:"Cintas de demarcación",n:8,c:"Seguridad vial"},
+  {m:"Seguridad Vial",f:"Señalización › Carteles",n:12,c:"Seguridad vial"}
+];
+const norm = s => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+const $ = s => document.querySelector(s);
+let filter = "all", query = "", current = -1, trigger = null;
+
+const list = $("#list"), line = $("#resultline");
+
+function visible() {
+  return FAMS.map((fam,i)=>({fam,i})).filter(({fam})=>{
+    if (filter === "none" && fam.c !== null) return false;
+    if (filter !== "all" && filter !== "none" && fam.m !== filter) return false;
+    if (query && !norm(fam.m+" "+fam.f).includes(norm(query))) return false;
+    return true;
+  });
+}
+function catChip(fam){
+  const none = fam.c === null;
+  return `<span class="row__cat${none?" row__cat--none":""}">${none?"Sin asignar":fam.c}</span>`;
+}
+function render() {
+  const rows = visible();
+  line.innerHTML = `<b>${rows.length} de 51 familias</b>${filter==="none"?" · sin asignar":""}${query?` · «${query.replace(/[<>&]/g,"")}»`:""}`;
+  if (!rows.length) {
+    list.innerHTML = `<li><div class="empty"><h3>Sin resultados</h3><p>No hay familias que coincidan con «${query.replace(/[<>&]/g,"")}».</p><button class="link-btn" type="button" id="clearq">Limpiar búsqueda</button></div></li>`;
+    $("#clearq").addEventListener("click",()=>{$("#q").value="";query="";render();$("#q").focus();});
+    return;
+  }
+  const parts = rows.map(({fam,i})=>`
+    <li><button class="row" type="button" data-i="${i}" aria-label="Asignar categoría: ${fam.m} › ${fam.f} (actual: ${fam.c??NONE})">
+      <span class="row__label">${fam.m} › ${fam.f}</span>
+      <span class="row__count">${fam.n}</span>
+      ${catChip(fam)}
+    </button></li>`);
+  const rest = 51 - FAMS.length;
+  if (filter === "all" && !query) parts.push(`<li class="more">… ${rest} familias más (recorte del mockup: la lista real tiene 51)</li>`);
+  list.innerHTML = parts.join("");
+  list.querySelectorAll(".row").forEach(b=>b.addEventListener("click",()=>openSheet(+b.dataset.i,b)));
+}
+function openSheet(i, btn) {
+  current = i; trigger = btn;
+  const fam = FAMS[i];
+  $("#sheet-name").textContent = fam.m+" › "+fam.f;
+  $("#sheet-meta").textContent = `${fam.n} productos · Actual: ${fam.c ?? NONE}`;
+  $("#sheet-chips").innerHTML =
+    `<label class="rchip rchip--none"><input type="radio" name="cat" value="" ${fam.c===null?"checked":""}><span>${NONE}</span></label>` +
+    CATS.map(c=>`<label class="rchip"><input type="radio" name="cat" value="${c}" ${fam.c===c?"checked":""}><span>${c}</span></label>`).join("");
+  $("#sheet").showModal();
+  $("#sheet").querySelector("[data-close]").focus();
+}
+function restoreFocus(){
+  /* Si la fila guardada sigue en la vista, ahí; si desapareció (p. ej. dejó de estar
+     «sin asignar» con ese filtro activo), a la primera fila o al conteo de resultados. */
+  if (trigger && trigger.isConnected) { trigger.focus(); return; }
+  const first = list.querySelector(".row");
+  (first ?? $("#resultline")).focus();
+}
+function closeSheet(){
+  $("#sheet").close();
+  restoreFocus();
+  trigger = null;
+}
+$("#sheet").addEventListener("click",e=>{ if(e.target===$("#sheet")) closeSheet(); });
+$("#sheet").addEventListener("close",()=>{ restoreFocus(); trigger = null; });
+document.querySelectorAll("[data-close]").forEach(b=>b.addEventListener("click",closeSheet));
+$("#sheet-save").addEventListener("click",()=>{
+  const fam = FAMS[current];
+  const val = document.querySelector("#sheet-chips input:checked")?.value ?? "";
+  fam.c = val === "" ? null : val;
+  render();
+  trigger = list.querySelector(`.row[data-i="${current}"]`) || trigger; /* render() reemplazó el nodo */
+  toast(`Guardado · ${fam.f} → ${fam.c ?? "Otros"}`);
+  closeSheet();
+});
+let toastT;
+function toast(msg){
+  const t = $("#toast");
+  t.textContent = msg; t.hidden = false; t.style.opacity = "1";
+  clearTimeout(toastT);
+  toastT = setTimeout(()=>{ t.hidden = true; }, 2600);
+}
+$("#q").addEventListener("input",e=>{ query = e.target.value.trim(); render(); });
+document.querySelectorAll(".fchip").forEach(ch=>ch.addEventListener("click",()=>{
+  document.querySelectorAll(".fchip").forEach(x=>x.setAttribute("aria-pressed","false"));
+  ch.setAttribute("aria-pressed","true");
+  filter = ch.dataset.f; render();
+}));
+document.querySelectorAll(".vp-btn").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll(".vp-btn").forEach(x=>x.setAttribute("aria-pressed","false"));
+  b.setAttribute("aria-pressed","true");
+  document.body.dataset.vp = b.dataset.vp;
+  $("#vplbl").textContent = b.dataset.vp === "mobile" ? "Móvil · 390 px" : "Escritorio · 1280 px";
+}));
+render();
+</script>
+</body></html>

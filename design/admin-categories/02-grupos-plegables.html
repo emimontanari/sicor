@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>02 · Categorías admin — Grupos plegables por metacategoría</title>
+<style>
+/* Tokens sincronizados de design/system.md (fuente: src/app/globals.css + src/app/admin/admin.css) */
+:root{--red:#e1202f;--red-dark:#b8101e;--charcoal:#2b2a33;--light:#f3f3f5;--line:#d9d9de;--muted:#5d5c66;--white:#fff;--ok:#1a6b34;--font:"Helvetica Neue",Arial,"Segoe UI",system-ui,sans-serif;--pad:1rem;--max:72rem}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--font);color:var(--charcoal);background:var(--white);line-height:1.45;border-top:8px solid var(--red);min-height:100dvh}
+h1,h2,h3{margin:0;text-transform:uppercase;font-weight:800;letter-spacing:.01em;line-height:1.15}
+:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+.muted{color:var(--muted)}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* === Artboard chrome (no es parte de la app) === */
+.board{background:var(--charcoal);color:var(--white);padding:.5rem var(--pad);display:flex;flex-wrap:wrap;align-items:center;gap:.5rem 1rem;position:sticky;top:0;z-index:40}
+.board h1{font-size:.85rem;letter-spacing:.04em;flex:1;min-width:12ch}
+.board__trade{font-size:.75rem;opacity:.8;font-weight:700}
+.board__vp{display:inline-flex;gap:.4rem}
+.vp-btn{position:relative;height:34px;padding:0 .7rem;border:1px solid var(--white);border-radius:6px;background:transparent;color:var(--white);font:inherit;font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.02em;display:inline-flex;align-items:center;gap:.35rem;cursor:pointer}
+.vp-btn::after{content:"";position:absolute;inset:-6px -4px}
+.vp-btn[aria-pressed="true"]{background:var(--red);border-color:var(--red)}
+.stage{background:var(--light);padding:1.25rem 0 4rem;display:flex;justify-content:center}
+.frame{flex:none;width:390px;background:var(--white);border:1px solid var(--line);border-radius:12px;overflow:clip;min-height:100dvh;display:flex;flex-direction:column}
+body[data-vp="desktop"] .frame{width:1280px}
+.stage__lbl{text-align:center;font-size:.7rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding-bottom:.6rem;width:100%}
+
+/* === App: admin shell === */
+.admin-header{background:var(--charcoal);color:var(--white);position:sticky;top:0;z-index:30}
+.admin-header__inner{display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.4rem var(--pad);min-height:48px;max-width:var(--max);margin:0 auto}
+.admin-header__brand{font-size:.85rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em}
+.admin-nav{display:flex;gap:.4rem}
+.nav-ctl{position:relative;height:34px;padding:0 .7rem;border:1px solid var(--white);border-radius:6px;background:transparent;color:var(--white);font:inherit;font-size:.65rem;font-weight:800;line-height:1;text-transform:uppercase;letter-spacing:.02em;display:inline-flex;align-items:center;cursor:pointer;text-decoration:none}
+.nav-ctl::after{content:"";position:absolute;inset:-6px -4px}
+.nav-ctl[aria-current="page"]{background:var(--red);border-color:var(--red)}
+.nav-ctl--out{border-color:var(--red-dark);color:inherit}
+
+.wrap{max-width:60rem;margin:0 auto;width:100%;padding:.9rem var(--pad) 4rem}
+.page-head h2{font-size:1.4rem}
+.page-head p{margin:.2rem 0 0;font-size:.85rem;color:var(--muted)}
+.searchfield{position:relative;display:flex;flex:1;min-width:0;margin:.75rem 0 .25rem}
+.searchfield input{width:100%;height:44px;padding:0 .75rem 0 2.6rem;font:inherit;font-size:1rem;color:var(--charcoal);border:1px solid var(--charcoal);border-radius:6px;background:var(--white)}
+.searchfield>svg{position:absolute;left:.8rem;top:50%;translate:0 -50%;width:20px;height:20px;color:var(--muted);pointer-events:none}
+.resultline{margin:.35rem 0 .5rem;font-size:.8rem;color:var(--muted);font-weight:700}
+.resultline b{color:var(--charcoal)}
+.link-btn{position:relative;background:none;border:0;color:var(--red-dark);font:inherit;font-weight:800;font-size:.65rem;text-transform:uppercase;letter-spacing:.02em;text-decoration:underline;text-underline-offset:3px;min-height:34px;padding:0 .5rem;cursor:pointer}
+
+/* === Grupos plegables === */
+.grp{border:1px solid var(--line);border-radius:6px;background:var(--white);margin-bottom:.5rem;overflow:clip}
+.grp__btn{display:flex;align-items:center;gap:.5rem;width:100%;min-height:48px;padding:.4rem .6rem;background:none;border:0;font:inherit;text-align:left;cursor:pointer}
+.grp.is-open .grp__btn{position:sticky;top:48px;z-index:10;background:var(--white);border-bottom:1px solid var(--line)}
+.grp__chev{flex:none;width:16px;height:16px;color:var(--muted)}
+@media (prefers-reduced-motion:no-preference){.grp__chev{transition:rotate .15s ease}}
+.grp.is-open .grp__chev{rotate:180deg}
+.grp__name{flex:1;min-width:0;font-weight:800;text-transform:uppercase;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.grp__n{flex:none;font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.02em;padding:.3rem .45rem;border:1px solid var(--line);border-radius:4px;color:var(--muted)}
+.grp__p{flex:none;font-size:.8rem;font-weight:700;color:var(--muted)}
+.grp--none{border-color:var(--red-dark)}
+.grp--none .grp__name{color:var(--red-dark)}
+.grp--none .grp__n{border-color:var(--red-dark);color:var(--red-dark)}
+.grp--none.is-open .grp__btn{box-shadow:inset 4px 0 0 var(--red)}
+.grp.is-open .grp__btn{box-shadow:inset 4px 0 0 var(--red)}
+.grp__rows{list-style:none;margin:0;padding:0 .6rem .5rem}
+.grow{display:flex;align-items:center;gap:.5rem;min-height:44px;padding:.35rem 0;border-bottom:1px solid var(--line)}
+.grow:last-child{border-bottom:0}
+.grow__label{flex:1;min-width:0;font-weight:700;font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.grow__count{flex:none;font-size:.8rem;font-weight:700;color:var(--muted);min-width:2.5ch;text-align:right}
+.sel{flex:none;max-width:44%;height:34px;min-width:0;padding:0 .4rem;border:1px solid var(--charcoal);border-radius:6px;background:var(--white);color:var(--charcoal);font:inherit;font-size:.8rem;cursor:pointer}
+.sel:focus{border-color:var(--red)}
+.saved{flex:none;font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:.02em;color:var(--ok);white-space:nowrap}
+.more{padding:.6rem 0;font-size:.8rem;color:var(--muted);border-bottom:1px solid var(--line)}
+.more--warn{color:var(--red-dark);font-weight:700}
+.nores{padding:2rem 1rem;text-align:center;border:2px dashed var(--line);border-radius:8px}
+.nores h3{font-size:1rem;margin-bottom:.4rem}
+.nores p{margin:0;color:var(--muted);font-size:.85rem}
+
+/* === Toast === */
+.toast{position:fixed;left:.75rem;right:.75rem;bottom:calc(.75rem + env(safe-area-inset-bottom));z-index:50;background:var(--charcoal);color:var(--white);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.3);padding:.6rem .75rem;font-size:.85rem;font-weight:700;display:flex;align-items:center;gap:.5rem}
+@media (prefers-reduced-motion:no-preference){.toast{transition:opacity .2s}}
+body[data-vp="desktop"] .toast{left:auto;right:1.5rem;width:26rem}
+[hidden]{display:none!important}
+</style></head><body>
+<div class="board">
+  <h1>02 · Grupos plegables por metacategoría</h1>
+  <span class="board__trade">Cada familia tiene su lugar · llegar a una familia lejana cuesta más toques</span>
+  <span class="board__vp">
+    <button class="vp-btn" type="button" data-vp="mobile" aria-pressed="true">Móvil 390</button>
+    <button class="vp-btn" type="button" data-vp="desktop" aria-pressed="false">Escritorio 1280</button>
+  </span>
+</div>
+<div class="stage">
+<div class="frame">
+  <header class="admin-header">
+    <div class="admin-header__inner">
+      <span class="admin-header__brand">SICOR · Admin</span>
+      <nav class="admin-nav" aria-label="Secciones admin">
+        <a class="nav-ctl" href="#">Productos</a>
+        <a class="nav-ctl" href="#" aria-current="page">Categorías</a>
+        <a class="nav-ctl nav-ctl--out" href="#">Salir</a>
+      </nav>
+    </div>
+  </header>
+  <main class="wrap">
+    <div class="page-head">
+      <h2>Categorías de Masefer</h2>
+      <p>51 familias · 552 productos · asignación a categorías SICOR</p>
+    </div>
+    <div class="searchfield">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input type="search" id="q" placeholder="Buscar familia…" aria-label="Buscar familia por nombre o metacategoría">
+    </div>
+    <p class="resultline" id="resultline" aria-live="polite"></p>
+    <div id="groups"></div>
+  </main>
+</div>
+<p class="stage__lbl" id="vplbl">Móvil · 390 px</p>
+</div>
+
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+"use strict";
+const CATS = ["Indumentaria laboral","Calzado de seguridad","Elementos de protección personal","Protección ocular y auditiva","Guantes de protección","Seguridad vial","Productos destacados"];
+const NONE = "Sin asignar (Otros)";
+const METACOUNTS = [["Seguridad Industrial",301,23,13],["Calzado",97,8,3],["Indumentaria",78,11,6],["Seguridad Vial",76,9,4]];
+// f: familia › subfamilia · n: productos · c: categoría SICOR asignada (null = sin asignar)
+const FAMS = [
+  {m:"Seguridad Industrial",f:"Protección ocular › Anteojos",n:42,c:"Protección ocular y auditiva"},
+  {m:"Seguridad Industrial",f:"Protección ocular › Gafas de recambio",n:12,c:"Protección ocular y auditiva"},
+  {m:"Seguridad Industrial",f:"Protección auditiva › Tapones",n:9,c:"Protección ocular y auditiva"},
+  {m:"Seguridad Industrial",f:"Guantes",n:64,c:"Guantes de protección"},
+  {m:"Seguridad Industrial",f:"Cascos",n:28,c:"Elementos de protección personal"},
+  {m:"Seguridad Industrial",f:"Protección respiratoria › Respiradores",n:23,c:"Elementos de protección personal"},
+  {m:"Seguridad Industrial",f:"Arnés y líneas de vida",n:12,c:"Elementos de protección personal"},
+  {m:"Seguridad Industrial",f:"Ropa descartable › Camisolines",n:15,c:"Indumentaria laboral"},
+  {m:"Seguridad Industrial",f:"Botiquines",n:9,c:null},
+  {m:"Seguridad Industrial",f:"Sogas",n:6,c:null},
+  {m:"Calzado",f:"Calzado de seguridad › Botín con puntera",n:28,c:"Calzado de seguridad"},
+  {m:"Calzado",f:"Calzado de seguridad › Zapatilla de seguridad",n:22,c:"Calzado de seguridad"},
+  {m:"Calzado",f:"Calzado de seguridad › Bota de goma con puntera",n:15,c:"Calzado de seguridad"},
+  {m:"Calzado",f:"Calzado de goma › Bota de goma",n:12,c:"Calzado de seguridad"},
+  {m:"Calzado",f:"Accesorios › Plantillas",n:8,c:"Calzado de seguridad"},
+  {m:"Indumentaria",f:"Camisas",n:14,c:"Indumentaria laboral"},
+  {m:"Indumentaria",f:"Pantalones",n:19,c:"Indumentaria laboral"},
+  {m:"Indumentaria",f:"Camperas",n:11,c:"Indumentaria laboral"},
+  {m:"Indumentaria",f:"Chalecos reflectantes",n:9,c:"Seguridad vial"},
+  {m:"Indumentaria",f:"Remeras",n:8,c:"Indumentaria laboral"},
+  {m:"Seguridad Vial",f:"Conos",n:14,c:"Seguridad vial"},
+  {m:"Seguridad Vial",f:"Vallas",n:11,c:"Seguridad vial"},
+  {m:"Seguridad Vial",f:"Balizas portátiles",n:9,c:"Seguridad vial"},
+  {m:"Seguridad Vial",f:"Cintas de demarcación",n:8,c:"Seguridad vial"},
+  {m:"Seguridad Vial",f:"Señalización › Carteles",n:12,c:"Seguridad vial"}
+];
+const norm = s => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+const $ = s => document.querySelector(s);
+const groups = $("#groups");
+let query = "", openM = null;
+
+function rowsHTML(rows, idxs) {
+  return rows.map((fam,k)=>`
+    <li class="grow">
+      <span class="grow__label">${fam.m} › ${fam.f}</span>
+      <span class="grow__count">${fam.n}</span>
+      <label class="sr-only" for="sel-${idxs[k]}">Categoría para ${fam.m} › ${fam.f}</label>
+      <select class="sel" id="sel-${idxs[k]}" data-i="${idxs[k]}">
+        <option value="" ${fam.c===null?"selected":""}>${NONE}</option>
+        ${CATS.map(c=>`<option value="${c}" ${fam.c===c?"selected":""}>${c}</option>`).join("")}
+      </select>
+    </li>`).join("");
+}
+function esc(s){return s.replace(/[&<>"]/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));}
+
+function render() {
+  const searching = query.length > 0;
+  const defs = [
+    { key:"__none", label:"Sin asignar", famsN:2, prodsN:15, moreN:0,
+      items:FAMS.map((f,i)=>({f,i})).filter(x=>x.f.c===null) }
+  ];
+  for (const [m,prodsN,famsN,moreN] of METACOUNTS)
+    defs.push({ key:m, label:m, famsN, prodsN, moreN,
+      items:FAMS.map((f,i)=>({f,i})).filter(x=>x.f.m===m) });
+  let shown = 0, out = "";
+  for (const g of defs) {
+    const matched = searching ? g.items.filter(x=>norm(x.f.m+" "+x.f.f).includes(norm(query))) : g.items;
+    shown += matched.length;
+    if (searching && matched.length === 0) continue;
+    const isOpen = searching ? true : openM === g.key;
+    const idxs = matched.map(x=>x.i);
+    const moreTxt = g.key === "__none" ? "" :
+      `<li class="more">… ${g.moreN} familias más (recorte del mockup)</li>`;
+    const warnTxt = g.key === "Seguridad Industrial"
+      ? `<li class="more more--warn">2 familias de este grupo están sin asignar (Botiquines, Sogas) → grupo «Sin asignar»</li>` : "";
+    out += `
+    <section class="grp${g.key==="__none"?" grp--none":""}${isOpen?" is-open":""}" data-key="${g.key}">
+      <h3><button class="grp__btn" type="button" aria-expanded="${isOpen}" aria-controls="rows-${esc(g.key)}">
+        <svg class="grp__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+        <span class="grp__name">${g.key==="__none"?"Sin asignar · sin categoría SICOR":g.label}</span>
+        <span class="grp__n">${g.famsN} familias</span>
+        <span class="grp__p">${g.prodsN} productos</span>
+      </button></h3>
+      <ul class="grp__rows" id="rows-${esc(g.key)}"${isOpen?"":" hidden"}>${rowsHTML(matched.map(x=>x.f),idxs)}${warnTxt}${moreTxt}</ul>
+    </section>`;
+  }
+  if (searching && shown === 0) {
+    out = `<div class="nores"><h3>Sin resultados</h3><p>No hay familias que coincidan con «${esc(query)}». <button class="link-btn" type="button" id="clearq">Limpiar búsqueda</button></p></div>`;
+  }
+  groups.innerHTML = out;
+  const line = $("#resultline");
+  line.innerHTML = searching
+    ? `<b>${shown} familia${shown===1?"":"s"}</b> ${shown===1?"coincide":"coinciden"} con «${esc(query)}» de 51`
+    : `<b>4 metacategorías + sin asignar</b> · 51 familias · los grupos se abren de a uno`;
+  groups.querySelectorAll(".grp__btn").forEach(b=>b.addEventListener("click",()=>{
+    const key = b.closest(".grp").dataset.key;
+    const nowOpen = openM === key;
+    openM = nowOpen ? null : key;   /* se expande un grupo por vez */
+    render();
+  }));
+  groups.querySelectorAll(".sel").forEach(sel=>sel.addEventListener("change",()=>{
+    const fam = FAMS[+sel.dataset.i];
+    fam.c = sel.value === "" ? null : sel.value;
+    toast(`Guardado · ${fam.f} → ${fam.c ?? "Otros"}`);
+    const chip = document.createElement("span");
+    chip.className = "saved"; chip.textContent = "✓ Guardado";
+    sel.after(chip);
+    setTimeout(()=>chip.remove(), 1900);
+  }));
+  const clear = $("#clearq");
+  if (clear) clear.addEventListener("click",()=>{ $("#q").value=""; query=""; render(); $("#q").focus(); });
+}
+let toastT;
+function toast(msg){
+  const t = $("#toast");
+  t.textContent = msg; t.hidden = false; t.style.opacity = "1";
+  clearTimeout(toastT);
+  toastT = setTimeout(()=>{ t.hidden = true; }, 2600);
+}
+$("#q").addEventListener("input",e=>{ query = e.target.value.trim(); render(); });
+document.querySelectorAll(".vp-btn").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll(".vp-btn").forEach(x=>x.setAttribute("aria-pressed","false"));
+  b.setAttribute("aria-pressed","true");
+  document.body.dataset.vp = b.dataset.vp;
+  $("#vplbl").textContent = b.dataset.vp === "mobile" ? "Móvil · 390 px" : "Escritorio · 1280 px";
+}));
+/* Estado inicial: todo plegado; se expande un grupo por vez. */
+render();
+</script>
+</body></html>

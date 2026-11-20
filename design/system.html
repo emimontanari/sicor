@@ -2,7 +2,7 @@
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>SICOR — Design system</title>
 <style>
-:root{--red:#e1202f;--red-dark:#b8101e;--charcoal:#2b2a33;--light:#f3f3f5;--line:#d9d9de;--muted:#5d5c66;--white:#fff;--font:"Helvetica Neue",Arial,"Segoe UI",system-ui,sans-serif;--pad:1rem;--max:72rem}
+:root{--red:#e1202f;--red-dark:#b8101e;--charcoal:#2b2a33;--light:#f3f3f5;--line:#d9d9de;--muted:#5d5c66;--white:#fff;--font:"Helvetica Neue",Arial,"Segoe UI",system-ui,sans-serif;--pad:1rem;--max:72rem;--hdr:64px}
 *{box-sizing:border-box}
 body{margin:0;font-family:var(--font);color:var(--charcoal);background:var(--white);line-height:1.45;border-top:8px solid var(--red);width:1440px}
 h1,h2,h3{margin:0;text-transform:uppercase;font-weight:800;letter-spacing:.01em;line-height:1.15}
@@ -18,12 +18,20 @@ h2{font-size:1.15rem;margin-bottom:1rem;padding-left:.6rem;border-left:5px solid
 .row{display:flex;gap:2rem;flex-wrap:wrap;align-items:flex-start}
 .btn{min-height:48px;padding:0 1.25rem;font:inherit;font-weight:800;text-transform:uppercase;letter-spacing:.02em;border:0;border-radius:6px;background:var(--charcoal);color:var(--white);display:inline-flex;align-items:center}
 .btn--primary{background:var(--red)}.btn--wa{background:#1a7f37}.btn--ghost{background:transparent;color:var(--charcoal);border:2px solid var(--charcoal)}
+.admin-btn{background:var(--red);color:var(--white);border:0;border-radius:4px;font:inherit;font-weight:700;min-height:44px;padding:.6rem 1rem;display:inline-flex;align-items:center}
+.admin-btn--secondary{background:var(--white);color:var(--charcoal);border:1px solid var(--line)}
+.ctl,.chip-btn,.chip-sm{position:relative;box-sizing:border-box;height:34px;padding:0 .7rem;border:1px solid var(--charcoal);border-radius:6px;background:var(--white);color:var(--charcoal);font:inherit;font-size:.65rem;font-weight:800;line-height:1;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;gap:.35rem}
+.ctl--solid{background:var(--charcoal);color:var(--white)}.ctl--danger{background:var(--red-dark);border-color:var(--red-dark);color:var(--white)}
+.ctl--icon{width:34px;padding:0;font-size:1rem;letter-spacing:0}
+.ctl:hover{background:var(--light)}.ctl--solid:hover,.ctl--danger:hover{background:#000}
+.hit{position:relative;margin:6px 4px}
+.hit::after{content:"";position:absolute;inset:-6px -4px;border:1px dashed rgb(225 32 47/.5);border-radius:8px}
 .chip{min-width:44px;min-height:44px;padding:0 .9rem;border:2px solid var(--line);border-radius:6px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
 .chip.on{background:var(--charcoal);border-color:var(--charcoal);color:var(--white)}
 .search{display:flex;gap:.5rem;width:420px}.search input{flex:1;min-height:48px;padding:0 .9rem;font:inherit;border:2px solid var(--line);border-radius:6px}
 .card{width:200px;border:1px solid var(--line);border-radius:6px;overflow:hidden;padding-bottom:.75rem;box-shadow:0 4px 14px rgb(43 42 51/.15)}
 .card .img{aspect-ratio:1;background:var(--light);display:grid;place-items:center;font-weight:900;color:var(--line);font-size:1.4rem;letter-spacing:.1em}
-.card p{margin:.6rem .65rem 0;font-size:.85rem;font-weight:700}.card em{display:block;font-style:normal;margin:.45rem .65rem 0;font-size:.72rem;font-weight:800;text-transform:uppercase;color:var(--red)}
+.card p{margin:.6rem .65rem 0;font-size:.85rem;font-weight:700}.card em{display:block;font-style:normal;margin:.45rem .65rem 0;font-size:.72rem;font-weight:800;text-transform:uppercase;color:var(--red-dark)}
 .badge{width:44px;height:48px;display:grid;place-items:center;border-radius:4px;color:#fff;font-weight:800}
 .fab{position:relative;min-height:56px;padding:0 1.1rem;display:inline-flex;align-items:center;background:var(--red);color:#fff;border-radius:999px;font-weight:800;text-transform:uppercase;font-size:.85rem;box-shadow:0 4px 14px rgb(43 42 51/.35)}
 .fab b{position:absolute;top:-6px;right:-4px;min-width:24px;height:24px;border-radius:12px;background:var(--charcoal);border:2px solid #fff;display:grid;place-items:center;font-size:.8rem}
@@ -31,36 +39,74 @@ h2{font-size:1.15rem;margin-bottom:1rem;padding-left:.6rem;border-left:5px solid
 footer{background:var(--charcoal);color:#fff;padding:1.5rem 3rem;font-weight:700;font-size:.85rem;letter-spacing:.02em}
 .ty p{margin:.3rem 0}.muted{color:var(--muted)}
 .rad{display:flex;gap:1rem}.rad i{width:72px;height:72px;background:var(--light);border:2px solid var(--line);display:block}
+.adminbar{background:var(--charcoal);color:var(--white);padding:.4rem 1rem;display:flex;align-items:center;gap:1rem;border-radius:6px 6px 0 0}
+.adminbar b{font-size:.85rem;text-transform:uppercase;letter-spacing:.04em}
+.sheet{width:340px;border-radius:12px 12px 0 0;background:var(--white);border:1px solid var(--line);box-shadow:0 4px 14px rgb(43 42 51/.35);overflow:hidden}
+.sheet i{display:block;width:44px;height:5px;border-radius:3px;background:var(--line);margin:.5rem auto 0}
+.sheet .h{display:flex;align-items:center;justify-content:space-between;padding:.5rem 1rem;border-bottom:1px solid var(--line);min-height:56px}
+.sheet .h strong{font-size:1.05rem;text-transform:uppercase}
+.opt{display:flex;align-items:center;justify-content:space-between;min-height:44px;padding:0 .6rem;border-bottom:1px solid var(--line);font-size:.9rem}
+.opt em{font-style:normal;color:var(--muted);font-size:.8rem}
+.opt[aria-current=true]{font-weight:800;background:var(--light);box-shadow:inset 4px 0 0 var(--red)}
+.toast{display:inline-flex;align-items:center;gap:.5rem;background:var(--charcoal);color:var(--white);border-radius:8px;padding:.6rem .75rem;font-size:.85rem;font-weight:700;box-shadow:0 4px 16px rgba(0,0,0,.3)}
+.prb{font-size:.75rem;padding:.1rem .5rem;border-radius:999px;background:var(--light);border:1px solid var(--line)}
+.prb--on{background:#e3f4e8;border-color:#9fd1ae}.prb--new{background:#fff3cd;border-color:#e5c96b}.prb--off{background:#fde3e5;border-color:#e5a1a7}
 .logo{height:56px;width:auto}
+section p.cap{margin:0 0 .75rem;color:var(--muted);font-size:.85rem}
 </style></head><body>
 <header>
 <svg class="logo" viewBox="0 0 330 120" role="img" aria-label="SICOR Suministros Industriales"><circle cx="46" cy="52" r="40" fill="none" stroke="#e1202f" stroke-width="11" stroke-dasharray="9 8"/><circle cx="46" cy="52" r="32" fill="none" stroke="#e1202f" stroke-width="6"/><path d="M46 24a28 28 0 0 0 0 56z" fill="#5d5c66"/><text x="100" y="82" font-family="Arial Narrow,Helvetica Neue,Arial,sans-serif" font-weight="900" font-size="92" textLength="224" lengthAdjust="spacingAndGlyphs"><tspan fill="#2b2a33">SI</tspan><tspan fill="#b8101e">COR</tspan></text><text x="100" y="108" font-family="Arial Narrow,Arial,sans-serif" font-weight="700" font-size="18" fill="#2b2a33" textLength="224" lengthAdjust="spacingAndGlyphs">SUMINISTROS INDUSTRIALES</text></svg>
-<h1>Design system</h1><span class="muted">Fuente: src/app/globals.css</span></header>
+<h1>Design system</h1><span class="muted">Fuente: src/app/globals.css · src/app/admin/admin.css</span></header>
 <main>
-<section><h2>Colores</h2><div class="sw">
+<section><h2>Colores — 7 tokens + literales</h2><div class="sw">
 <div><i style="background:#e1202f"></i><b>--red</b><span>#e1202f</span></div>
 <div><i style="background:#b8101e"></i><b>--red-dark</b><span>#b8101e</span></div>
 <div><i style="background:#2b2a33"></i><b>--charcoal</b><span>#2b2a33</span></div>
 <div><i style="background:#f3f3f5"></i><b>--light</b><span>#f3f3f5</span></div>
 <div><i style="background:#d9d9de"></i><b>--line</b><span>#d9d9de</span></div>
 <div><i style="background:#5d5c66"></i><b>--muted</b><span>#5d5c66</span></div>
-<div><i style="background:#1a7f37"></i><b>WhatsApp / ok</b><span>#1a7f37</span></div></div></section>
+<div><i style="background:#fff;border-bottom:1px solid #d9d9de"></i><b>--white</b><span>#fff</span></div></div>
+<p class="cap" style="margin-top:1rem">Literales: #f8f8f8 header · #1a7f37 WhatsApp/ok · #1a6b34 ok texto admin · #000 hover sólido · badges #e3f4e8/#9fd1ae · #fff3cd/#e5c96b · #fde3e5/#e5a1a7 · #fdecea banner fallido · backdrop rgb(43 42 51/.55)</p>
+<div class="row" style="margin-top:.75rem"><span class="prb">Estado</span><span class="prb prb--on">Visible</span><span class="prb prb--new">Nuevo</span><span class="prb prb--off">Oculto</span><span class="toast" style="box-shadow:none">Toast admin</span></div></section>
 <section class="ty"><h2>Tipografía — --font</h2>
 <h1 style="font-size:2.8rem;font-weight:900">Hero título 2.8rem / 900</h1>
 <h2 style="border:0;padding:0;margin:.5rem 0">Section title 1.15rem / 800</h2>
 <p style="font-size:1rem">Cuerpo 1rem, line-height 1.45. Guantes de protección para la industria.</p>
-<p class="muted" style="font-size:.85rem">Texto secundario 0.85rem · --muted</p></section>
+<p class="muted" style="font-size:.85rem">Texto secundario 0.85rem · --muted</p>
+<p style="font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.02em;margin:.6rem 0 .2rem">Compacto .65rem / 800 — familia de controles</p></section>
+<section><h2>Familia de controles compactos — 34px + hit ≥44px</h2><div class="row" style="gap:.75rem">
+<span class="hit"><span class="ctl">Ficha</span></span>
+<span class="hit"><span class="ctl ctl--solid">Agregar</span></span>
+<span class="hit"><span class="ctl ctl--danger">Eliminar</span></span>
+<span class="hit"><span class="ctl ctl--icon" aria-label="Más acciones">…</span></span>
+<span class="hit"><span class="ctl">Acciones <b style="background:var(--red);color:var(--white);border-radius:999px;min-width:1.15rem;height:1.15rem;display:inline-grid;place-items:center;font-size:.65rem;padding:0 .25rem">3</b></span></span>
+<p class="cap">34px visible · 1px --charcoal · 6px radius · uppercase .65rem/800 · hit area inset -6px -4px (línea punteada = zona táctil)</p></div></section>
 <section><h2>Radio, espaciado y sombras</h2><div class="row">
 <div class="rad"><i style="border-radius:4px"></i><i style="border-radius:6px"></i><i style="border-radius:8px"></i><i style="border-radius:12px"></i><i style="border-radius:999px"></i></div>
-<div>4 · 6 · 8 · 12 · 999 px<br><span class="muted">--pad 1rem · --max 72rem · gaps .5 / .75 / 1rem</span></div></div></section>
-<section><h2>Componentes</h2><div class="row">
+<div>3 · 4 · 5 · 6 · 8 · 11 · 12 · 999 px<br><span class="muted">--pad 1rem · --max 72rem · --hdr 64px · gaps .5 / .75 / 1rem · bp 640 / 900 / 48rem</span></div>
+<div class="row" style="gap:1.5rem"><div style="width:120px;height:80px;border-radius:8px;background:var(--white);box-shadow:0 4px 14px rgb(43 42 51/.15);display:grid;place-items:center;font-size:.75rem" class="muted">card hover</div>
+<div style="width:120px;height:80px;border-radius:8px;background:var(--white);box-shadow:0 4px 16px rgba(0,0,0,.3);display:grid;place-items:center;font-size:.75rem" class="muted">toast admin</div>
+<div style="width:120px;height:80px;border-radius:8px;background:var(--white);box-shadow:0 0 24px rgba(0,0,0,.25);display:grid;place-items:center;font-size:.75rem" class="muted">drawer</div></div></div></section>
+<section><h2>Componentes — tienda</h2><div class="row">
 <div style="display:grid;gap:1rem"><div class="row" style="gap:.75rem"><span class="btn">Botón</span><span class="btn btn--primary">Agregar</span><span class="btn btn--ghost">Ghost</span><span class="btn btn--wa">WhatsApp</span></div>
-<div class="row" style="gap:.5rem"><span class="chip on">Seleccionado</span><span class="chip">Chip</span><span class="chip">Chip</span></div>
+<div class="row" style="gap:.5rem"><span class="chip on">Seleccionado</span><span class="chip">Chip</span><span class="hit"><span class="chip-btn" style="background:var(--charcoal);color:var(--white)">Chip-btn on</span></span><span class="hit"><span class="chip-btn">Chip-btn</span></span></div>
 <div class="search"><input placeholder="Buscar productos" aria-label="Buscar"><span class="btn">Buscar</span></div>
 <div class="note">Este producto tiene demora en algunas variantes de talle/color.</div>
 <div class="row" style="gap:.75rem;align-items:center"><span class="badge" style="background:#e1202f">01</span><span class="badge" style="background:#2b2a33">02</span><strong style="text-transform:uppercase">Indumentaria laboral</strong></div>
 <span class="fab">Cotización<b>3</b></span></div>
 <div class="card"><div class="img">SICOR</div><p>CHOMBA DE PIQUE M/C</p><em>Consultar cotización</em></div>
+</div></section>
+<section><h2>Componentes — admin</h2><div class="row">
+<div style="width:420px">
+<div class="adminbar"><b>SICOR · Admin</b><span class="ctl" style="border-color:var(--white);background:transparent;color:var(--white);width:34px;padding:0">≡</span></div>
+<div class="row" style="gap:.75rem;padding:.75rem 0"><span class="admin-btn">Guardar</span><span class="admin-btn admin-btn--secondary">Cancelar</span></div>
+<div class="row" style="gap:.75rem"><span class="hit"><span class="ctl ctl--solid">Categorías</span></span><span class="hit"><span class="ctl">Productos</span></span><span class="hit"><span class="ctl" style="color:var(--red-dark);border-color:var(--red-dark)">Salir</span></span></div>
+<div class="opt" aria-current="true">Indumentaria laboral <em>79</em></div>
+<div class="opt">Calzado de seguridad <em>97</em></div>
+<div class="opt">Elementos de protección personal <em>120</em></div>
+</div>
+<div class="sheet"><i></i><div class="h"><strong>Acciones</strong><span class="ctl ctl--icon">✕</span></div>
+<div class="opt">Editar <em></em></div><div class="opt">Ocultar <em></em></div><div class="opt" style="color:var(--red-dark);font-weight:800">Eliminar <em></em></div></div>
 </div></section>
 </main>
 <footer>SICOR | SUMINISTROS INDUSTRIALES CÓRDOBA</footer>

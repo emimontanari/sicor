@@ -1,0 +1,21 @@
+{
+  "title": "Admin categorías",
+  "brief": "Reorganizar la página admin «Categorías de Masefer» (mapeo de familias Masefer → categorías SICOR, ~51 familias, 4 metacategorías, 7 categorías + Otros) para que sea cómoda de administrar desde el teléfono: menos scroll, controles compactos (34px, hit ≥44px), estado «Sin asignar» visible. Público: admin que trabaja 100% desde el móvil.",
+  "feature": "odd/tasks/admin-categories.md",
+  "artboards": [
+    {
+      "file": "01-busqueda-y-fila-compacta.html",
+      "title": "Búsqueda fija y filas compactas",
+      "tradeoff": "Menos scroll por pantalla: filas de una línea y búsqueda/filtros siempre fijos; cambiar una categoría cuesta un toque extra (fila → hoja inferior)",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "file": "02-grupos-plegables.html",
+      "title": "Grupos plegables por metacategoría",
+      "tradeoff": "Cada familia encuentra su lugar (grupos con conteos, «Sin asignar» arriba); llegar a una familia lejana cuesta más toques (grupos plegados de a uno)",
+      "width": 390,
+      "height": 844
+    }
+  ]
+}
