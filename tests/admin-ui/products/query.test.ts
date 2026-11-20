@@ -104,7 +104,7 @@ describe("parseProductForm", () => {
 });
 
 describe("parseBulkForm", () => {
-  it("show/hide/reviewed", () => {
+  it("show/hide", () => {
     expect(parseBulkForm(fd([["code", "A"], ["code", "B"], ["intent", "show"]]))).toEqual({
       ok: true,
       scope: "codes",
@@ -112,7 +112,6 @@ describe("parseBulkForm", () => {
       patch: { visible: true },
     });
     expect(parseBulkForm(fd([["code", "A"], ["intent", "hide"]]))).toMatchObject({ patch: { visible: false } });
-    expect(parseBulkForm(fd([["code", "A"], ["intent", "reviewed"]]))).toMatchObject({ patch: { reviewed: true } });
   });
   it("category", () => {
     expect(parseBulkForm(fd([["code", "A"], ["intent", "category"], ["bulkCategory", "3"]]))).toMatchObject({
@@ -126,17 +125,11 @@ describe("parseBulkForm", () => {
       error: "Elegí una categoría",
     });
   });
-  it("unreview maps to reviewed:false on both scopes (S6)", () => {
-    expect(parseBulkForm(fd([["code", "A"], ["intent", "unreview"]]))).toMatchObject({
-      ok: true,
-      scope: "codes",
-      patch: { reviewed: false },
-    });
-    expect(parseBulkForm(fd([["scope", "all"], ["intent", "unreview"]]))).toMatchObject({
-      ok: true,
-      scope: "all",
-      patch: { reviewed: false },
-    });
+  it("removed review intents are rejected on both scopes (publish-on-sync S2)", () => {
+    for (const intent of ["reviewed", "unreview"]) {
+      expect(parseBulkForm(fd([["code", "A"], ["intent", intent]]))).toEqual({ ok: false, error: "Acción inválida" });
+      expect(parseBulkForm(fd([["scope", "all"], ["intent", intent]]))).toEqual({ ok: false, error: "Acción inválida" });
+    }
   });
   it("errors", () => {
     expect(parseBulkForm(fd([["intent", "show"]]))).toEqual({ ok: false, error: "Seleccioná al menos un producto" });
@@ -165,11 +158,11 @@ describe("parseBulkForm scope=all (S5)", () => {
     });
   });
   it("defaults filtro to todos and drops empty categoria/q", () => {
-    expect(parseBulkForm(fd([["scope", "all"], ["intent", "reviewed"]]))).toEqual({
+    expect(parseBulkForm(fd([["scope", "all"], ["intent", "show"]]))).toEqual({
       ok: true,
       scope: "all",
       filter: { filter: "all" },
-      patch: { reviewed: true },
+      patch: { visible: true },
     });
   });
   it("category works the same as the per-code path", () => {

@@ -3,7 +3,6 @@ import { NavDrawer } from "./NavDrawer";
 
 const LINKS = [
   { href: "/admin/productos", label: "Productos" },
-  { href: "/admin/productos?filtro=nuevos", label: "Nuevos" },
   { href: "/admin/actualizaciones", label: "Actualizaciones" },
   { href: "/admin/categorias", label: "Categorías" },
   { href: "/admin/ajustes", label: "Ajustes" },

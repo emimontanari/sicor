@@ -168,7 +168,7 @@ describe("sync engine", () => {
     expect((await engine.getPendingRun())?.id).toBe(run.id);
   });
 
-  it("2: apply inserts products, variants, local images; new products hidden unless auto_publish_new (S5, S6)", async () => {
+  it("2: apply inserts products, variants, local images; new products are published by default with no override row (publish-on-sync S1)", async () => {
     source.next = catalog(product("A"));
     const run = await engine.check("manual");
     const applied = await engine.apply(run.id);
@@ -181,9 +181,9 @@ describe("sync engine", () => {
     expect(p.supplierPrice).toBe("10.00");
     expect(p.contentHash).toBeTruthy();
     expect((await variants()).map((v) => v.sku).sort()).toEqual(["A-A", "A-R"]);
+    // append-only sync never writes overrides; the flipped default publishes the product (S1).
     expect(await ctx.db.select().from(schema.productOverrides)).toEqual([]);
-    expect(effectiveVisibility(p, null, { autoPublishNew: false })).toBe(false);
-    expect(effectiveVisibility(p, null, { autoPublishNew: true })).toBe(true);
+    expect(effectiveVisibility(p, null)).toBe(true);
     expect(await engine.getPendingRun()).toBeNull();
   });
 

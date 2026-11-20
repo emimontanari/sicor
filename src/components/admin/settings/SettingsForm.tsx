@@ -7,7 +7,6 @@ import { buildQuoteMessage } from "../../../lib/cart/whatsapp";
 type Initial = {
   whatsappNumber: string;
   messageTemplate: string;
-  autoPublishNew: boolean;
   showPrices: boolean;
 };
 
@@ -56,10 +55,6 @@ export function SettingsForm({ initial, defaultTemplate }: { initial: Initial; d
         <strong>Vista previa del mensaje</strong>
         <pre>{preview}</pre>
       </div>
-      <label className="set-check">
-        <input type="checkbox" name="autoPublishNew" defaultChecked={initial.autoPublishNew} />
-        <span>Publicar automáticamente los productos nuevos</span>
-      </label>
       <label className="set-check">
         <input type="checkbox" name="showPrices" defaultChecked={initial.showPrices} />
         <span>Mostrar precios en el catálogo</span>

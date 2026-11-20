@@ -19,7 +19,6 @@ export default async function SettingsPage() {
         initial={{
           whatsappNumber: s.whatsappNumber ?? "",
           messageTemplate: s.messageTemplate ?? "",
-          autoPublishNew: s.autoPublishNew,
           showPrices: s.showPrices,
         }}
       />

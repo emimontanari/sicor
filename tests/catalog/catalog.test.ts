@@ -34,19 +34,24 @@ async function add(p: Partial<P> & { code: string }, o?: O) {
 }
 const shown: O = { visible: true };
 
-describe("visibility (S4)", () => {
-  it("excludes hidden, new (unreviewed), discontinued; includes shown", async () => {
+/** Old-style override row: the `reviewed` column still exists and travels with every row. */
+const legacyRow = (o: O): O & { reviewed: boolean } => ({ reviewed: false, ...o });
+
+describe("visibility (publish-on-sync S1)", () => {
+  it("includes a fresh synced product with no override; excludes only explicit hides and discontinued", async () => {
     await add({ code: "OK" }, shown);
-    await add({ code: "HID" }, { visible: false, reviewed: true });
-    await add({ code: "NEW" });
+    await add({ code: "HID" }, legacyRow({ visible: false }));
+    await add({ code: "NEW" }); // no override row: the sync itself publishes it
     await add({ code: "DISC", status: "discontinued" }, shown);
-    expect((await listProducts({}, db)).map((p) => p.code)).toEqual(["OK"]);
+    expect((await listProducts({}, db)).map((p) => p.code)).toEqual(["NEW", "OK"]);
+    expect(await getProduct("NEW", db)).not.toBeNull();
     expect(await getProduct("OK", db)).not.toBeNull();
-    for (const c of ["HID", "NEW", "DISC", "NOPE"]) expect(await getProduct(c, db)).toBeNull();
+    for (const c of ["HID", "DISC", "NOPE"]) expect(await getProduct(c, db)).toBeNull();
   });
-  it("auto_publish_new shows new products", async () => {
-    await db.update(schema.settings).set({ autoPublishNew: true });
+  it("auto_publish_new is obsolete: a no-override product is visible with the flag on or off", async () => {
     await add({ code: "NEW" });
+    expect((await listProducts({}, db)).map((p) => p.code)).toEqual(["NEW"]);
+    await db.update(schema.settings).set({ autoPublishNew: true });
     expect((await listProducts({}, db)).map((p) => p.code)).toEqual(["NEW"]);
   });
 });
@@ -134,7 +139,8 @@ describe("listCategories (S5)", () => {
   it("omits Otros when every visible product is categorised", async () => {
     const vial = await cat("seguridad-vial");
     await add({ code: "A" }, { visible: true, categoryId: vial });
-    await add({ code: "N" });
+    // S1: a no-override product is visible, so it must be categorised to keep Otros empty.
+    await add({ code: "N" }, { categoryId: vial });
     const list = await listCategories(db);
     expect(list).toHaveLength(7);
     expect(list.every((c) => c.slug !== "otros")).toBe(true);

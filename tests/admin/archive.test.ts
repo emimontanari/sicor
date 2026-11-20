@@ -51,7 +51,8 @@ async function seed() {
 describe("archiveProducts / restoreProducts (S3)", () => {
   it("archive hides from public catalog and default admin list, shows only in eliminados", async () => {
     await seed();
-    expect((await listProducts({}, db)).map((p) => p.code).sort()).toEqual(["A", "B"]);
+    // publish-on-sync S1: N has no override and is publicly visible now.
+    expect((await listProducts({}, db)).map((p) => p.code).sort()).toEqual(["A", "B", "N"]);
     const res = await archiveProducts(db, ["A", "N"]);
     expect(res).toEqual({ updated: 2 });
 

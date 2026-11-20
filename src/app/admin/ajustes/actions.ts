@@ -16,7 +16,6 @@ export async function saveSettingsAction(_p: SettingsState, f: FormData): Promis
       updateSettings(db, {
         whatsappNumber: v.whatsappNumber,
         messageTemplate: v.messageTemplate,
-        autoPublishNew: v.autoPublishNew,
         showPrices: v.showPrices,
       }),
     );

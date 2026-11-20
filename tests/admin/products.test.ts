@@ -31,36 +31,34 @@ async function seed() {
 const codes = (r: { items: { code: string }[] }) => r.items.map((i) => i.code).sort();
 
 describe("listAdminProducts (S3/S4)", () => {
-  it("counts per filter and filters", async () => {
+  it("counts per filter and filters (S1: a no-override product is visible)", async () => {
     await seed();
     const all = await listAdminProducts(db);
     expect(all.total).toBe(5);
-    expect(all.counts).toEqual({ all: 5, visible: 2, hidden: 2, nuevos: 1, discontinued: 1, eliminados: 0 });
-    expect(codes(await listAdminProducts(db, { filter: "visible" }))).toEqual(["REV", "VIS"]);
-    expect(codes(await listAdminProducts(db, { filter: "hidden" }))).toEqual(["HID", "NEW1"]);
+    expect(all.counts).toEqual({ all: 5, visible: 3, hidden: 1, nuevos: 1, discontinued: 1, eliminados: 0 });
+    expect(codes(await listAdminProducts(db, { filter: "visible" }))).toEqual(["NEW1", "REV", "VIS"]);
+    expect(codes(await listAdminProducts(db, { filter: "hidden" }))).toEqual(["HID"]);
+    // "nuevos" stays tolerated server-side but is no longer offered in the UI (S2/S3).
     expect(codes(await listAdminProducts(db, { filter: "nuevos" }))).toEqual(["NEW1"]);
     expect(codes(await listAdminProducts(db, { filter: "discontinued" }))).toEqual(["DIS"]);
   });
-  it("auto-publish makes unreviewed products visible but still 'nuevos'", async () => {
+  it("auto_publish_new is obsolete: the flag no longer changes visibility (S1/S5)", async () => {
     await seed();
     await db.update(schema.settings).set({ autoPublishNew: true });
     const r = await listAdminProducts(db, { filter: "nuevos" });
     expect(r.items[0]).toMatchObject({ code: "NEW1", visible: true, isNew: true });
   });
-  it("a reverted product (reviewed=false, visible=null) is new again; bulk-unreviewed visible=true stays visible and out of the queue (S6)", async () => {
+  it("data layer still tolerates reviewed patches (column kept, unread for visibility; queue UI removed)", async () => {
+    // publish-on-sync S2: the review intents are gone from the UI, but updateOverride/bulkUpdate
+    // keep accepting `reviewed` so stored rows round-trip without errors.
     await add(db, { code: "REV1", name: "Fue revisado" }, { reviewed: true });
-    await add(db, { code: "REV2", name: "Fue publicado" }, { visible: true, reviewed: true });
-    // "Volver a Nuevos" (unreviewAction): reviewed=false and no visibility decision
-    await updateOverride(db, "REV1", { reviewed: false, visible: null });
-    await updateOverride(db, "REV2", { reviewed: false, visible: null });
-    expect(codes(await listAdminProducts(db, { filter: "nuevos" }))).toEqual(["REV1", "REV2"]);
-    // bulk "Marcar como nuevo" only touches reviewed: a visible product stays visible, not in the queue
     await add(db, { code: "VIS2", name: "Queda visible" }, { visible: true, reviewed: true });
+    await updateOverride(db, "REV1", { reviewed: false, visible: null });
     await bulkUpdate(db, ["VIS2"], { reviewed: false });
     const all = await listAdminProducts(db);
-    expect(all.counts.nuevos).toBe(2);
+    expect(all.counts.nuevos).toBe(1); // REV1 only: VIS2 keeps visible=true so it is not "new"
     expect(codes(await listAdminProducts(db, { filter: "visible" }))).toContain("VIS2");
-    expect(codes(await listAdminProducts(db, { filter: "nuevos" }))).toEqual(["REV1", "REV2"]);
+    expect(codes(await listAdminProducts(db, { filter: "nuevos" }))).toEqual(["REV1"]);
   });
   it("search is accent and case insensitive on name/code/brand", async () => {
     await seed();

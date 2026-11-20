@@ -1,10 +1,10 @@
-import { FILTER_BY_SLUG, FILTER_LABELS, FILTER_SLUGS, listHref, type FilterSlug, type ListState } from "./query";
+import { ESTADO_SLUGS, FILTER_BY_SLUG, FILTER_LABELS, listHref, type FilterSlug, type ListState } from "./query";
 import type { AdminFilter } from "../../../server/admin/products";
 
 /** Pure helpers for the filter drawer, chips and nav highlight. URL query stays the source of truth. */
 
-/** Single source for the "Estado" group: adding a slug to FILTER_SLUGS adds an option. */
-export const ESTADO_OPTIONS: { slug: FilterSlug; label: string; countKey: AdminFilter }[] = FILTER_SLUGS.map((slug) => ({
+/** Single source for the "Estado" group (publish-on-sync S3: Todos, Visibles, Ocultos, Eliminados). */
+export const ESTADO_OPTIONS: { slug: FilterSlug; label: string; countKey: AdminFilter }[] = ESTADO_SLUGS.map((slug) => ({
   slug,
   label: FILTER_LABELS[slug],
   countKey: FILTER_BY_SLUG[slug],
@@ -39,11 +39,9 @@ export function optionHref(state: ListState, change: { filtro?: FilterSlug; cate
   return listHref(state, change);
 }
 
-/** Section is current when its path matches; Productos vs Nuevos is told apart by ?filtro=nuevos. */
-export function isNavCurrent(link: { href: string }, pathname: string, params: URLSearchParams): boolean {
-  const [path, query = ""] = link.href.split("?");
-  if (pathname !== path && !pathname.startsWith(`${path}/`)) return false;
-  const wantsNuevos = new URLSearchParams(query).get("filtro") === "nuevos";
-  if (path !== "/admin/productos") return true;
-  return wantsNuevos ? params.get("filtro") === "nuevos" : params.get("filtro") !== "nuevos";
+/** Section is current when its path matches; publish-on-sync S2 removed the separate
+ *  "Nuevos" link, so the query string no longer matters for highlighting. */
+export function isNavCurrent(link: { href: string }, pathname: string): boolean {
+  const path = link.href.split("?")[0];
+  return pathname === path || pathname.startsWith(`${path}/`);
 }

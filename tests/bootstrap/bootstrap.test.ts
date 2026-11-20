@@ -55,20 +55,21 @@ afterEach(async () => {
 });
 
 describe("bootstrapCatalog (S8)", () => {
-  it("seeds categories, mappings, applies sync and publishes every active product", async () => {
+  it("seeds categories, mappings, applies sync and publishes every active product without mass-override rows (S1)", async () => {
     const r = await bootstrapCatalog(deps());
     expect((await ctx.db.select().from(schema.categories)).length).toBe(CATEGORIES.length);
     expect((await ctx.db.select().from(schema.categoryMappings)).length).toBe(DEFAULT_CATEGORY_MAPPINGS.length);
     expect((await ctx.db.select().from(schema.sourceProducts)).length).toBe(3);
     const cats = await ctx.db.select().from(schema.categories);
     const ind = cats.find((c) => c.slug === "indumentaria-laboral")!;
+    // Only the PDF products get an override (their curated category + note); publication
+    // itself no longer needs override rows: the default is visible (publish-on-sync S1).
     const rows = await overrides();
-    expect(rows.map((o) => o.productCode).sort()).toEqual([noNote.code, withNote.code, "OTHER"].sort());
-    expect(rows.find((o) => o.productCode === "OTHER")).toMatchObject({ visible: true, reviewed: true, categoryId: null, customDescription: null });
+    expect(rows.map((o) => o.productCode).sort()).toEqual([noNote.code, withNote.code].sort());
     const a = rows.find((o) => o.productCode === withNote.code)!;
-    expect(a).toMatchObject({ visible: true, reviewed: true, categoryId: ind.id, customDescription: withNote.note });
+    expect(a).toMatchObject({ visible: null, categoryId: ind.id, customDescription: withNote.note });
     const b = rows.find((o) => o.productCode === noNote.code)!;
-    expect(b).toMatchObject({ visible: true, reviewed: true, categoryId: ind.id, customDescription: null });
+    expect(b).toMatchObject({ visible: null, categoryId: ind.id, customDescription: null });
     expect(r.published).toBe(3);
     expect(r.alreadyHidden).toBe(0);
     expect((await listProducts({}, ctx.db)).map((p) => p.code).sort()).toEqual([noNote.code, withNote.code, "OTHER"].sort());
@@ -124,7 +125,8 @@ describe("bootstrapCatalog (S8)", () => {
     await ctx.db.insert(schema.productOverrides).values({ productCode: noNote.code, customName: "Renamed" });
     await bootstrapCatalog(deps());
     const o = (await overrides()).find((x) => x.productCode === noNote.code)!;
-    expect(o).toMatchObject({ customName: "Renamed", visible: true, reviewed: true });
+    // publish-on-sync S1: visible stays null (the default publishes); only category/note are filled.
+    expect(o).toMatchObject({ customName: "Renamed", visible: null });
     expect(o.categoryId).not.toBeNull();
   });
 
@@ -143,9 +145,10 @@ describe("bootstrapCatalog (S8)", () => {
     expect(rows.find((r) => r.subfamily === first.subfamily && r.family === first.family)!.categoryId).toBe(other.id);
   });
 
-  it("keeps admin-hidden products hidden and counts them", async () => {
+  it("keeps admin-hidden products hidden and counts them (rerun never un-hides, S1)", async () => {
     await bootstrapCatalog(deps());
-    await ctx.db.update(schema.productOverrides).set({ visible: false }).where(eq(schema.productOverrides.productCode, "OTHER"));
+    // S1 removed the mass-override insert, so the admin hide is the product's only override row.
+    await ctx.db.insert(schema.productOverrides).values({ productCode: "OTHER", visible: false });
     const r = await bootstrapCatalog(deps());
     expect((await overrides()).find((o) => o.productCode === "OTHER")!.visible).toBe(false);
     expect(r).toMatchObject({ published: 2, alreadyHidden: 1 });
@@ -162,16 +165,22 @@ describe("bootstrapCatalog (S8)", () => {
     expect(r.published).toBe(2);
   });
 
-  it("fills a null visible on a non-PDF override", async () => {
+  it("leaves a null visible untouched (default-visible) and never mass-inserts overrides (S1)", async () => {
     await bootstrapCatalog(deps());
-    await ctx.db.update(schema.productOverrides).set({ visible: null, reviewed: false, customName: "X" }).where(eq(schema.productOverrides.productCode, "OTHER"));
+    await ctx.db
+      .update(schema.productOverrides)
+      .set({ visible: null, reviewed: false, customName: "X" })
+      .where(eq(schema.productOverrides.productCode, withNote.code));
     await bootstrapCatalog(deps());
-    expect((await overrides()).find((o) => o.productCode === "OTHER")).toMatchObject({ visible: true, reviewed: true, customName: "X" });
+    // no visible=true is forced anymore: null means visible and must survive a rerun
+    expect((await overrides()).find((o) => o.productCode === withNote.code)).toMatchObject({ visible: null, customName: "X" });
+    expect((await overrides()).map((o) => o.productCode).sort()).toEqual([noNote.code, withNote.code].sort());
   });
 
   it("skips PDF codes missing from the supplier catalog without failing", async () => {
     const r = await bootstrapCatalog({ ...deps(), source: source(product("OTHER")) });
-    expect((await overrides()).map((o) => o.productCode)).toEqual(["OTHER"]);
+    // No PDF product exists, so no override row is created at all; OTHER publishes by default (S1).
+    expect((await overrides()).map((o) => o.productCode)).toEqual([]);
     expect(r.published).toBe(1);
     expect(r.unmatched.length).toBe(PDF_PRODUCTS.length);
   });

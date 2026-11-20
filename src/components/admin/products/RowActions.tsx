@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { createContext, useCallback, useContext, useEffect, useRef, useState, useTransition, type ReactNode } from "react";
-import { archiveAction, restoreAction, toggleVisibilityAction, unreviewAction } from "../../../app/admin/productos/actions";
+import { archiveAction, restoreAction, toggleVisibilityAction } from "../../../app/admin/productos/actions";
 import { rowMenuItems, type MenuRow } from "../../../lib/admin/products/menu";
 import { Drawer } from "../shell/Drawer";
 
@@ -72,11 +72,6 @@ export function RowMenu({ code, name, editHref, ...row }: Props) {
         fd.set("visible", String(id === "show"));
         await toggleVisibilityAction(fd);
         notify({ message: id === "show" ? "Producto visible" : "Producto oculto" });
-      });
-    } else if (id === "unreview") {
-      run(async () => {
-        const r = await unreviewAction(code);
-        notify({ message: r.ok ? "Vuelto a Nuevos para revisar" : (r.message ?? "No se pudo volver a Nuevos") });
       });
     } else if (id === "restore") {
       run(async () => {

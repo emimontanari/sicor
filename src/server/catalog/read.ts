@@ -71,7 +71,6 @@ const score = (m: { metaCategory: string; family: string; subfamily: string }) =
 
 async function buildCatalog(db: Db): Promise<CatalogProduct[]> {
   const { settingsRow, products, overrides, variants, mappings, cats } = await loadAll(db);
-  const autoPublishNew = settingsRow?.autoPublishNew ?? false;
   const showPrices = settingsRow?.showPrices ?? false;
   const ovByCode = new Map(overrides.map((o) => [o.productCode, o]));
   const catById = new Map(cats.map((c) => [c.id, c]));
@@ -87,7 +86,7 @@ async function buildCatalog(db: Db): Promise<CatalogProduct[]> {
   const out: CatalogProduct[] = [];
   for (const p of products) {
     const o = ovByCode.get(p.code) ?? null;
-    if (!effectiveVisibility(p, o, { autoPublishNew })) continue;
+    if (!effectiveVisibility(p, o)) continue;
 
     let catId: number | null = o?.categoryId ?? null;
     if (catId === null) {

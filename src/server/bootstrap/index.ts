@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import type { PgDb, TestDb } from "../db";
 import { categories, categoryMappings, productOverrides, sourceProducts } from "../db/schema";
 import { seedCategories } from "../db/seed";
@@ -81,16 +81,14 @@ export async function bootstrapCatalog(deps: BootstrapDeps): Promise<BootstrapRe
     const categoryId = idBySlug.get(p.categorySlug) ?? null;
     const [existing] = await db.select().from(productOverrides).where(eq(productOverrides.productCode, p.code));
     if (!existing) {
+      // publish-on-sync S1: only the curated category and note need an override row;
+      // publication itself is the default (no visible/reviewed writes).
       await db
         .insert(productOverrides)
-        .values({ productCode: p.code, visible: true, reviewed: true, categoryId, customDescription: p.note, updatedAt: now() })
+        .values({ productCode: p.code, categoryId, customDescription: p.note, updatedAt: now() })
         .onConflictDoNothing();
     } else {
       const patch: Partial<typeof productOverrides.$inferInsert> = {};
-      if (existing.visible === null) {
-        patch.visible = true;
-        patch.reviewed = true;
-      }
       if (existing.categoryId === null && categoryId !== null) patch.categoryId = categoryId;
       if (existing.customDescription === null && p.note !== null) patch.customDescription = p.note;
       if (Object.keys(patch).length > 0) {
@@ -99,32 +97,26 @@ export async function bootstrapCatalog(deps: BootstrapDeps): Promise<BootstrapRe
     }
   }
 
-  // Every other active product: create a visible, reviewed override or fill nulls.
-  const activeCodes = (await db.select({ code: sourceProducts.code }).from(sourceProducts).where(eq(sourceProducts.status, "active"))).map((r) => r.code);
-  const withOverride = new Set((await db.select({ code: productOverrides.productCode }).from(productOverrides)).map((r) => r.code));
-  const missing = activeCodes.filter((c) => !withOverride.has(c));
-  for (let i = 0; i < missing.length; i += 200) {
-    await db
-      .insert(productOverrides)
-      .values(missing.slice(i, i + 200).map((productCode) => ({ productCode, visible: true, reviewed: true, updatedAt: now() })))
-      .onConflictDoNothing();
-  }
-  await db
-    .update(productOverrides)
-    .set({ visible: true, reviewed: true, updatedAt: now() })
-    .where(
-      and(
-        isNull(productOverrides.visible),
-        inArray(productOverrides.productCode, db.select({ c: sourceProducts.code }).from(sourceProducts).where(eq(sourceProducts.status, "active"))),
-      ),
-    );
-
-  const activeOverrides = await db
-    .select({ visible: productOverrides.visible })
-    .from(productOverrides)
-    .innerJoin(sourceProducts, eq(sourceProducts.code, productOverrides.productCode))
+  // Every other active product is visible by default (S1): no override rows are created and
+  // no null visible is forced, so a rerun never hides (or un-hides) what the admin decided.
+  const activeRows = await db
+    .select({ code: sourceProducts.code })
+    .from(sourceProducts)
     .where(eq(sourceProducts.status, "active"));
-  const published = activeOverrides.filter((o) => o.visible === true).length;
-  const alreadyHidden = activeOverrides.filter((o) => o.visible === false).length;
+  const ovRows = await db
+    .select({ code: productOverrides.productCode, visible: productOverrides.visible, archivedAt: productOverrides.archivedAt })
+    .from(productOverrides);
+  const ovByCode = new Map(ovRows.map((o) => [o.code, o]));
+  let published = 0;
+  let alreadyHidden = 0;
+  for (const a of activeRows) {
+    const o = ovByCode.get(a.code);
+    if (o?.archivedAt) continue;
+    if (o?.visible === false) {
+      alreadyHidden++;
+      continue;
+    }
+    published++;
+  }
   return { appliedRunId, published, alreadyHidden, unmatched };
 }

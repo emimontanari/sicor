@@ -2,16 +2,14 @@ import { LIST_PATH } from "./query";
 
 /** Pure helpers for the per-row "…" menu and the edit page's back link. */
 
-export type MenuItemId = "edit" | "hide" | "show" | "unreview" | "delete" | "restore";
+export type MenuItemId = "edit" | "hide" | "show" | "delete" | "restore";
 export type MenuItem = { id: MenuItemId; label: string; destructive?: true };
-export type MenuRow = { visible: boolean; archived: boolean; status: "active" | "discontinued"; reviewed: boolean };
+export type MenuRow = { visible: boolean; archived: boolean; status: "active" | "discontinued" };
 
 export function rowMenuItems(row: MenuRow): MenuItem[] {
   if (row.archived) return [{ id: "restore", label: "Restaurar" }, { id: "edit", label: "Editar" }];
   const items: MenuItem[] = [{ id: "edit", label: "Editar" }];
   if (row.status === "active") items.push(row.visible ? { id: "hide", label: "Ocultar" } : { id: "show", label: "Mostrar" });
-  // S6: a reviewed product can go back to the "Nuevos para revisar" queue; archived rows keep Restaurar/Editar only.
-  if (row.reviewed && row.status !== "discontinued") items.push({ id: "unreview", label: "Volver a Nuevos" });
   items.push({ id: "delete", label: "Eliminar", destructive: true });
   return items;
 }

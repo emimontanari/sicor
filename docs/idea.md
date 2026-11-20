@@ -107,8 +107,8 @@ Single-user login (the client). Private.
 
 **Workflow**
 - **Bulk actions:** hide/show, show/hide prices, change category for many products.
-- **"New products to review" queue:** new supplier products enter **hidden** until approved, unless the client turns on the **auto-publish** setting.
-- **Settings:** WhatsApp number, message template, auto-publish new products, optional public price display.
+- **New products:** everything synced from the supplier is published automatically; hiding is a manual, explicit decision (per product, in bulk, or by category).
+- **Settings:** WhatsApp number, message template, optional public price display.
 - **Discontinued products:** auto-hidden and flagged when they disappear from the supplier.
 - **Pending-updates notice:** shown in the dashboard after the 15-day scheduled check or the manual check, e.g. "Masefer added 3 new, 5 changed, 2 removed — update now?". Confirm applies the changes; cancel (or ignoring it) changes nothing.
 - **"Check for updates" button:** usable anytime; runs the check without applying and produces the same notice.
@@ -150,7 +150,7 @@ Single-user login (the client). Private.
 - Changes are applied **only when the admin confirms**, whether the check was scheduled or manual.
 - Both paths use the same **change detection**: new / changed / removed products.
 - Client overrides are never touched.
-- New products enter hidden in the review queue unless **auto-publish** is on.
+- New products are **published automatically** when the sync is applied; the client only hides what they do not want to show (a manual, explicit decision).
 - Removed products are auto-hidden and flagged.
 - On failure: an **alert in the admin dashboard** (no email for the MVP); the catalog **keeps the last good data**.
 
@@ -182,7 +182,7 @@ Decided in L8/L9: a single app deployed entirely on **Dokploy** with docker-comp
 - **Phase 0 — Spike: DONE (2026-11-14).** RAE (agent mode, provider `auto`, Claude Sonnet 5.5, TypeScript, ~3.5 min, USD 0.29) generated a working client at `spike/rae/scripts/e1d689cd924c/api_client.ts` (113 lines, no runtime deps, Node 22 built-in WebSocket; run `npx tsx api_client.ts`). Run twice successfully. RAE approach confirmed; no hand-written DDP client needed.
 - **Phase 1 — Sync + data:** adapt the generated client, schema, scheduled sync (every 15 days), `sync_runs`.
 - **Phase 2 — Public catalog:** categories, search, product cards (quote-only), quote cart in localStorage, `wa.me` send button.
-- **Phase 3 — Dashboard:** login, per-product edits, bulk actions, review queue, sync status, settings (WhatsApp number, message template, auto-publish), pending-updates notice (from the 15-day check or the manual "Check for updates" button) with confirm/cancel, and sync failure alerts.
+- **Phase 3 — Dashboard:** login, per-product edits, bulk actions, sync status, settings (WhatsApp number, message template), pending-updates notice (from the 15-day check or the manual "Check for updates" button) with confirm/cancel, and sync failure alerts.
 - Phase 1 includes the 15-day scheduled check and change detection (check and apply as separate steps; the scheduled check never applies, the dashboard confirms).
 - **Later:** more admin-dashboard features.
 

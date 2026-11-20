@@ -12,7 +12,6 @@ import { OTHERS_SLUG } from "../../../server/catalog";
 import { requireAdmin } from "../../../server/auth/session";
 import { RowFeedback, RowMenu } from "../../../components/admin/products/RowActions";
 import { editHref } from "../../../lib/admin/products/menu";
-import { reviewAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Productos", robots: { index: false, follow: false } };
@@ -45,7 +44,6 @@ export default async function ProductsPage({ searchParams }: Props) {
   ]);
   const lastPage = Math.max(Math.ceil(list.total / list.pageSize), 1);
   const current = { ...state, page: list.page };
-  const isNuevos = state.filtro === "nuevos";
   const isEliminados = state.filtro === "eliminados";
   const listUrl = listHref(current, {});
 
@@ -120,28 +118,11 @@ export default async function ProductsPage({ searchParams }: Props) {
                   ) : (
                     <span className={p.visible ? "pr-badge pr-badge--on" : "pr-badge"}>{p.visible ? "Visible" : "Oculto"}</span>
                   )}
-                  {p.isNew ? <span className="pr-badge pr-badge--new">Nuevo</span> : null}
                   {p.status === "discontinued" ? <span className="pr-badge pr-badge--off">Discontinuado</span> : null}
                 </span>
               </div>
               <div className="pr-row__actions">
-                {isNuevos && p.isNew && !p.archived ? (
-                  <>
-                    <form action={reviewAction}>
-                      <input type="hidden" name="code" value={p.code} />
-                      <button type="submit" name="intent" value="publish" className="admin-btn admin-btn--sm">
-                        Publicar
-                      </button>
-                    </form>
-                    <form action={reviewAction}>
-                      <input type="hidden" name="code" value={p.code} />
-                      <button type="submit" name="intent" value="dismiss" className="admin-btn admin-btn--sm admin-btn--ghost">
-                        Descartar
-                      </button>
-                    </form>
-                  </>
-                ) : null}
-                <RowMenu code={p.code} name={p.name} visible={p.visible} archived={p.archived} status={p.status} reviewed={p.reviewed} editHref={editHref(p.code, listUrl)} />
+                <RowMenu code={p.code} name={p.name} visible={p.visible} archived={p.archived} status={p.status} editHref={editHref(p.code, listUrl)} />
               </div>
             </li>
           ))}

@@ -5,7 +5,6 @@ import {
   categories,
   categoryMappings,
   productOverrides,
-  settings,
   sourceProducts,
   sourceVariants,
 } from "../db/schema";
@@ -118,8 +117,6 @@ const matches = (row: AdminProductRow, filter: AdminFilter): boolean => {
 
 /** Loads every supplier product with its override as an admin row (shared by the list and the scope=all bulk). */
 async function loadAdminRows(d: TestDb): Promise<AdminProductRow[]> {
-  const [settingsRow] = await d.select().from(settings).where(eq(settings.id, 1));
-  const autoPublishNew = settingsRow?.autoPublishNew ?? false;
   const [products, overrides, mappings, cats] = await Promise.all([
     d.select().from(sourceProducts).orderBy(asc(sourceProducts.name), asc(sourceProducts.code)),
     d.select().from(productOverrides),
@@ -142,7 +139,7 @@ async function loadAdminRows(d: TestDb): Promise<AdminProductRow[]> {
       brand: p.brand,
       thumbnailUrl: thumb ? imageUrl(thumb) : null,
       status: p.status,
-      visible: effectiveVisibility(p, o, { autoPublishNew }),
+      visible: effectiveVisibility(p, o),
       reviewed: o?.reviewed ?? false,
       archived: !!o?.archivedAt,
       isNew: p.status === "active" && !(o?.reviewed ?? false) && (o?.visible ?? null) === null,
@@ -223,7 +220,6 @@ export async function getAdminProduct(db: Db, code: string): Promise<AdminProduc
   const [p] = await d.select().from(sourceProducts).where(eq(sourceProducts.code, code));
   if (!p) return null;
   const [o] = await d.select().from(productOverrides).where(eq(productOverrides.productCode, code));
-  const [settingsRow] = await d.select().from(settings).where(eq(settings.id, 1));
   const [vs, mappings, cats] = await Promise.all([
     d.select().from(sourceVariants).where(eq(sourceVariants.productCode, code)).orderBy(asc(sourceVariants.id)),
     d.select().from(categoryMappings),
@@ -250,7 +246,7 @@ export async function getAdminProduct(db: Db, code: string): Promise<AdminProduc
     archivedAt: o?.archivedAt?.toISOString() ?? null,
     effective: {
       name: o?.customName ?? p.name,
-      visible: effectiveVisibility(p, o, { autoPublishNew: settingsRow?.autoPublishNew ?? false }),
+      visible: effectiveVisibility(p, o),
       category: c ? { id: c.id, slug: c.slug, name: c.name } : null,
     },
     variants: vs.map((v) => ({

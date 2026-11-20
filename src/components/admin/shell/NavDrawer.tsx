@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { isNavCurrent } from "../../../lib/admin/products/filters";
 import { Drawer } from "./Drawer";
@@ -12,7 +12,6 @@ type Props = { links: { href: string; label: string }[]; children?: ReactNode };
 export function NavDrawer({ links, children }: Props) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
-  const params = useSearchParams();
   return (
     <>
       <button
@@ -30,7 +29,7 @@ export function NavDrawer({ links, children }: Props) {
       <Drawer open={open} onClose={() => setOpen(false)} title="Menú" side="left">
         <nav aria-label="Administración" className="admin-nav" onClick={(e) => (e.target as HTMLElement).closest("a") && setOpen(false)}>
           {links.map((l) => (
-            <Link key={l.href} href={l.href} aria-current={isNavCurrent(l, pathname, params) ? "page" : undefined}>
+            <Link key={l.href} href={l.href} aria-current={isNavCurrent(l, pathname) ? "page" : undefined}>
               {l.label}
             </Link>
           ))}

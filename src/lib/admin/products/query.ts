@@ -5,6 +5,10 @@ import type { AdminFilter, BulkPatch, OverridePatch } from "../../../server/admi
 export const FILTER_SLUGS = ["todos", "visibles", "ocultos", "nuevos", "discontinuados", "eliminados"] as const;
 export type FilterSlug = (typeof FILTER_SLUGS)[number];
 
+/** publish-on-sync S3: the Estado options offered in the UI. `nuevos` and `discontinuados`
+ *  stay parsable (tolerated: old links keep working) but are no longer offered. */
+export const ESTADO_SLUGS: readonly FilterSlug[] = ["todos", "visibles", "ocultos", "eliminados"];
+
 export const FILTER_BY_SLUG: Record<FilterSlug, AdminFilter> = {
   todos: "all",
   visibles: "visible",
@@ -111,10 +115,6 @@ function parseBulkPatch(fd: FormData): BulkPatch | { error: string } {
       return { visible: true };
     case "hide":
       return { visible: false };
-    case "reviewed":
-      return { reviewed: true };
-    case "unreview":
-      return { reviewed: false };
     case "category": {
       const v = str(fd, "bulkCategory");
       if (v === "none") return { categoryId: null };

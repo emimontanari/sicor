@@ -11,12 +11,10 @@ import {
 } from "../../../src/lib/admin/products/bulk";
 
 describe("BULK_ITEMS", () => {
-  it("lists the simple bulk sheet actions in order", () => {
+  it("lists the simple bulk sheet actions in order (S2: only Mostrar/Ocultar)", () => {
     expect(BULK_ITEMS).toEqual([
       { id: "show", label: "Mostrar" },
       { id: "hide", label: "Ocultar" },
-      { id: "reviewed", label: "Marcar como revisados" },
-      { id: "unreview", label: "Marcar como nuevo" },
     ]);
   });
 });

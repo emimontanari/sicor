@@ -7,38 +7,28 @@ const ids = (r: Parameters<typeof rowMenuItems>[0]) => rowMenuItems(r).map((i) =
 
 describe("rowMenuItems", () => {
   it("visible active product: Editar, Ocultar, Eliminar (Eliminar is destructive)", () => {
-    expect(rowMenuItems({ visible: true, archived: false, status: "active", reviewed: false })).toEqual([
+    expect(rowMenuItems({ visible: true, archived: false, status: "active" })).toEqual([
       { id: "edit", label: "Editar" },
       { id: "hide", label: "Ocultar" },
       { id: "delete", label: "Eliminar", destructive: true },
     ]);
   });
   it("hidden active product offers Mostrar instead of Ocultar", () => {
-    expect(ids({ visible: false, archived: false, status: "active", reviewed: false })).toEqual(["edit", "show", "delete"]);
+    expect(ids({ visible: false, archived: false, status: "active" })).toEqual(["edit", "show", "delete"]);
   });
-  it("archived product: Restaurar and Editar only (even when reviewed)", () => {
-    expect(rowMenuItems({ visible: true, archived: true, status: "active", reviewed: true })).toEqual([
+  it("archived product: Restaurar and Editar only", () => {
+    expect(rowMenuItems({ visible: true, archived: true, status: "active" })).toEqual([
       { id: "restore", label: "Restaurar" },
       { id: "edit", label: "Editar" },
     ]);
   });
   it("discontinued product has no show/hide toggle (as before)", () => {
-    expect(ids({ visible: false, archived: false, status: "discontinued", reviewed: false })).toEqual(["edit", "delete"]);
+    expect(ids({ visible: false, archived: false, status: "discontinued" })).toEqual(["edit", "delete"]);
   });
-  it("reviewed active product gains Volver a Nuevos before Eliminar (S6)", () => {
-    expect(rowMenuItems({ visible: true, archived: false, status: "active", reviewed: true })).toEqual([
-      { id: "edit", label: "Editar" },
-      { id: "hide", label: "Ocultar" },
-      { id: "unreview", label: "Volver a Nuevos" },
-      { id: "delete", label: "Eliminar", destructive: true },
-    ]);
-    expect(ids({ visible: false, archived: false, status: "active", reviewed: true })).toEqual(["edit", "show", "unreview", "delete"]);
-  });
-  it("not reviewed: no Volver a Nuevos (S6)", () => {
-    expect(ids({ visible: true, archived: false, status: "active", reviewed: false })).not.toContain("unreview");
-  });
-  it("discontinued reviewed: no Volver a Nuevos (S6)", () => {
-    expect(ids({ visible: true, archived: false, status: "discontinued", reviewed: true })).not.toContain("unreview");
+  it("publish-on-sync S2: no review/unreview items remain", () => {
+    const all = [...rowMenuItems({ visible: true, archived: false, status: "active" }), ...rowMenuItems({ visible: true, archived: true, status: "active" })];
+    expect(all.map((i) => i.id)).not.toContain("unreview");
+    expect(all.every((i) => !i.label.includes("Nuevos"))).toBe(true);
   });
 });
 

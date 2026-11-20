@@ -10,16 +10,24 @@ const fd = (o: Record<string, string>) => {
 };
 
 describe("parseSettingsForm", () => {
-  it("maps fields and checkboxes", () => {
-    expect(
-      parseSettingsForm(fd({ whatsappNumber: "+54 9 11 1234-5678", messageTemplate: " Hola ", autoPublishNew: "on" })),
-    ).toEqual({ whatsappNumber: "+54 9 11 1234-5678", messageTemplate: " Hola ", autoPublishNew: true, showPrices: false });
+  it("maps fields and the showPrices checkbox (S5: auto_publish_new is gone from the form)", () => {
+    expect(parseSettingsForm(fd({ whatsappNumber: "+54 9 11 1234-5678", messageTemplate: " Hola ", showPrices: "on" }))).toEqual({
+      whatsappNumber: "+54 9 11 1234-5678",
+      messageTemplate: " Hola ",
+      showPrices: true,
+    });
   });
   it("missing text fields become empty strings (cleared)", () => {
     expect(parseSettingsForm(fd({}))).toEqual({
       whatsappNumber: "",
       messageTemplate: "",
-      autoPublishNew: false,
+      showPrices: false,
+    });
+  });
+  it("a stale autoPublishNew checkbox in the payload is ignored", () => {
+    expect(parseSettingsForm(fd({ autoPublishNew: "on" }))).toEqual({
+      whatsappNumber: "",
+      messageTemplate: "",
       showPrices: false,
     });
   });

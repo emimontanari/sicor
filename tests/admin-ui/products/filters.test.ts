@@ -15,9 +15,20 @@ const cats = [
 ];
 
 describe("ESTADO_OPTIONS", () => {
-  it("is rendered from the single filter list, in order, with labels", () => {
-    expect(ESTADO_OPTIONS.map((o) => o.slug)).toEqual([...FILTER_SLUGS]);
-    expect(ESTADO_OPTIONS.map((o) => o.label)).toEqual(FILTER_SLUGS.map((s) => FILTER_LABELS[s]));
+  it("offers only Todos, Visibles, Ocultos, Eliminados (publish-on-sync S3)", () => {
+    expect(ESTADO_OPTIONS).toEqual([
+      { slug: "todos", label: "Todos", countKey: "all" },
+      { slug: "visibles", label: "Visibles", countKey: "visible" },
+      { slug: "ocultos", label: "Ocultos", countKey: "hidden" },
+      { slug: "eliminados", label: "Eliminados", countKey: "eliminados" },
+    ]);
+  });
+  it("nuevos/discontinuados stay parsable (tolerated) but are never offered", () => {
+    expect(FILTER_SLUGS).toContain("nuevos");
+    expect(FILTER_SLUGS).toContain("discontinuados");
+    expect(ESTADO_OPTIONS.map((o) => o.slug)).not.toContain("nuevos");
+    expect(ESTADO_OPTIONS.map((o) => o.slug)).not.toContain("discontinuados");
+    expect(FILTER_LABELS.nuevos).toBeTruthy();
   });
 });
 
@@ -64,15 +75,13 @@ describe("clearFiltersHref / optionHref", () => {
 });
 
 describe("isNavCurrent", () => {
-  it("separates Productos from Nuevos by the filtro param", () => {
+  it("highlights the section by path; Productos covers every filtro (no separate Nuevos link, S2)", () => {
     const productos = { href: "/admin/productos" };
-    const nuevos = { href: "/admin/productos?filtro=nuevos" };
-    expect(isNavCurrent(productos, "/admin/productos", new URLSearchParams("filtro=ocultos"))).toBe(true);
-    expect(isNavCurrent(nuevos, "/admin/productos", new URLSearchParams("filtro=ocultos"))).toBe(false);
-    expect(isNavCurrent(nuevos, "/admin/productos", new URLSearchParams("filtro=nuevos"))).toBe(true);
-    expect(isNavCurrent(productos, "/admin/productos", new URLSearchParams("filtro=nuevos"))).toBe(false);
-    expect(isNavCurrent(productos, "/admin/productos/ABC", new URLSearchParams())).toBe(true);
-    expect(isNavCurrent({ href: "/admin/ajustes" }, "/admin/ajustes", new URLSearchParams())).toBe(true);
-    expect(isNavCurrent({ href: "/admin/ajustes" }, "/admin/productos", new URLSearchParams())).toBe(false);
+    expect(isNavCurrent(productos, "/admin/productos")).toBe(true);
+    expect(isNavCurrent({ href: "/admin/productos?filtro=nuevos" }, "/admin/productos")).toBe(true);
+    expect(isNavCurrent(productos, "/admin/productos/ABC")).toBe(true);
+    expect(isNavCurrent({ href: "/admin/ajustes" }, "/admin/ajustes")).toBe(true);
+    expect(isNavCurrent({ href: "/admin/ajustes" }, "/admin/productos")).toBe(false);
+    expect(isNavCurrent(productos, "/admin/ajustes")).toBe(false);
   });
 });

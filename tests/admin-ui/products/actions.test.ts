@@ -24,7 +24,7 @@ vi.mock("../../../src/server/admin", async (orig) => ({
 const denied = vi.hoisted(() => ({ value: false }));
 const bulkCount = vi.hoisted(() => ({ value: 0 }));
 
-import { archiveAction, bulkAction, restoreAction, unreviewAction } from "../../../src/app/admin/productos/actions";
+import { archiveAction, bulkAction, restoreAction } from "../../../src/app/admin/productos/actions";
 
 beforeEach(() => {
   calls.length = 0;
@@ -54,34 +54,6 @@ describe("archiveAction / restoreAction", () => {
   });
   it("rejects an empty code without touching data", async () => {
     const r = await archiveAction("");
-    expect(r.ok).toBe(false);
-    expect(calls).toEqual(["requireAdmin"]);
-  });
-});
-
-describe("unreviewAction (S6)", () => {
-  it("requireAdmin first, then reviewed=false + visible=null, revalidates like reviewAction", async () => {
-    const r = await unreviewAction("ZAP13");
-    expect(r.ok).toBe(true);
-    expect(calls[0]).toBe("requireAdmin");
-    expect(calls[1]).toBe('update:ZAP13:{"reviewed":false,"visible":null}');
-    expect(calls).toEqual(
-      expect.arrayContaining([
-        "revalidate:/admin/productos",
-        "revalidate:/admin/productos/ZAP13",
-        "revalidate:/",
-        "revalidate:/buscar",
-        "revalidate:/producto/[code]",
-      ]),
-    );
-  });
-  it("unauthenticated: nothing is updated or revalidated", async () => {
-    denied.value = true;
-    await expect(unreviewAction("A1")).rejects.toThrow(/NEXT_REDIRECT/);
-    expect(calls.filter((c) => c !== "requireAdmin")).toEqual([]);
-  });
-  it("rejects an empty code without touching data", async () => {
-    const r = await unreviewAction("");
     expect(r.ok).toBe(false);
     expect(calls).toEqual(["requireAdmin"]);
   });
