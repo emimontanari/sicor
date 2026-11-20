@@ -2,7 +2,7 @@
 
 export const BULK_FORM_ID = "bulk-form";
 
-export type BulkItemId = "show" | "hide" | "reviewed";
+export type BulkItemId = "show" | "hide" | "reviewed" | "unreview";
 export type BulkItem = { id: BulkItemId; label: string };
 
 /** Simple sheet actions; "Asignar categoría" needs its own select and is rendered separately. */
@@ -10,6 +10,8 @@ export const BULK_ITEMS: BulkItem[] = [
   { id: "show", label: "Mostrar" },
   { id: "hide", label: "Ocultar" },
   { id: "reviewed", label: "Marcar como revisados" },
+  // S6: the inverse of "Marcar como revisados"; always available so the change is reversible.
+  { id: "unreview", label: "Marcar como nuevo" },
 ];
 
 /** "Acciones (N)": the count only appears once something is selected. */

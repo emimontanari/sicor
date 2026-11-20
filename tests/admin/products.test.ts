@@ -47,6 +47,21 @@ describe("listAdminProducts (S3/S4)", () => {
     const r = await listAdminProducts(db, { filter: "nuevos" });
     expect(r.items[0]).toMatchObject({ code: "NEW1", visible: true, isNew: true });
   });
+  it("a reverted product (reviewed=false, visible=null) is new again; bulk-unreviewed visible=true stays visible and out of the queue (S6)", async () => {
+    await add(db, { code: "REV1", name: "Fue revisado" }, { reviewed: true });
+    await add(db, { code: "REV2", name: "Fue publicado" }, { visible: true, reviewed: true });
+    // "Volver a Nuevos" (unreviewAction): reviewed=false and no visibility decision
+    await updateOverride(db, "REV1", { reviewed: false, visible: null });
+    await updateOverride(db, "REV2", { reviewed: false, visible: null });
+    expect(codes(await listAdminProducts(db, { filter: "nuevos" }))).toEqual(["REV1", "REV2"]);
+    // bulk "Marcar como nuevo" only touches reviewed: a visible product stays visible, not in the queue
+    await add(db, { code: "VIS2", name: "Queda visible" }, { visible: true, reviewed: true });
+    await bulkUpdate(db, ["VIS2"], { reviewed: false });
+    const all = await listAdminProducts(db);
+    expect(all.counts.nuevos).toBe(2);
+    expect(codes(await listAdminProducts(db, { filter: "visible" }))).toContain("VIS2");
+    expect(codes(await listAdminProducts(db, { filter: "nuevos" }))).toEqual(["REV1", "REV2"]);
+  });
   it("search is accent and case insensitive on name/code/brand", async () => {
     await seed();
     expect(codes(await listAdminProducts(db, { search: "nandu" }))).toEqual(["NEW1"]);
@@ -172,6 +187,19 @@ describe("bulkUpdate (S2/S4)", () => {
     const a = (await db.select().from(schema.productOverrides)).find((r) => r.productCode === "A")!;
     expect(a).toMatchObject({ categoryId: id, reviewed: false, visible: true });
   });
+  it("accepts reviewed:false (S6 \"Marcar como nuevo\") keeping visibility, rejects non-boolean, round-trips back to true", async () => {
+    await add(db, { code: "A" }, { visible: true, reviewed: true });
+    await add(db, { code: "B" });
+    expect(await bulkUpdate(db, ["A", "B"], { reviewed: false })).toEqual({ updated: 2 });
+    let rows = Object.fromEntries((await db.select().from(schema.productOverrides)).map((o) => [o.productCode, o]));
+    expect(rows.A).toMatchObject({ reviewed: false, visible: true }); // stays visible, just not reviewed
+    expect(rows.B).toMatchObject({ reviewed: false, visible: null });
+    await expect(bulkUpdate(db, ["A"], { reviewed: "x" as never })).rejects.toBeInstanceOf(AdminValidationError);
+    expect(await bulkUpdate(db, ["A", "B"], { reviewed: true })).toEqual({ updated: 2 });
+    rows = Object.fromEntries((await db.select().from(schema.productOverrides)).map((o) => [o.productCode, o]));
+    expect(rows.A).toMatchObject({ reviewed: true, visible: true });
+    expect(rows.B).toMatchObject({ reviewed: true, visible: null });
+  });
   it("rejects more than 200 codes, empty, bad patch", async () => {
     const many = Array.from({ length: 201 }, (_, i) => `C${i}`);
     for (const c of many) await db.insert(schema.sourceProducts).values({ code: c, name: c });
@@ -233,6 +261,22 @@ describe("bulkUpdateFiltered (S5)", () => {
     await expect(bulkUpdateFiltered(db, { filter: "all" }, { categoryId: 99999 })).rejects.toBeInstanceOf(AdminValidationError);
     await expect(bulkUpdateFiltered(db, { filter: "all" }, {})).rejects.toBeInstanceOf(AdminValidationError);
     expect(await db.select().from(schema.productOverrides)).toHaveLength(0);
+  });
+  it("accepts reviewed:false over the filtered list and round-trips back to true (S6)", async () => {
+    await add(db, { code: "V1", name: "Casco" }, { visible: true, reviewed: true });
+    await add(db, { code: "V2", name: "Casco" }, { visible: true, reviewed: true });
+    await add(db, { code: "H1", name: "Casco" }, { visible: false, reviewed: true });
+    const r = await bulkUpdateFiltered(db, { filter: "visible", search: "casco" }, { reviewed: false });
+    expect(r).toEqual({ updated: 2 });
+    let rows = Object.fromEntries((await db.select().from(schema.productOverrides)).map((o) => [o.productCode, o]));
+    expect(rows.V1).toMatchObject({ reviewed: false, visible: true });
+    expect(rows.V2).toMatchObject({ reviewed: false, visible: true });
+    expect(rows.H1.reviewed).toBe(true); // outside the filter: untouched
+    const back = await bulkUpdateFiltered(db, { filter: "visible", search: "casco" }, { reviewed: true });
+    expect(back).toEqual({ updated: 2 });
+    rows = Object.fromEntries((await db.select().from(schema.productOverrides)).map((o) => [o.productCode, o]));
+    expect(rows.V1).toMatchObject({ reviewed: true, visible: true });
+    expect(rows.V2).toMatchObject({ reviewed: true, visible: true });
   });
   it("per-code bulkUpdate keeps its 200 cap", async () => {
     const many = Array.from({ length: 201 }, (_, i) => `C${i}`);

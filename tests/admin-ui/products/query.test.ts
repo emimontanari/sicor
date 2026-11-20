@@ -126,6 +126,18 @@ describe("parseBulkForm", () => {
       error: "Elegí una categoría",
     });
   });
+  it("unreview maps to reviewed:false on both scopes (S6)", () => {
+    expect(parseBulkForm(fd([["code", "A"], ["intent", "unreview"]]))).toMatchObject({
+      ok: true,
+      scope: "codes",
+      patch: { reviewed: false },
+    });
+    expect(parseBulkForm(fd([["scope", "all"], ["intent", "unreview"]]))).toMatchObject({
+      ok: true,
+      scope: "all",
+      patch: { reviewed: false },
+    });
+  });
   it("errors", () => {
     expect(parseBulkForm(fd([["intent", "show"]]))).toEqual({ ok: false, error: "Seleccioná al menos un producto" });
     expect(parseBulkForm(fd([["code", "A"], ["intent", "x"]]))).toEqual({ ok: false, error: "Acción inválida" });

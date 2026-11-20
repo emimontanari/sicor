@@ -141,7 +141,7 @@ export default async function ProductsPage({ searchParams }: Props) {
                     </form>
                   </>
                 ) : null}
-                <RowMenu code={p.code} name={p.name} visible={p.visible} archived={p.archived} status={p.status} editHref={editHref(p.code, listUrl)} />
+                <RowMenu code={p.code} name={p.name} visible={p.visible} archived={p.archived} status={p.status} reviewed={p.reviewed} editHref={editHref(p.code, listUrl)} />
               </div>
             </li>
           ))}

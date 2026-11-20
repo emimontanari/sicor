@@ -62,6 +62,20 @@ export async function reviewAction(formData: FormData): Promise<void> {
   revalidateProducts([code]);
 }
 
+/** S6: "Volver a Nuevos" — undoes a review. reviewed=false and no visibility decision
+ *  (visible=null), so the product re-enters the "Nuevos para revisar" queue. */
+export async function unreviewAction(code: string): Promise<ActionState> {
+  await requireAdmin();
+  if (!code) return { ok: false, message: "Producto inválido" };
+  try {
+    await updateOverride(getAdminDb(), code, { reviewed: false, visible: null });
+  } catch (e) {
+    return toState(e);
+  }
+  revalidateProducts([code]);
+  return { ok: true, message: "Vuelto a Nuevos para revisar" };
+}
+
 const updatedMessage = (updated: number) => `${updated} producto${updated === 1 ? "" : "s"} actualizado${updated === 1 ? "" : "s"}`;
 
 export async function bulkAction(_prev: ActionState, formData: FormData): Promise<ActionState> {

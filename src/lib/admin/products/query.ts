@@ -113,6 +113,8 @@ function parseBulkPatch(fd: FormData): BulkPatch | { error: string } {
       return { visible: false };
     case "reviewed":
       return { reviewed: true };
+    case "unreview":
+      return { reviewed: false };
     case "category": {
       const v = str(fd, "bulkCategory");
       if (v === "none") return { categoryId: null };

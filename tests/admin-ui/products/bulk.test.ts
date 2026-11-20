@@ -16,6 +16,7 @@ describe("BULK_ITEMS", () => {
       { id: "show", label: "Mostrar" },
       { id: "hide", label: "Ocultar" },
       { id: "reviewed", label: "Marcar como revisados" },
+      { id: "unreview", label: "Marcar como nuevo" },
     ]);
   });
 });
