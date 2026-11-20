@@ -20,6 +20,7 @@ export type CartAction =
   | { type: "setNote"; key: string; note: string }
   | { type: "setCustomerNote"; note: string }
   | { type: "remove"; key: string }
+  | { type: "restore"; item: CartItem; index: number }
   | { type: "clear" };
 
 export const EMPTY_CART: CartState = { items: [], customerNote: "" };
@@ -45,6 +46,15 @@ export function cartReducer(state: CartState, action: CartAction): CartState {
           )
         : [...state.items, incoming];
       return { ...state, items };
+    }
+    case "restore": {
+      // Reuse add for key uniqueness, merge semantics and quantity normalization.
+      const merged = cartReducer(state, { type: "add", item: action.item });
+      if (state.items.some((i) => itemKey(i) === itemKey(action.item))) return merged;
+      const items = [...merged.items];
+      const restored = items.pop()!;
+      items.splice(Math.max(0, Math.min(action.index, items.length)), 0, restored);
+      return { ...merged, items };
     }
     case "setQuantity": {
       const target = action.key;

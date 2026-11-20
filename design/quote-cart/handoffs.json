@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "chosen": "02-resumen-en-linea-y-panel-fijo.html",
+  "handoffs": {
+    "02-resumen-en-linea-y-panel-fijo.html": {
+      "status": "in_progress",
+      "queued": false,
+      "sentAt": "2026-11-15T14:48:46.204Z",
+      "startedAt": "2026-11-15T14:48:56.936Z",
+      "implementedAt": null,
+      "feature": "odd/tasks/quote-cart-redesign.md"
+    }
+  }
+}

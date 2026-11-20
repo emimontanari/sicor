@@ -1,136 +1,69 @@
 "use client";
 import Link from "next/link";
-import { itemKey } from "../lib/cart/cart";
+import { useEffect, useRef, useState } from "react";
+import { itemKey, type CartItem } from "../lib/cart/cart";
+import { resolveQuoteMedia, type QuoteMediaMap } from "../lib/cart/quote";
 import { dispatchCart, useCart } from "../lib/cart/store";
-import { buildWhatsAppUrl } from "../lib/cart/whatsapp";
+import { Icon } from "./Icon";
+import { QuoteLine } from "./quote/QuoteLine";
+import { QuoteSummary } from "./quote/QuoteSummary";
 
-export function QuoteCart({
-  whatsappNumber,
-  messageTemplate,
-}: {
-  whatsappNumber: string | null;
-  messageTemplate: string;
+type Removal = { item: CartItem; index: number };
+
+export function QuoteCart({ whatsappNumber, messageTemplate, media = {} }: {
+  whatsappNumber: string | null; messageTemplate: string; media?: QuoteMediaMap;
 }) {
   const cart = useCart();
+  const [removed, setRemoved] = useState<Removal | null>(null);
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const remaining = useRef({ ms: 8000 });
+  const undoButton = useRef<HTMLButtonElement>(null);
+  const emptyTitle = useRef<HTMLHeadingElement>(null);
 
-  if (cart.items.length === 0) {
-    return (
-      <div className="empty">
-        <p>Tu cotización está vacía.</p>
-        <Link href="/" className="btn btn--primary">
-          Ver catálogo
-        </Link>
-      </div>
-    );
+  useEffect(() => { if (removed) undoButton.current?.focus(); }, [removed]);
+  useEffect(() => {
+    if (!removed || hovered || focused) return;
+    // Capture this removal's budget: cleanup of an older toast must not shorten a new one.
+    const budget = remaining.current;
+    const start = performance.now();
+    const timer = window.setTimeout(() => setRemoved(null), budget.ms);
+    return () => { window.clearTimeout(timer); budget.ms = Math.max(0, budget.ms - (performance.now() - start)); };
+  }, [removed, hovered, focused]);
+
+  function remove(item: CartItem) {
+    remaining.current = { ms: 8000 };
+    setRemoved({ item, index: cart.items.findIndex((i) => itemKey(i) === itemKey(item)) });
+    dispatchCart({ type: "remove", key: itemKey(item) });
+  }
+  function clear() {
+    setRemoved(null);
+    // The summary unmounts after clear; send focus to the new empty-state heading.
+    requestAnimationFrame(() => emptyTitle.current?.focus());
   }
 
-  const url = buildWhatsAppUrl({
-    number: whatsappNumber,
-    template: messageTemplate,
-    items: cart.items,
-    customerNote: cart.customerNote,
-  });
-
-  return (
-    <div className="quote">
-      <ul className="quote__list">
-        {cart.items.map((i) => {
-          const key = itemKey(i);
-          const variants = [i.talle ? `Talle ${i.talle}` : "", i.color ? `Color ${i.color}` : ""]
-            .filter(Boolean)
-            .join(" · ");
-          return (
-            <li key={key} className="quote__item">
-              <div className="quote__head">
-                <div>
-                  <Link href={`/producto/${encodeURIComponent(i.code)}`} className="quote__name">
-                    {i.name}
-                  </Link>
-                  <p className="muted quote__meta">
-                    {i.code}
-                    {variants ? ` · ${variants}` : ""}
-                  </p>
-                </div>
-                <button type="button" className="link-btn" onClick={() => dispatchCart({ type: "remove", key })}>
-                  Quitar
-                </button>
-              </div>
-              <div className="stepper" role="group" aria-label={`Cantidad de ${i.name}`}>
-                <button
-                  type="button"
-                  aria-label="Menos"
-                  disabled={i.quantity <= 1}
-                  onClick={() => dispatchCart({ type: "setQuantity", key, quantity: i.quantity - 1 })}
-                >
-                  −
-                </button>
-                <input
-                  type="number"
-                  inputMode="numeric"
-                  min={1}
-                  aria-label="Cantidad"
-                  value={i.quantity}
-                  onChange={(e) =>
-                    dispatchCart({ type: "setQuantity", key, quantity: Number(e.target.value) || 1 })
-                  }
-                />
-                <button
-                  type="button"
-                  aria-label="Más"
-                  onClick={() => dispatchCart({ type: "setQuantity", key, quantity: i.quantity + 1 })}
-                >
-                  +
-                </button>
-              </div>
-              <label className="field">
-                <span>Nota (opcional)</span>
-                <input
-                  type="text"
-                  value={i.note ?? ""}
-                  maxLength={200}
-                  onChange={(e) => dispatchCart({ type: "setNote", key, note: e.target.value })}
-                />
-              </label>
-            </li>
-          );
-        })}
+  return <div className="qc">
+    {cart.items.length === 0 ? <div className="qc-empty">
+      <span className="qc-empty-icon"><Icon name="cart" /></span>
+      <h2 ref={emptyTitle} tabIndex={-1}>Tu cotización está vacía</h2>
+      <p>Sumá productos desde el catálogo y envialos por WhatsApp.</p>
+      <Link href="/" className="btn btn--primary">Ver catálogo</Link>
+    </div> : <div className="qc-layout">
+      <ul className="qc-list" aria-label="Productos de la cotización">
+        {cart.items.map((item) => <QuoteLine key={itemKey(item)} item={item} media={resolveQuoteMedia(item, media)} onRemove={remove} />)}
       </ul>
-
-      <label className="field">
-        <span>Tu nombre o comentario general (opcional)</span>
-        <textarea
-          rows={2}
-          maxLength={500}
-          value={cart.customerNote}
-          onChange={(e) => dispatchCart({ type: "setCustomerNote", note: e.target.value })}
-        />
-      </label>
-
-      <div className="quote__actions">
-        {url ? (
-          <a className="btn btn--wa" href={url} target="_blank" rel="noopener noreferrer" data-wa-send>
-            Enviar por WhatsApp
-          </a>
-        ) : (
-          <>
-            <button type="button" className="btn btn--wa" disabled>
-              Enviar por WhatsApp
-            </button>
-            <p className="form-error" role="status">
-              WhatsApp no configurado
-            </p>
-          </>
-        )}
-        <button
-          type="button"
-          className="btn btn--ghost"
-          onClick={() => {
-            if (window.confirm("¿Vaciar la cotización?")) dispatchCart({ type: "clear" });
-          }}
-        >
-          Vaciar cotización
-        </button>
-      </div>
+      <QuoteSummary cart={cart} whatsappNumber={whatsappNumber} messageTemplate={messageTemplate} onClear={clear} />
+    </div>}
+    <div className="qc-toast-region" aria-live="polite" role="status">
+      {removed && <div className="qc-toast" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} onFocus={() => setFocused(true)} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setFocused(false); }}>
+        <span>Quitado ·</span>
+        <button ref={undoButton} type="button" onClick={() => {
+          dispatchCart({ type: "restore", ...removed });
+          setRemoved(null);
+          setFocused(false);
+          setHovered(false);
+        }}>Deshacer</button>
+      </div>}
     </div>
-  );
+  </div>;
 }
